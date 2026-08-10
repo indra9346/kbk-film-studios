@@ -15,7 +15,7 @@ export const getVideoType = (url: string) => {
     return { type: 'youtube', id: (match && match[1]) || '' };
   }
   if (url.includes('drive.google.com')) {
-    const match = url.match(/\/d\/([^/]+)/) || url.match(/id=([^&]+)/);
+    const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
     return { type: 'google-drive', id: (match && match[1]) || '' };
   }
   return { type: 'direct', id: url };
@@ -38,6 +38,19 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
 
   const isCurrentActive = activePlayingVideoId === work.id;
   const media = getVideoType(work.videoUrl);
+
+  const getThumbnail = () => {
+    if (work.thumbnailUrl && work.thumbnailUrl !== '/assets/kbk-logo.jpg') {
+      return work.thumbnailUrl;
+    }
+    if (media.type === 'google-drive' && media.id) {
+      return `https://lh3.googleusercontent.com/d/${media.id}`;
+    }
+    if (media.type === 'youtube' && media.id) {
+      return `https://img.youtube.com/vi/${media.id}/hqdefault.jpg`;
+    }
+    return '/assets/kbk-logo.jpg';
+  };
 
   useEffect(() => {
     if (media.type !== 'direct') return;
@@ -99,11 +112,27 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
             allow="autoplay"
             frameBorder="0"
           />
+        ) : media.type === 'google-drive' ? (
+          <div className="relative w-full h-full">
+            <img
+              src={getThumbnail()}
+              alt={work.title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
+              }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
+              <div className="p-3.5 rounded-full bg-gold/90 text-black shadow-gold group-hover:scale-110 transition-transform">
+                <Play className="w-5 h-5 fill-black translate-x-0.5" />
+              </div>
+            </div>
+          </div>
         ) : (
           <video
             ref={videoRef}
             src={getCleanVideoUrl(work.videoUrl) || '/assets/hero-reel.mp4'}
-            poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+            poster={getThumbnail()}
             loop
             muted={isMuted}
             playsInline

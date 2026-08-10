@@ -1200,15 +1200,56 @@
   ],
   "publicWorks": [
     {
-      "id": "work-2",
-      "title": "Enchanted Mist Romance | Karthik & Pooja",
+      "id": "work-muhurtham",
+      "title": "Grand Traditional Muhurtham Master Film",
+      "category": "Wedding Highlights",
+      "eventLocation": "Hindupur, Andhra Pradesh",
+      "eventYear": "2026",
+      "thumbnailUrl": "https://lh3.googleusercontent.com/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs",
+      "videoUrl": "https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link",
+      "videoSourceType": "google_drive",
+      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
+      "description": "Sacred Vedic muhurtham rituals, mangalashtak dialogue synchronization, and authentic gold silk color grading in DaVinci Resolve Studio.",
+      "softwareUsed": [
+        "DaVinci Resolve Studio",
+        "Premiere Pro",
+        "FabFilter Pro"
+      ],
+      "isFeatured": true,
+      "isPublished": true,
+      "sortOrder": 1,
+      "createdAt": "2026-08-10T12:00:00Z"
+    },
+    {
+      "id": "work-reception",
+      "title": "Grand Wedding Reception & Gala Night Highlights",
+      "category": "Wedding Highlights",
+      "eventLocation": "Bengaluru, Karnataka",
+      "eventYear": "2026",
+      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP",
+      "videoUrl": "https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link",
+      "videoSourceType": "google_drive",
+      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
+      "description": "High-energy reception celebrations, stage entry pacing, dynamic lighting restoration, and cinematic multi-cam edit.",
+      "softwareUsed": [
+        "Premiere Pro",
+        "DaVinci Resolve Studio"
+      ],
+      "isFeatured": true,
+      "isPublished": true,
+      "sortOrder": 2,
+      "createdAt": "2026-08-10T12:00:00Z"
+    },
+    {
+      "id": "work-prewedding",
+      "title": "Enchanted Mist Romance | Pre-Wedding Narrative",
       "category": "Pre-Wedding Video Editing",
       "eventLocation": "Ooty Hills, Nilgiris",
       "eventYear": "2026",
-      "thumbnailUrl": "/assets/kbk-logo.jpg",
+      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y",
       "videoUrl": "https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view?usp=share_link",
-      "videoSourceType": "direct_mp4",
-      "externalDestUrl": "https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view?usp=share_link",
+      "videoSourceType": "google_drive",
+      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
       "description": "Moody, slow-paced cinematic pre-wedding narrative in the pine forests of Ooty with custom color grading and warm acoustic melody.",
       "softwareUsed": [
         "DaVinci Resolve Studio",
@@ -1217,19 +1258,19 @@
       ],
       "isFeatured": true,
       "isPublished": true,
-      "sortOrder": 2,
+      "sortOrder": 3,
       "createdAt": "2026-08-10T12:00:00Z"
     },
     {
-      "id": "work-3",
+      "id": "work-haldi",
       "title": "Yellow Splash Festivity | Haldi & Sangeeth Blast",
       "category": "Haldi & Sangeeth Ceremonies",
       "eventLocation": "Hindupur, Andhra Pradesh",
       "eventYear": "2026",
-      "thumbnailUrl": "/assets/kbk-logo.jpg",
+      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn",
       "videoUrl": "https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view?usp=share_link",
-      "videoSourceType": "direct_mp4",
-      "externalDestUrl": "https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view?usp=share_link",
+      "videoSourceType": "google_drive",
+      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
       "description": "Ultra high-energy 120fps slow-motion water splash editing synced to electrifying folk beats and dance rhythms.",
       "softwareUsed": [
         "Premiere Pro",
@@ -1237,19 +1278,19 @@
       ],
       "isFeatured": true,
       "isPublished": true,
-      "sortOrder": 3,
+      "sortOrder": 4,
       "createdAt": "2026-08-10T12:00:00Z"
     },
     {
-      "id": "work-4",
-      "title": "Miracle of Motherhood | Ananya Maternity Story",
+      "id": "work-maternity",
+      "title": "Miracle of Motherhood | Maternity Visual Story",
       "category": "Maternity Shoot Videos",
       "eventLocation": "Nandi Hills Sunrise",
       "eventYear": "2025",
-      "thumbnailUrl": "/assets/kbk-logo.jpg",
+      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji",
       "videoUrl": "https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view?usp=share_link",
-      "videoSourceType": "direct_mp4",
-      "externalDestUrl": "https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view?usp=share_link",
+      "videoSourceType": "google_drive",
+      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
       "description": "Golden hour pastel aesthetic maternity visual keepsake celebrating the beauty of new parenthood.",
       "softwareUsed": [
         "DaVinci Resolve Studio",
@@ -1257,27 +1298,27 @@
       ],
       "isFeatured": false,
       "isPublished": true,
-      "sortOrder": 4,
+      "sortOrder": 5,
       "createdAt": "2026-08-10T12:00:00Z"
     },
     {
-      "id": "work-5",
-      "title": "Vedic Sanctity | Gruhapravesam Pooja & Walkthrough",
-      "category": "House Warming Ceremonies",
+      "id": "work-spot-editing",
+      "title": "On-Venue Spot Editing & Reception Projection Showcase",
+      "category": "Spot Editing Available",
       "eventLocation": "Anantapur, Andhra Pradesh",
       "eventYear": "2026",
-      "thumbnailUrl": "/assets/kbk-logo.jpg",
+      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q",
       "videoUrl": "https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/view?usp=share_link",
-      "videoSourceType": "direct_mp4",
-      "externalDestUrl": "https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/view?usp=share_link",
-      "description": "Sacred homam fire rituals captured with deep reverence alongside smooth interior architectural reveals.",
+      "videoSourceType": "google_drive",
+      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
+      "description": "Same-day on-venue live edit ingested in the morning and projected on large reception LED screens with instant teaser delivery.",
       "softwareUsed": [
         "Premiere Pro",
         "DaVinci Resolve"
       ],
       "isFeatured": false,
       "isPublished": true,
-      "sortOrder": 5,
+      "sortOrder": 6,
       "createdAt": "2026-08-10T12:00:00Z"
     }
   ],
@@ -1380,6 +1421,15 @@
     "contactClarificationMsg": "Hi Bharath Kumar, I was reviewing the pricing for your video editing services on KBK Film Studios and would love a custom quote/clarification for my upcoming event."
   },
   "auditLogs": [
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786387170428-mdul",
+      "timestamp": "2026-08-10T18:39:30.428Z"
+    },
     {
       "actorRole": "primary_owner",
       "actorName": "K S Indra Kumar",
@@ -2136,6 +2186,25 @@
       "expiresAt": 1786385961949,
       "verified": false,
       "createdAt": "2026-08-10T18:04:21.949Z"
+    },
+    {
+      "id": "otp-1786387064394",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "client_tracking",
+      "bookingRef": "KBK-2026-7235",
+      "expiresAt": 1786387964391,
+      "verified": false,
+      "createdAt": "2026-08-10T18:37:44.394Z"
+    },
+    {
+      "id": "otp-1786387152406",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786387752406,
+      "verified": false,
+      "createdAt": "2026-08-10T18:39:12.406Z"
     }
   ]
 }

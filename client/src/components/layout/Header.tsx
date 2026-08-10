@@ -31,11 +31,11 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo & Brand Identity */}
           <Link to="/" className="flex items-center gap-3.5 group">
-            <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full overflow-hidden border-2 border-gold p-0.5 shadow-gold transition-transform duration-300 group-hover:scale-105 bg-black">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-gold p-0.5 shadow-gold transition-transform duration-300 group-hover:scale-105 bg-black flex items-center justify-center">
               <img
                 src="/assets/kbk-logo.jpg"
                 alt="KBK Films Logo"
-                className="w-full h-full object-cover rounded-full"
+                className="w-full h-full object-contain rounded-full"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
                 }}

@@ -1646,31 +1646,44 @@ export const OwnerSpace: React.FC = () => {
                   type="text"
                   value={editingWork.title || ''}
                   onChange={(e) => setEditingWork({ ...editingWork, title: e.target.value })}
+                  placeholder="e.g. Grand Traditional Muhurtham Film"
                   required
-                  className="w-full px-4 py-2 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100"
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 placeholder:text-ivory-400/50"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-ivory-300">Category</label>
-                <input
-                  type="text"
+                <label className="font-semibold text-ivory-300">Category / Service Section</label>
+                <select
                   value={editingWork.category || 'Wedding Highlights'}
                   onChange={(e) => setEditingWork({ ...editingWork, category: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100"
-                />
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-medium"
+                >
+                  <option value="Wedding Highlights">Wedding Highlights</option>
+                  <option value="Pre-Wedding Video Editing">Pre-Wedding Video Editing</option>
+                  <option value="Haldi & Sangeeth Ceremonies">Haldi & Sangeeth Ceremonies</option>
+                  <option value="Maternity Shoot Videos">Maternity Shoot Videos</option>
+                  <option value="House Warming Ceremonies">House Warming Ceremonies</option>
+                  <option value="Spot Editing Available">Spot Editing Available</option>
+                </select>
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-ivory-300">Video Source URL (MP4)</label>
+                <label className="font-semibold text-ivory-300 flex items-center justify-between">
+                  <span>Video Stream URL (Google Drive / YouTube / MP4 Link)</span>
+                  <span className="text-[10px] text-gold font-normal">Auto-streams without buffer</span>
+                </label>
                 <input
                   type="text"
-                  value={editingWork.videoUrl || '/assets/hero-reel.mp4'}
+                  value={editingWork.videoUrl || ''}
                   onChange={(e) => setEditingWork({ ...editingWork, videoUrl: e.target.value })}
+                  placeholder="e.g. https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link"
                   required
-                  className="w-full px-4 py-2 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono"
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono placeholder:text-ivory-400/50"
                 />
+                <p className="text-[11px] text-ivory-400 font-light">
+                  Paste any public Google Drive file link, YouTube link, or direct MP4. It will play muted with seamless looping and zero buffering.
+                </p>
               </div>
 
               <div className="space-y-1.5">
@@ -1679,7 +1692,8 @@ export const OwnerSpace: React.FC = () => {
                   type="url"
                   value={editingWork.externalDestUrl || 'https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX'}
                   onChange={(e) => setEditingWork({ ...editingWork, externalDestUrl: e.target.value })}
-                  className="w-full px-4 py-2 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono"
+                  placeholder="https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX"
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono"
                 />
               </div>
 
@@ -1689,7 +1703,8 @@ export const OwnerSpace: React.FC = () => {
                   rows={3}
                   value={editingWork.description || ''}
                   onChange={(e) => setEditingWork({ ...editingWork, description: e.target.value })}
-                  className="w-full px-4 py-2 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100"
+                  placeholder="Details on color grading LUTs, sound restoration, and visual pacing..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100"
                 />
               </div>
             </div>
