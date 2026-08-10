@@ -95,7 +95,7 @@ export const TestimonialModal: React.FC<TestimonialModalProps> = ({
                 Service Handover Completed
               </span>
               <h3 className="font-serif text-xl font-bold text-ivory-100">
-                Share Your Experience with KBK Film Studios
+                Share Your Experience with KBK Films
               </h3>
               <p className="text-xs text-ivory-400">
                 Your review helps future couples and clients trust Kurudi Bharath Kumar's post-production artistry.

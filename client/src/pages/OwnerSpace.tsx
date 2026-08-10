@@ -66,6 +66,9 @@ export const OwnerSpace: React.FC = () => {
     'overview' | 'bookings' | 'pricing' | 'lifecycle' | 'deliveries' | 'works' | 'testimonials' | 'cms' | 'owners' | 'audit'
   >('overview');
 
+  const [bookingSubFilter, setBookingSubFilter] = useState<'pending' | 'accepted' | 'rejected'>('pending');
+  const [lifecycleSubFilter, setLifecycleSubFilter] = useState<'active' | 'completed'>('active');
+
   // Loaded Dashboard Data States
   const [metrics, setMetrics] = useState<any | null>(null);
   const [bookings, setBookings] = useState<BookingRequest[]>([]);
@@ -524,7 +527,7 @@ export const OwnerSpace: React.FC = () => {
                 { id: 'overview', label: 'Overview & KPIs', icon: BarChart3 },
                 { id: 'bookings', label: `Bookings (${bookings.filter(b => b.status === 'pending').length} New)`, icon: FileText },
                 { id: 'pricing', label: 'Service Pricing CMS', icon: DollarSign },
-                { id: 'lifecycle', label: 'Active Lifecycle (9 Stages)', icon: Layers },
+                { id: 'lifecycle', label: `Active Lifecycle (${projects.filter(p => p.currentStage !== 'testimonial_received').length})`, icon: Layers },
                 { id: 'deliveries', label: 'Client Delivery Locker', icon: Upload },
                 { id: 'works', label: 'Works Showcase', icon: Film },
                 { id: 'testimonials', label: 'Testimonials', icon: Sparkles },
@@ -641,103 +644,148 @@ export const OwnerSpace: React.FC = () => {
             {/* TAB 2: MANAGE BOOKINGS */}
             {activeTab === 'bookings' && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-serif text-xl font-bold text-ivory-100">
-                    Client Booking Inquiries & Quotation Management
-                  </h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-ivory-100">
+                      Client Booking Inquiries & Quotation Management
+                    </h3>
+                    <p className="text-xs text-ivory-400">
+                      Sync client requests, accept projects, and log declination reasons.
+                    </p>
+                  </div>
                   <span className="text-xs text-ivory-400">
                     Total: {bookings.length} Bookings
                   </span>
                 </div>
 
-                <div className="space-y-4">
-                  {bookings.map((booking) => (
-                    <div
-                      key={booking.id}
-                      className="p-6 rounded-2xl glass-panel border border-gold/20 space-y-4 hover:border-gold/40 transition-all"
+                {/* Sub-Filters */}
+                <div className="flex items-center gap-2 p-1 bg-surface-200/50 rounded-xl border border-surface-50 max-w-md">
+                  {[
+                    { id: 'pending', label: `Pending (${bookings.filter(b => b.status === 'pending').length})` },
+                    { id: 'accepted', label: `Accepted (${bookings.filter(b => b.status === 'accepted').length})` },
+                    { id: 'rejected', label: `Rejected (${bookings.filter(b => b.status === 'rejected').length})` },
+                  ].map((sub) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => setBookingSubFilter(sub.id as any)}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-semibold tracking-wider transition-all ${
+                        bookingSubFilter === sub.id
+                          ? 'bg-gold text-black shadow-gold-sm'
+                          : 'text-ivory-400 hover:text-white'
+                      }`}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-50 pb-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm font-bold text-gold">{booking.bookingRef}</span>
-                            <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                              booking.status === 'accepted' ? 'bg-accent-emerald/20 text-accent-emerald' : booking.status === 'rejected' ? 'bg-accent-crimson/20 text-accent-crimson' : 'bg-gold/20 text-gold'
-                            }`}>
-                              {booking.status}
-                            </span>
-                          </div>
-                          <h4 className="font-serif text-lg font-bold text-white mt-1">
-                            {booking.clientName} • <span className="text-ivory-300 font-normal">{booking.clientCity}</span>
-                          </h4>
-                          <p className="text-xs text-ivory-400">
-                            Phone: <a href={`tel:${booking.clientPhone}`} className="text-gold underline">{booking.clientPhone}</a> • Email: {booking.clientEmail}
-                          </p>
-                        </div>
-
-                        <div className="text-left sm:text-right">
-                          <span className="text-[11px] text-ivory-400 uppercase tracking-wider block">Service Quote:</span>
-                          <span className="font-serif text-xl font-bold text-gold">
-                            ₹{(booking.finalAmount || booking.quotedAmount).toLocaleString('en-IN')}
-                          </span>
-                          <button
-                            onClick={() => {
-                              setPriceRevisionBooking(booking);
-                              setNewPriceAmount(booking.finalAmount || booking.quotedAmount);
-                            }}
-                            className="text-[11px] text-gold/80 hover:text-gold underline block mt-0.5"
-                          >
-                            Revise Quote
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Booking Details Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-ivory-300 bg-surface-100/50 p-4 rounded-xl">
-                        <div>
-                          <span className="font-semibold text-white block">Service:</span>
-                          <span>{booking.serviceTitle}</span>
-                        </div>
-                        <div>
-                          <span className="font-semibold text-white block">Event Date:</span>
-                          <span>{booking.eventDate}</span>
-                        </div>
-                        <div>
-                          <span className="font-semibold text-white block">Footage Details:</span>
-                          <span>{booking.footageDetails || 'Not specified'}</span>
-                        </div>
-                      </div>
-
-                      {booking.customNotes && (
-                        <p className="text-xs text-ivory-300 italic">
-                          Notes: "{booking.customNotes}"
-                        </p>
-                      )}
-
-                      {/* Action Buttons */}
-                      {booking.status === 'pending' && (
-                        <div className="pt-2 flex flex-wrap gap-3">
-                          <button
-                            onClick={() => {
-                              setSelectedBookingForAction(booking);
-                              setActionQuoteAmount(booking.quotedAmount);
-                              setActionScheduleDate(booking.preferredDeliveryDate || '');
-                            }}
-                            className="px-5 py-2 rounded-xl bg-accent-emerald text-black font-bold text-xs uppercase tracking-wider hover:bg-accent-emerald/90 transition-all flex items-center gap-1.5"
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span>Accept & Schedule</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleRejectBooking(booking)}
-                            className="px-5 py-2 rounded-xl bg-accent-crimson/20 hover:bg-accent-crimson/30 text-accent-crimson border border-accent-crimson/40 font-semibold text-xs transition-all"
-                          >
-                            Decline Request
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                      {sub.label}
+                    </button>
                   ))}
+                </div>
+
+                <div className="space-y-4">
+                  {(() => {
+                    const filtered = bookings.filter(b => b.status === bookingSubFilter);
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="p-12 text-center rounded-3xl glass-panel border border-gold/15 space-y-2">
+                          <p className="text-sm text-ivory-400 italic">No {bookingSubFilter} bookings found.</p>
+                        </div>
+                      );
+                    }
+                    return filtered.map((booking) => (
+                      <div
+                        key={booking.id}
+                        className="p-6 rounded-2xl glass-panel border border-gold/20 space-y-4 hover:border-gold/40 transition-all animate-fadeIn"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-50 pb-4">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-sm font-bold text-gold">{booking.bookingRef}</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                                booking.status === 'accepted' ? 'bg-accent-emerald/20 text-accent-emerald' : booking.status === 'rejected' ? 'bg-accent-crimson/20 text-accent-crimson' : 'bg-gold/20 text-gold'
+                              }`}>
+                                {booking.status}
+                              </span>
+                            </div>
+                            <h4 className="font-serif text-lg font-bold text-white mt-1">
+                              {booking.clientName} • <span className="text-ivory-300 font-normal">{booking.clientCity}</span>
+                            </h4>
+                            <p className="text-xs text-ivory-400">
+                              Phone: <a href={`tel:${booking.clientPhone}`} className="text-gold underline">{booking.clientPhone}</a> • Email: {booking.clientEmail}
+                            </p>
+                          </div>
+
+                          <div className="text-left sm:text-right">
+                            <span className="text-[11px] text-ivory-400 uppercase tracking-wider block">Service Quote:</span>
+                            <span className="font-serif text-xl font-bold text-gold">
+                              ₹{(booking.finalAmount || booking.quotedAmount).toLocaleString('en-IN')}
+                            </span>
+                            {booking.status !== 'rejected' && (
+                              <button
+                                onClick={() => {
+                                  setPriceRevisionBooking(booking);
+                                  setNewPriceAmount(booking.finalAmount || booking.quotedAmount);
+                                }}
+                                className="text-[11px] text-gold/80 hover:text-gold underline block mt-0.5"
+                              >
+                                Revise Quote
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Booking Details Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-ivory-300 bg-surface-100/50 p-4 rounded-xl">
+                          <div>
+                            <span className="font-semibold text-white block">Service:</span>
+                            <span>{booking.serviceTitle}</span>
+                          </div>
+                          <div>
+                            <span className="font-semibold text-white block">Event Date:</span>
+                            <span>{booking.eventDate}</span>
+                          </div>
+                          <div>
+                            <span className="font-semibold text-white block">Footage Details:</span>
+                            <span>{booking.footageDetails || 'Not specified'}</span>
+                          </div>
+                        </div>
+
+                        {booking.customNotes && (
+                          <p className="text-xs text-ivory-300 italic">
+                            Notes: "{booking.customNotes}"
+                          </p>
+                        )}
+
+                        {booking.status === 'rejected' && booking.rejectionReason && (
+                          <div className="p-3 rounded-xl bg-accent-crimson/10 border border-accent-crimson/30 text-xs">
+                            <span className="text-[10px] text-ivory-400 font-bold block mb-1">DECLINATION REASON:</span>
+                            <p className="text-accent-crimson font-mono">{booking.rejectionReason}</p>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        {booking.status === 'pending' && (
+                          <div className="pt-2 flex flex-wrap gap-3">
+                            <button
+                              onClick={() => {
+                                setSelectedBookingForAction(booking);
+                                setActionQuoteAmount(booking.quotedAmount);
+                                setActionScheduleDate(booking.preferredDeliveryDate || '');
+                              }}
+                              className="px-5 py-2 rounded-xl bg-accent-emerald text-black font-bold text-xs uppercase tracking-wider hover:bg-accent-emerald/90 transition-all flex items-center gap-1.5"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span>Accept & Schedule</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleRejectBooking(booking)}
+                              className="px-5 py-2 rounded-xl bg-accent-crimson/20 hover:bg-accent-crimson/30 text-accent-crimson border border-accent-crimson/40 font-semibold text-xs transition-all"
+                            >
+                              Decline Request
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
             )}
@@ -814,83 +862,123 @@ export const OwnerSpace: React.FC = () => {
             {/* TAB 4: ACTIVE LIFECYCLE (9 STAGES) */}
             {activeTab === 'lifecycle' && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-serif text-xl font-bold text-ivory-100">
-                    Active Client Project Lifecycle Tracker (9 Stages)
-                  </h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-ivory-100">
+                      Client Project Lifecycle Tracker (9 Stages)
+                    </h3>
+                    <p className="text-xs text-ivory-400">
+                      Advance project stages, upload deliverables, and track progress.
+                    </p>
+                  </div>
                   <span className="text-xs text-ivory-400">
-                    {projects.length} Active Projects
+                    {projects.filter(p => p.currentStage !== 'testimonial_received').length} Active Projects
                   </span>
                 </div>
 
-                <div className="space-y-6">
-                  {projects.map((proj) => (
-                    <div
-                      key={proj.id}
-                      className="p-6 rounded-3xl glass-panel border border-gold/30 space-y-6"
+                {/* Sub-Filters */}
+                <div className="flex items-center gap-2 p-1 bg-surface-200/50 rounded-xl border border-surface-50 max-w-sm">
+                  {[
+                    { id: 'active', label: `Active Pipeline (${projects.filter(p => p.currentStage !== 'testimonial_received').length})` },
+                    { id: 'completed', label: `Completed & Archived (${projects.filter(p => p.currentStage === 'testimonial_received').length})` },
+                  ].map((sub) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => setLifecycleSubFilter(sub.id as any)}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold tracking-wider transition-all ${
+                        lifecycleSubFilter === sub.id
+                          ? 'bg-gold text-black shadow-gold-sm'
+                          : 'text-ivory-400 hover:text-white'
+                      }`}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-50 pb-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm font-bold text-gold">{proj.bookingRef}</span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-gold/15 text-gold text-[10px] font-bold uppercase">
-                              Stage: {proj.currentStage.replace(/_/g, ' ')}
-                            </span>
-                          </div>
-                          <h4 className="font-serif text-xl font-bold text-white mt-1">
-                            {proj.clientName} • {proj.serviceTitle}
-                          </h4>
-                          <p className="text-xs text-ivory-400">
-                            Target Delivery: {proj.estimatedDeliveryDate} • Tracking Token: <span className="font-mono text-gold">{proj.trackingToken}</span>
-                          </p>
-                        </div>
-
-                        {/* Quick Action to upload delivery */}
-                        <button
-                          onClick={() => {
-                            setDeliveryProject(proj);
-                            setDeliveryTitle(`${proj.clientName} 4K Master Video Highlight`);
-                            setDeliveryFileName(`${proj.bookingRef}_Master_4K.mp4`);
-                          }}
-                          className="px-4 py-2 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm flex items-center gap-1.5"
-                        >
-                          <Upload className="w-4 h-4" />
-                          <span>Deliver File to Locker</span>
-                        </button>
-                      </div>
-
-                      {/* Advance Stage Controls */}
-                      <div className="space-y-2">
-                        <span className="text-xs font-semibold text-ivory-300">
-                          Advance Project Stage:
-                        </span>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                          {[
-                            { key: 'accepted_scheduled', label: '2. Accepted & Scheduled' },
-                            { key: 'raw_footage_received', label: '3. Raw Footage Ingested' },
-                            { key: 'in_progress', label: '4. Rough Cut In Progress' },
-                            { key: 'color_grading_audio', label: '5. Color Grading & Sound' },
-                            { key: 'in_review', label: '6. In Client Review' },
-                            { key: 'service_completed', label: '7. Master Exported' },
-                            { key: 'files_delivered', label: '8. Delivered to Locker' },
-                            { key: 'testimonial_received', label: '9. Completed & Archived' },
-                          ].map((st) => (
-                            <button
-                              key={st.key}
-                              onClick={() => handleAdvanceStage(proj.id, st.key as any, st.label)}
-                              className={`p-2 rounded-xl text-[11px] font-semibold text-left border transition-all ${
-                                proj.currentStage === st.key
-                                  ? 'bg-gold text-black border-gold shadow-gold-sm'
-                                  : 'bg-surface-100 text-ivory-300 hover:bg-surface-50 border-surface-50'
-                              }`}
-                            >
-                              {st.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                      {sub.label}
+                    </button>
                   ))}
+                </div>
+
+                <div className="space-y-6">
+                  {(() => {
+                    const filtered = projects.filter((p) => {
+                      const isCompleted = p.currentStage === 'testimonial_received';
+                      return lifecycleSubFilter === 'completed' ? isCompleted : !isCompleted;
+                    });
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="p-12 text-center rounded-3xl glass-panel border border-gold/15 space-y-2">
+                          <p className="text-sm text-ivory-400 italic">No {lifecycleSubFilter === 'completed' ? 'completed & archived' : 'active pipeline'} projects found.</p>
+                        </div>
+                      );
+                    }
+                    return filtered.map((proj) => (
+                      <div
+                        key={proj.id}
+                        className="p-6 rounded-3xl glass-panel border border-gold/30 space-y-6 animate-fadeIn"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-50 pb-4">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-sm font-bold text-gold">{proj.bookingRef}</span>
+                              <span className="px-2.5 py-0.5 rounded-full bg-gold/15 text-gold text-[10px] font-bold uppercase">
+                                Stage: {proj.currentStage.replace(/_/g, ' ')}
+                              </span>
+                            </div>
+                            <h4 className="font-serif text-xl font-bold text-white mt-1">
+                              {proj.clientName} • {proj.serviceTitle}
+                            </h4>
+                            <p className="text-xs text-ivory-400">
+                              Target Delivery: {proj.estimatedDeliveryDate} • Tracking Token: <span className="font-mono text-gold">{proj.trackingToken}</span>
+                            </p>
+                          </div>
+
+                          {/* Quick Action to upload delivery */}
+                          {proj.currentStage !== 'testimonial_received' && (
+                            <button
+                              onClick={() => {
+                                setDeliveryProject(proj);
+                                setDeliveryTitle(`${proj.clientName} 4K Master Video Highlight`);
+                                setDeliveryFileName(`${proj.bookingRef}_Master_4K.mp4`);
+                              }}
+                              className="px-4 py-2 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm flex items-center gap-1.5"
+                            >
+                              <Upload className="w-4 h-4" />
+                              <span>Deliver File to Locker</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Advance Stage Controls */}
+                        <div className="space-y-2">
+                          <span className="text-xs font-semibold text-ivory-300">
+                            Advance Project Stage:
+                          </span>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                            {[
+                              { key: 'accepted_scheduled', label: '2. Accepted & Scheduled' },
+                              { key: 'raw_footage_received', label: '3. Raw Footage Ingested' },
+                              { key: 'in_progress', label: '4. Rough Cut In Progress' },
+                              { key: 'color_grading_audio', label: '5. Color Grading & Sound' },
+                              { key: 'in_review', label: '6. In Client Review' },
+                              { key: 'service_completed', label: '7. Master Exported' },
+                              { key: 'files_delivered', label: '8. Delivered to Locker' },
+                              { key: 'testimonial_received', label: '9. Completed & Archived' },
+                            ].map((st) => (
+                              <button
+                                key={st.key}
+                                onClick={() => handleAdvanceStage(proj.id, st.key as any, st.label)}
+                                className={`p-2 rounded-xl text-[11px] font-semibold text-left border transition-all ${
+                                  proj.currentStage === st.key
+                                    ? 'bg-gold text-black border-gold shadow-gold-sm'
+                                    : 'bg-surface-100 text-ivory-300 hover:bg-surface-50 border-surface-50'
+                                }`}
+                              >
+                                {st.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
             )}

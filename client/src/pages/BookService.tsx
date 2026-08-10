@@ -182,7 +182,7 @@ export const BookService: React.FC = () => {
                 {bookingSuccess.bookingRef}
               </h2>
               <p className="text-xs sm:text-sm text-ivory-300 max-w-lg mx-auto">
-                Thank you, <span className="text-white font-semibold">{fullName}</span>! Your project request for <span className="text-gold">{selectedService?.title}</span> has been registered into KBK Film Studios.
+                Thank you, <span className="text-white font-semibold">{fullName}</span>! Your project request for <span className="text-gold">{selectedService?.title}</span> has been registered into KBK Films.
               </p>
             </div>
 
@@ -585,7 +585,7 @@ export const BookService: React.FC = () => {
                         onClick={() => setIsTermsModalOpen(true)}
                         className="text-gold font-bold underline hover:text-gold-light"
                       >
-                        KBK Film Studios 10-Clause Terms & Conditions
+                        KBK Films 10-Clause Terms & Conditions
                       </button>
                       <span> including excluded expenses, revision limits, and data isolation policies.</span>
                     </div>

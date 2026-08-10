@@ -335,7 +335,8 @@ const INITIAL_PUBLIC_WORKS: PublicWork[] = [
     softwareUsed: ['DaVinci Resolve Studio', 'Premiere Pro'],
     isFeatured: true,
     isPublished: true,
-    sortOrder: 1
+    sortOrder: 1,
+    createdAt: '2026-08-10T12:00:00Z'
   }
 ];
 
@@ -427,8 +428,8 @@ const INITIAL_OWNERS: Owner[] = [
     name: 'Kurudi Bharath Kumar',
     phone: '9346227894',
     email: 'kbkfilms.official@gmail.com',
-    role: 'primary_owner',
-    permissions: ['all', 'manage_owners', 'manage_pricing', 'manage_cms', 'manage_deliveries'],
+    role: 'co_owner',
+    permissions: ['manage_bookings', 'manage_lifecycle', 'manage_deliveries', 'manage_works', 'manage_pricing', 'manage_cms'],
     isActive: true,
     createdAt: '2026-01-01T00:00:00Z'
   },

@@ -162,7 +162,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Why Choose KBK Film Studios (Competitive Edge) */}
+      {/* 4. Why Choose KBK Films (Competitive Edge) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="p-8 sm:p-12 rounded-3xl glass-panel gold-border-glow space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-2">
@@ -234,7 +234,7 @@ export const Home: React.FC = () => {
               <Star className="w-3.5 h-3.5 fill-gold" /> Verified Client Praise
             </span>
             <h2 className="font-serif text-2xl sm:text-4xl font-bold text-ivory-100">
-              What Clients Say About KBK Film Studios
+              What Clients Say About KBK Films
             </h2>
           </div>
 
@@ -288,7 +288,7 @@ export const Home: React.FC = () => {
           </span>
 
           <h2 className="font-serif text-3xl sm:text-5xl font-bold text-ivory-100 max-w-3xl mx-auto leading-tight">
-            Reserve Your Post-Production Slot with KBK Film Studios
+            Reserve Your Post-Production Slot with KBK Films
           </h2>
 
           <p className="text-xs sm:text-base text-ivory-300 max-w-2xl mx-auto font-light leading-relaxed">

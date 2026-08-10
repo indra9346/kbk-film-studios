@@ -20,7 +20,7 @@ export const Footer: React.FC = () => {
                 <img src="/assets/kbk-logo.jpg" alt="KBK Logo" className="w-full h-full object-cover" />
               </div>
               <div>
-                <h4 className="font-serif font-bold text-base text-gold tracking-wider uppercase">KBK Film Studios</h4>
+                <h4 className="font-serif font-bold text-base text-gold tracking-wider uppercase">KBK Films</h4>
                 <p className="text-[11px] text-ivory-400">Post-Production & Color Science</p>
               </div>
             </div>
@@ -144,7 +144,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Bar & Discreet Owner Access */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ivory-400">
-          <p>© {new Date().getFullYear()} KBK Film Studios. All rights reserved. Kurudi Bharath Kumar, Hindupur.</p>
+          <p>© {new Date().getFullYear()} KBK Films. All rights reserved. Kurudi Bharath Kumar, Hindupur.</p>
 
           <div className="flex items-center gap-6">
             <button

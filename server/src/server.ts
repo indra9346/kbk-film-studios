@@ -56,11 +56,22 @@ const requireOwnerAuth = (req: AuthRequest, res: Response, next: NextFunction) =
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
-    if (!decoded || (decoded.role !== 'primary_owner' && decoded.role !== 'co_owner' && decoded.role !== 'editor')) {
-      res.status(403).json({ error: 'Forbidden: Valid owner privileges required' });
+    if (!decoded) {
+      res.status(403).json({ error: 'Forbidden: Invalid owner token payload' });
       return;
     }
-    req.owner = decoded;
+
+    // Verify owner still exists and is active in database
+    const ownerRecord = db.getOwners().find(
+      o => o.isActive && (o.phone === decoded.phone || o.email.toLowerCase() === decoded.email.toLowerCase())
+    );
+
+    if (!ownerRecord) {
+      res.status(403).json({ error: 'Forbidden: Owner account is deactivated or disconnected.' });
+      return;
+    }
+
+    req.owner = ownerRecord;
     next();
   } catch (err) {
     res.status(401).json({ error: 'Invalid or expired owner session token' });
@@ -828,7 +839,7 @@ app.patch('/api/owner/bookings/:id/status', requireOwnerAuth, (req: AuthRequest,
             id: `msg-${Date.now()}`,
             sender: 'owner',
             senderName: req.owner?.name || 'Kurudi Bharath Kumar',
-            text: `Welcome to KBK Film Studios! We have accepted your booking for ${booking.serviceTitle}. We will begin processing upon raw footage receipt.`,
+            text: `Welcome to KBK Films! We have accepted your booking for ${booking.serviceTitle}. We will begin processing upon raw footage receipt.`,
             timestamp: new Date().toISOString()
           }
         ],
@@ -1267,8 +1278,8 @@ app.get('/api/owner/audit-logs', requireOwnerAuth, (req: AuthRequest, res: Respo
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);
-  console.log(`🎬 KBK Film Studios Backend API Running on Port ${PORT}`);
-  console.log(`🚀 Primary Owner: Kurudi Bharath Kumar (9346227894)`);
+  console.log(`🎬 KBK Films Backend API Running on Port ${PORT}`);
+  console.log(`🚀 Primary Owner: K S Indra Kumar (9346476951)`);
   console.log(`🔒 Client Isolation & Passwordless OTP Service Active`);
   console.log(`====================================================`);
 });

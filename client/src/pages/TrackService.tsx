@@ -186,10 +186,11 @@ export const TrackService: React.FC = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={fetchClientData}
-                className="p-2.5 rounded-xl bg-surface-100 hover:bg-surface-50 text-ivory-300 hover:text-gold border border-gold/20 transition-all"
+                disabled={dataLoading}
+                className="p-2.5 rounded-xl bg-surface-100 hover:bg-surface-50 text-ivory-300 hover:text-gold border border-gold/20 transition-all disabled:opacity-50"
                 title="Refresh Status"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className={`w-4 h-4 ${dataLoading ? 'animate-spin text-gold' : ''}`} />
               </button>
               <button
                 onClick={clientLogout}
@@ -481,13 +482,27 @@ export const TrackService: React.FC = () => {
         ) : (
           /* 2. AUTHENTICATED CLIENT DASHBOARD */
           <div className="space-y-10 animate-fadeIn">
+            {dataError && (
+              <div className="p-4 rounded-2xl bg-accent-crimson/15 text-accent-crimson border border-accent-crimson/30 text-xs flex items-center gap-2 animate-fadeIn">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{dataError}</span>
+              </div>
+            )}
+
             {/* Overview Summary Card */}
             {booking && (
               <div className="p-6 sm:p-8 rounded-3xl glass-panel gold-border-glow grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-2 space-y-2">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/15 text-gold text-xs font-bold uppercase tracking-wider border border-gold/30">
+                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
+                    booking.status === 'rejected'
+                      ? 'bg-accent-crimson/15 text-accent-crimson border-accent-crimson/30'
+                      : booking.status === 'pending'
+                      ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                      : 'bg-gold/15 text-gold border-gold/30'
+                  }`}>
                     <Film className="w-3.5 h-3.5" />
                     <span>{booking.serviceTitle}</span>
+                    <span className="text-[10px] opacity-75">• {booking.status.toUpperCase()}</span>
                   </div>
                   <h2 className="font-serif text-2xl sm:text-3xl font-bold text-ivory-100">
                     {booking.clientName}
@@ -514,8 +529,8 @@ export const TrackService: React.FC = () => {
                     <span className="text-[11px] uppercase tracking-wider text-ivory-400">
                       Estimated Delivery:
                     </span>
-                    <div className="font-serif text-lg font-bold text-white">
-                      {project?.estimatedDeliveryDate || booking.preferredDeliveryDate || 'In Schedule'}
+                    <div className={`font-serif text-lg font-bold ${booking.status === 'rejected' ? 'text-accent-crimson' : 'text-white'}`}>
+                      {booking.status === 'rejected' ? 'Declined' : (project?.estimatedDeliveryDate || booking.preferredDeliveryDate || 'In Schedule')}
                     </div>
                   </div>
 
@@ -532,8 +547,58 @@ export const TrackService: React.FC = () => {
               </div>
             )}
 
-            {/* 3. Interactive 9-Stage Visual Lifecycle Progress */}
-            {project && (
+            {/* If Booking is Rejected */}
+            {booking && booking.status === 'rejected' && (
+              <div className="p-6 sm:p-8 rounded-3xl bg-accent-crimson/10 border border-accent-crimson/35 shadow-2xl space-y-5 animate-fadeIn">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-accent-crimson/20 text-accent-crimson border border-accent-crimson/40">
+                    <AlertCircle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-lg font-bold text-white uppercase tracking-wider">
+                      Booking Request Declined
+                    </h3>
+                    <p className="text-xs text-ivory-400">
+                      This service request has been rejected by Kurudi Bharath Kumar.
+                    </p>
+                  </div>
+                </div>
+                {booking.rejectionReason && (
+                  <div className="p-4 rounded-xl bg-surface-200 border border-surface-55">
+                    <span className="text-[10px] text-ivory-400 font-semibold block mb-1">DECLINATION REASON:</span>
+                    <p className="text-xs font-mono text-accent-crimson leading-relaxed">{booking.rejectionReason}</p>
+                  </div>
+                )}
+                <p className="text-xs text-ivory-300">
+                  If you have any questions or would like to discuss adjustments to your project footage or timeline, please contact the studio directly via WhatsApp.
+                </p>
+              </div>
+            )}
+
+            {/* If Booking is Pending */}
+            {booking && booking.status === 'pending' && (
+              <div className="p-6 sm:p-8 rounded-3xl bg-amber-500/10 border border-amber-500/35 shadow-2xl space-y-4 animate-fadeIn">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                    <Clock className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-lg font-bold text-white uppercase tracking-wider">
+                      Booking Pending Review
+                    </h3>
+                    <p className="text-xs text-ivory-400">
+                      Our studio is currently verifying your event request and editing requirements.
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-ivory-300">
+                  Once Kurudi Bharath Kumar approves this booking, your visual timeline tracker and private delivery locker will immediately unlock on this portal.
+                </p>
+              </div>
+            )}
+
+            {/* 3. Interactive 9-Stage Visual Lifecycle Progress (Only if Accepted) */}
+            {booking && booking.status === 'accepted' && project && (
               <div className="p-6 sm:p-8 rounded-3xl glass-panel border border-gold/30 shadow-xl space-y-6">
                 <ServiceTimeline
                   currentStage={project.currentStage}
@@ -543,17 +608,19 @@ export const TrackService: React.FC = () => {
               </div>
             )}
 
-            {/* 4. Private Media Deliverables Locker (Data Isolation) */}
-            <div className="p-6 sm:p-8 rounded-3xl glass-panel border border-gold/30 shadow-xl space-y-6">
-              <PrivateMediaLocker
-                deliveries={deliveries}
-                clientName={booking?.clientName || 'Client'}
-                bookingRef={booking?.bookingRef || 'KBK'}
-              />
-            </div>
+            {/* 4. Private Media Deliverables Locker (Only if Accepted) */}
+            {booking && booking.status === 'accepted' && (
+              <div className="p-6 sm:p-8 rounded-3xl glass-panel border border-gold/30 shadow-xl space-y-6">
+                <PrivateMediaLocker
+                  deliveries={deliveries}
+                  clientName={booking.clientName}
+                  bookingRef={booking.bookingRef}
+                />
+              </div>
+            )}
 
-            {/* 5. Direct Studio Messages */}
-            {project && (
+            {/* 5. Direct Studio Messages (Only if Accepted) */}
+            {booking && booking.status === 'accepted' && project && (
               <div className="p-6 sm:p-8 rounded-3xl glass-panel border border-gold/20 shadow-xl space-y-6">
                 <div className="flex items-center gap-3 border-b border-surface-50 pb-4">
                   <div className="p-2.5 rounded-xl bg-gold/15 text-gold border border-gold/30">

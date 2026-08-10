@@ -31,25 +31,24 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo & Brand Identity */}
           <Link to="/" className="flex items-center gap-3.5 group">
-            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-gold/60 p-0.5 shadow-gold-sm transition-transform duration-300 group-hover:scale-105">
+            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-gold/70 p-0.5 shadow-gold transition-transform duration-300 group-hover:scale-105 bg-black">
               <img
                 src="/assets/kbk-logo.jpg"
-                alt="KBK Film Studios Logo"
+                alt="KBK Films Logo"
                 className="w-full h-full object-cover rounded-full"
                 onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
+                  (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
                 }}
               />
-              <div className="absolute inset-0 bg-gold/10 pointer-events-none"></div>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-serif text-lg sm:text-xl font-bold tracking-wider gold-gradient-text uppercase">
-                  KBK Film Studios
+                <span className="font-serif text-xl sm:text-2xl font-bold tracking-wider gold-gradient-text uppercase">
+                  KBK Films
                 </span>
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-gold animate-ping"></span>
               </div>
-              <p className="text-[11px] text-ivory-400 uppercase tracking-widest font-medium">
+              <p className="text-[10px] text-ivory-400 uppercase tracking-widest font-medium">
                 Kurudi Bharath Kumar • Hindupur
               </p>
             </div>

@@ -17,7 +17,7 @@ export const PricingClarificationModal: React.FC = () => {
   const service = clarificationServiceTitle || 'Custom Video Editing';
 
   const whatsappMessage = encodeURIComponent(
-    `Hi Bharath Kumar, I am reviewing the pricing for "${service}" on KBK Film Studios and would like some quick clarification/custom quote for my event raw footage.`
+    `Hi Bharath Kumar, I am reviewing the pricing for "${service}" on KBK Films and would like some quick clarification/custom quote for my event raw footage.`
   );
 
   return (

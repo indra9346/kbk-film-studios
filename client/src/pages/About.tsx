@@ -36,11 +36,11 @@ export const About: React.FC = () => {
             <div className="relative rounded-3xl overflow-hidden glass-panel border border-gold/40 shadow-2xl p-3">
               <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-surface-300 relative">
                 <img
-                  src="/assets/kbk-logo.jpg"
+                  src="/assets/founder.jpg"
                   alt="Kurudi Bharath Kumar"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-top"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent"></div>
 
                 <div className="absolute bottom-6 left-6 right-6 space-y-1">
                   <span className="px-2.5 py-0.5 rounded bg-gold text-black text-[10px] uppercase font-extrabold tracking-widest">
@@ -50,7 +50,7 @@ export const About: React.FC = () => {
                     Kurudi Bharath Kumar
                   </h3>
                   <p className="text-xs text-ivory-300 font-light">
-                    Founder, KBK Film Studios • Hindupur, AP
+                    Founder, KBK Films • Hindupur, AP
                   </p>
                 </div>
               </div>
@@ -85,7 +85,7 @@ export const About: React.FC = () => {
             </p>
 
             <p className="text-xs sm:text-sm text-ivory-300 leading-relaxed font-light">
-              Every celebration holds a heartbeat—the anxious smile before the Muhurtham, the joyous tears during the Kanyadanam, the electric energy of the Sangeeth floor, and the quiet blessings of elders. At KBK Film Studios, we believe post-production is not simply joining clips; it is composing a cinematic symphony where sound, color, and pacing tell your story forever.
+              Every celebration holds a heartbeat—the anxious smile before the Muhurtham, the joyous tears during the Kanyadanam, the electric energy of the Sangeeth floor, and the quiet blessings of elders. At KBK Films, we believe post-production is not simply joining clips; it is composing a cinematic symphony where sound, color, and pacing tell your story forever.
             </p>
 
             {/* Quick CTAs */}

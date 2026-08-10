@@ -16,7 +16,7 @@ export const TermsModal: React.FC = () => {
     'Revisions are handled according to the agreed service scope. Additional revisions or changes outside the agreed scope may require an additional charge.',
     'The client confirms they have permission to provide all photos, videos, music references, logos, and other materials submitted for the project.',
     'Private delivered files are available through the client portal for the selected access period. Clients should download and safely back up their files.',
-    'KBK Film Studios may display completed work publicly only after receiving client approval.',
+    'KBK Films may display completed work publicly only after receiving client approval.',
     'By submitting this request, the client agrees to these terms.'
   ];
 
@@ -34,7 +34,7 @@ export const TermsModal: React.FC = () => {
                 Terms & Conditions of Service
               </h3>
               <p className="text-xs text-ivory-400">
-                KBK Film Studios • Standard Post-Production Agreement
+                KBK Films • Standard Post-Production Agreement
               </p>
             </div>
           </div>

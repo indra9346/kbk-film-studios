@@ -30,7 +30,7 @@ export const Testimonials: React.FC = () => {
           What Our Clients Say
         </h1>
         <p className="text-xs sm:text-sm text-ivory-300 max-w-2xl mx-auto font-light">
-          Real words and video testimonials from couples, families, and creators who trusted KBK Film Studios for their post-production needs.
+          Real words and video testimonials from couples, families, and creators who trusted KBK Films for their post-production needs.
         </p>
 
         {/* Category Filters */}
