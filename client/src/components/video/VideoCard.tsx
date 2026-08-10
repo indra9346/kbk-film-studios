@@ -8,13 +8,24 @@ interface VideoCardProps {
   onSelect: (work: PublicWork) => void;
 }
 
-const getCleanVideoUrl = (url: string): string => {
-  if (!url) return '';
+export const getVideoType = (url: string) => {
+  if (!url) return { type: 'unknown', id: '' };
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/);
+    return { type: 'youtube', id: (match && match[1]) || '' };
+  }
   if (url.includes('drive.google.com')) {
     const match = url.match(/\/d\/([^/]+)/) || url.match(/id=([^&]+)/);
-    if (match && match[1]) {
-      return `https://drive.google.com/uc?export=download&id=${match[1]}`;
-    }
+    return { type: 'google-drive', id: (match && match[1]) || '' };
+  }
+  return { type: 'direct', id: url };
+};
+
+const getCleanVideoUrl = (url: string): string => {
+  if (!url) return '';
+  const media = getVideoType(url);
+  if (media.type === 'google-drive') {
+    return `https://drive.google.com/uc?export=download&id=${media.id}`;
   }
   return url;
 };
@@ -26,8 +37,10 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
   const { activePlayingVideoId, setActivePlayingVideoId } = useStudio();
 
   const isCurrentActive = activePlayingVideoId === work.id;
+  const media = getVideoType(work.videoUrl);
 
   useEffect(() => {
+    if (media.type !== 'direct') return;
     const video = videoRef.current;
     if (!video) return;
 
@@ -36,7 +49,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
     } else {
       video.pause();
     }
-  }, [isCurrentActive]);
+  }, [isCurrentActive, media.type]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -49,9 +62,12 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
 
   const toggleSound = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!videoRef.current) return;
-    videoRef.current.muted = !videoRef.current.muted;
-    setIsMuted(videoRef.current.muted);
+    if (media.type === 'direct' && videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    } else {
+      setIsMuted(!isMuted);
+    }
     if (!isCurrentActive) {
       setActivePlayingVideoId(work.id);
     }
@@ -66,16 +82,34 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
     >
       {/* Video Container (16:9 Aspect Ratio) */}
       <div className="relative aspect-video w-full overflow-hidden bg-surface-300">
-        {/* Direct Video or Poster Thumbnail */}
-        <video
-          ref={videoRef}
-          src={getCleanVideoUrl(work.videoUrl) || '/assets/hero-reel.mp4'}
-          poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
-          loop
-          muted={isMuted}
-          playsInline
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-        />
+        {/* Direct Video or YouTube/Drive Embeds */}
+        {isHovered && media.type === 'youtube' ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0`}
+            title={work.title}
+            className="w-full h-full object-cover border-0"
+            allow="autoplay; encrypted-media"
+            frameBorder="0"
+          />
+        ) : isHovered && media.type === 'google-drive' ? (
+          <iframe
+            src={`https://drive.google.com/file/d/${media.id}/preview`}
+            title={work.title}
+            className="w-full h-full object-cover border-0 scale-105"
+            allow="autoplay"
+            frameBorder="0"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            src={getCleanVideoUrl(work.videoUrl) || '/assets/hero-reel.mp4'}
+            poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+            loop
+            muted={isMuted}
+            playsInline
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        )}
 
         {/* Video Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-surface-300 via-transparent to-black/30 pointer-events-none"></div>

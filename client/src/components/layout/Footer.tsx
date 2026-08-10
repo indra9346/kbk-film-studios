@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
           {/* Column 1: Studio Identity & Credentials */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border border-gold/50 overflow-hidden shadow-gold-sm">
+              <div className="w-12 h-12 rounded-full border border-gold overflow-hidden shadow-gold-sm">
                 <img src="/assets/kbk-logo.jpg" alt="KBK Logo" className="w-full h-full object-cover" />
               </div>
               <div>

@@ -31,7 +31,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo & Brand Identity */}
           <Link to="/" className="flex items-center gap-3.5 group">
-            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-gold/70 p-0.5 shadow-gold transition-transform duration-300 group-hover:scale-105 bg-black">
+            <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full overflow-hidden border-2 border-gold p-0.5 shadow-gold transition-transform duration-300 group-hover:scale-105 bg-black">
               <img
                 src="/assets/kbk-logo.jpg"
                 alt="KBK Films Logo"

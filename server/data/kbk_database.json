@@ -1206,9 +1206,9 @@
       "eventLocation": "Ooty Hills, Nilgiris",
       "eventYear": "2026",
       "thumbnailUrl": "/assets/kbk-logo.jpg",
-      "videoUrl": "/assets/hero-reel.mp4",
+      "videoUrl": "https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view?usp=share_link",
       "videoSourceType": "direct_mp4",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
+      "externalDestUrl": "https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view?usp=share_link",
       "description": "Moody, slow-paced cinematic pre-wedding narrative in the pine forests of Ooty with custom color grading and warm acoustic melody.",
       "softwareUsed": [
         "DaVinci Resolve Studio",
@@ -1217,7 +1217,8 @@
       ],
       "isFeatured": true,
       "isPublished": true,
-      "sortOrder": 2
+      "sortOrder": 2,
+      "createdAt": "2026-08-10T12:00:00Z"
     },
     {
       "id": "work-3",
@@ -1226,9 +1227,9 @@
       "eventLocation": "Hindupur, Andhra Pradesh",
       "eventYear": "2026",
       "thumbnailUrl": "/assets/kbk-logo.jpg",
-      "videoUrl": "/assets/hero-reel.mp4",
+      "videoUrl": "https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view?usp=share_link",
       "videoSourceType": "direct_mp4",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
+      "externalDestUrl": "https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view?usp=share_link",
       "description": "Ultra high-energy 120fps slow-motion water splash editing synced to electrifying folk beats and dance rhythms.",
       "softwareUsed": [
         "Premiere Pro",
@@ -1236,7 +1237,8 @@
       ],
       "isFeatured": true,
       "isPublished": true,
-      "sortOrder": 3
+      "sortOrder": 3,
+      "createdAt": "2026-08-10T12:00:00Z"
     },
     {
       "id": "work-4",
@@ -1245,9 +1247,9 @@
       "eventLocation": "Nandi Hills Sunrise",
       "eventYear": "2025",
       "thumbnailUrl": "/assets/kbk-logo.jpg",
-      "videoUrl": "/assets/hero-reel.mp4",
+      "videoUrl": "https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view?usp=share_link",
       "videoSourceType": "direct_mp4",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
+      "externalDestUrl": "https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view?usp=share_link",
       "description": "Golden hour pastel aesthetic maternity visual keepsake celebrating the beauty of new parenthood.",
       "softwareUsed": [
         "DaVinci Resolve Studio",
@@ -1255,7 +1257,8 @@
       ],
       "isFeatured": false,
       "isPublished": true,
-      "sortOrder": 4
+      "sortOrder": 4,
+      "createdAt": "2026-08-10T12:00:00Z"
     },
     {
       "id": "work-5",
@@ -1264,9 +1267,9 @@
       "eventLocation": "Anantapur, Andhra Pradesh",
       "eventYear": "2026",
       "thumbnailUrl": "/assets/kbk-logo.jpg",
-      "videoUrl": "/assets/hero-reel.mp4",
+      "videoUrl": "https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/view?usp=share_link",
       "videoSourceType": "direct_mp4",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
+      "externalDestUrl": "https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/view?usp=share_link",
       "description": "Sacred homam fire rituals captured with deep reverence alongside smooth interior architectural reveals.",
       "softwareUsed": [
         "Premiere Pro",
@@ -1274,7 +1277,8 @@
       ],
       "isFeatured": false,
       "isPublished": true,
-      "sortOrder": 5
+      "sortOrder": 5,
+      "createdAt": "2026-08-10T12:00:00Z"
     }
   ],
   "testimonials": [

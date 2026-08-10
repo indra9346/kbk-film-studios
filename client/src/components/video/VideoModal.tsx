@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { X, ExternalLink, Calendar, MapPin, Layers, Film, Sparkles, CheckCircle2 } from 'lucide-react';
 import { PublicWork } from '../../types';
+import { getVideoType } from './VideoCard';
 
 interface VideoModalProps {
   work: PublicWork | null;
@@ -41,36 +42,43 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
 
         {/* Video Player Section */}
         <div className="relative aspect-video w-full bg-black flex flex-col items-center justify-center">
-          {work.videoUrl && work.videoUrl.includes('drive.google.com') ? (
-            /* For Google Drive videos, raw HTML5 tags may block it due to CORS/auth. Show play instructions */
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-surface-300 text-center space-y-4">
-              <Film className="w-12 h-12 text-gold animate-pulse" />
-              <div className="space-y-1">
-                <h4 className="font-serif text-base font-bold text-white">Google Drive Cinematic Film</h4>
-                <p className="text-xs text-ivory-400 max-w-md">
-                  This master cut is stored securely on Google Drive. Click the button below to stream or download it directly at high speed.
-                </p>
-              </div>
-              <a
-                href={work.videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm inline-flex items-center gap-1.5 transition-all"
-              >
-                <span>Play Master Film on Google Drive</span>
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
-          ) : (
-            <video
-              ref={videoRef}
-              src={work.videoUrl || '/assets/hero-reel.mp4'}
-              controls
-              autoPlay
-              playsInline
-              className="w-full h-full object-contain"
-            />
-          )}
+          {(() => {
+            const media = getVideoType(work.videoUrl);
+            if (media.type === 'youtube') {
+              return (
+                <iframe
+                  src={`https://www.youtube.com/embed/${media.id}?autoplay=1&rel=0`}
+                  title={work.title}
+                  className="w-full h-full object-contain border-0"
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  frameBorder="0"
+                />
+              );
+            }
+            if (media.type === 'google-drive') {
+              return (
+                <iframe
+                  src={`https://drive.google.com/file/d/${media.id}/preview`}
+                  title={work.title}
+                  className="w-full h-full object-contain border-0"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                  frameBorder="0"
+                />
+              );
+            }
+            return (
+              <video
+                ref={videoRef}
+                src={work.videoUrl || '/assets/hero-reel.mp4'}
+                controls
+                autoPlay
+                playsInline
+                className="w-full h-full object-contain"
+              />
+            );
+          })()}
         </div>
 
         {/* Details & Creative Breakdown */}
