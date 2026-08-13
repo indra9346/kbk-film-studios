@@ -1,24 +1,9 @@
 {
   "owners": [
     {
-      "id": "owner-2",
-      "name": "KBK Studio Lead Editor",
-      "phone": "9845012345",
-      "email": "editor@kbkfilms.com",
-      "role": "co_owner",
-      "permissions": [
-        "manage_bookings",
-        "manage_lifecycle",
-        "manage_deliveries",
-        "manage_works"
-      ],
-      "isActive": true,
-      "createdAt": "2026-02-01T00:00:00Z"
-    },
-    {
       "id": "owner-indra",
       "name": "K S Indra Kumar",
-      "phone": "9346476951",
+      "phone": "09346476951",
       "email": "ik9893344@gmail.com",
       "role": "primary_owner",
       "permissions": [
@@ -32,8 +17,8 @@
       "createdAt": "2026-01-01T00:00:00Z"
     },
     {
-      "id": "owner-1",
-      "name": "Kurudi Bharath Kumar",
+      "id": "owner-1786603137015",
+      "name": "Kuridi Bharath Kumar",
       "phone": "9346227894",
       "email": "kbkfilms.official@gmail.com",
       "role": "co_owner",
@@ -46,7 +31,7 @@
         "manage_cms"
       ],
       "isActive": true,
-      "createdAt": "2026-01-01T00:00:00Z"
+      "createdAt": "2026-08-13T06:38:57.015Z"
     }
   ],
   "clients": [
@@ -353,716 +338,9 @@
       "badge": "Upcoming Studio Lab"
     }
   ],
-  "bookingRequests": [
-    {
-      "id": "book-1786373835535",
-      "bookingRef": "KBK-2026-8522",
-      "clientId": "client-1786354592911",
-      "clientName": "indra",
-      "clientPhone": "9346476951",
-      "clientEmail": "email1@gmail.com",
-      "clientCity": "ANANTAPUR",
-      "serviceId": "srv-6",
-      "serviceTitle": "House Warming Ceremonies (Gruhapravesam)",
-      "eventDate": "2026-09-02",
-      "preferredDeliveryDate": "",
-      "budgetRange": "Starting from ₹10,999",
-      "footageDetails": "50k",
-      "referenceLinks": "",
-      "customNotes": "traditional",
-      "agreedTerms": true,
-      "priceSnapshot": {
-        "serviceId": "srv-6",
-        "serviceTitle": "House Warming Ceremonies (Gruhapravesam)",
-        "priceType": "starting_from",
-        "basePrice": 10999,
-        "currency": "INR",
-        "priceLabel": "Starting from ₹10,999",
-        "inclusions": [
-          "Complete Ceremony Highlight Film (4-7 mins)",
-          "Pooja & Homam Sacred Mantras Audio Clean-up",
-          "Interior Architectural Cinematic Color Grading",
-          "Family Welcome Montages"
-        ],
-        "exclusions": [
-          "Camera recording crew and drone pilot on location",
-          "Travel & food arrangements"
-        ],
-        "turnaroundDays": 4,
-        "snapshotDate": "2026-08-10T14:57:15.535Z"
-      },
-      "quotedAmount": 10999,
-      "finalAmount": 10999,
-      "status": "accepted",
-      "createdAt": "2026-08-10T14:57:15.535Z"
-    },
-    {
-      "id": "book-1786356554818",
-      "bookingRef": "KBK-2026-7235",
-      "clientId": "client-1786354592911",
-      "clientName": "KUMAR",
-      "clientPhone": "9346476951",
-      "clientEmail": "ksindrakumar59@gmail.com",
-      "clientCity": "Chikkaballapur",
-      "serviceId": "srv-1",
-      "serviceTitle": "Pre-Wedding Video Editing",
-      "eventDate": "23242-03-22",
-      "preferredDeliveryDate": "",
-      "budgetRange": "Starting from ₹14,999",
-      "footageDetails": "",
-      "referenceLinks": "",
-      "customNotes": "need bestmcdsds",
-      "agreedTerms": true,
-      "priceSnapshot": {
-        "serviceId": "srv-1",
-        "serviceTitle": "Pre-Wedding Video Editing",
-        "priceType": "starting_from",
-        "basePrice": 14999,
-        "currency": "INR",
-        "priceLabel": "Starting from ₹14,999",
-        "inclusions": [
-          "Full 4K/1080p Cinematic Master Film (3-5 mins)",
-          "1x Vertical 9:16 Instagram Reel Teaser (60s)",
-          "Hollywood Grade Film Tone & Color Palette",
-          "Dialogue Clean-up & Ambient Audio Mastering",
-          "Licensed Background Music Sync",
-          "2 Rounds of Precision Revisions"
-        ],
-        "exclusions": [
-          "Raw footage shooting / camera equipment on location",
-          "Travel, food, lodging for shoot crew",
-          "Drone license permits or venue access charges"
-        ],
-        "turnaroundDays": 5,
-        "snapshotDate": "2026-08-10T10:09:14.818Z"
-      },
-      "quotedAmount": 14999,
-      "finalAmount": 5770,
-      "status": "accepted",
-      "createdAt": "2026-08-10T10:09:14.818Z"
-    },
-    {
-      "id": "book-1786355007605",
-      "bookingRef": "KBK-2026-7878",
-      "clientId": "client-1786354592911",
-      "clientName": "kumar",
-      "clientPhone": "9346476951",
-      "clientEmail": "ksindrakumar59@gmail.com",
-      "clientCity": "yelahanka,Bengaluru",
-      "serviceId": "srv-9",
-      "serviceTitle": "Spot Editing Available (Same-Day On-Venue)",
-      "eventDate": "2026-08-28",
-      "preferredDeliveryDate": "",
-      "budgetRange": "Starting from ₹19,999",
-      "footageDetails": "",
-      "referenceLinks": "",
-      "customNotes": "need best and good ",
-      "agreedTerms": true,
-      "priceSnapshot": {
-        "serviceId": "srv-9",
-        "serviceTitle": "Spot Editing Available (Same-Day On-Venue)",
-        "priceType": "starting_from",
-        "basePrice": 19999,
-        "currency": "INR",
-        "priceLabel": "Starting from ₹19,999",
-        "inclusions": [
-          "Same-Day On-Venue Live Editing (Same Day Delivery)",
-          "Ready for Reception Large LED Wall Projection (4K/1080p)",
-          "Instant Teaser for Live Social Media Sharing",
-          "Dedicated Mobile High-End Workstation Setup at Venue"
-        ],
-        "exclusions": [
-          "Travel, food & accommodation for editor (managed by client)",
-          "LED wall projector rental (provided by event venue/client)",
-          "Camera recording team (supplied by client or contracted separately)"
-        ],
-        "turnaroundDays": 1,
-        "snapshotDate": "2026-08-10T09:43:27.605Z"
-      },
-      "quotedAmount": 19999,
-      "finalAmount": 19999,
-      "status": "rejected",
-      "createdAt": "2026-08-10T09:43:27.605Z",
-      "rejectionReason": "due to bussy schedule"
-    },
-    {
-      "id": "book-1786354592911",
-      "bookingRef": "KBK-2026-7133",
-      "clientId": "client-1786354592911",
-      "clientName": "Indra Kumar",
-      "clientPhone": "9346476951",
-      "clientEmail": "ik9893344@gmail.com",
-      "clientCity": "Hindupur, AP",
-      "serviceId": "srv-1",
-      "serviceTitle": "Pre-Wedding Video Editing",
-      "eventDate": "60301-02-20",
-      "preferredDeliveryDate": "",
-      "budgetRange": "Starting from ₹14,999",
-      "footageDetails": "",
-      "referenceLinks": "",
-      "customNotes": "",
-      "agreedTerms": true,
-      "priceSnapshot": {
-        "serviceId": "srv-1",
-        "serviceTitle": "Pre-Wedding Video Editing",
-        "priceType": "starting_from",
-        "basePrice": 14999,
-        "currency": "INR",
-        "priceLabel": "Starting from ₹14,999",
-        "inclusions": [
-          "Full 4K/1080p Cinematic Master Film (3-5 mins)",
-          "1x Vertical 9:16 Instagram Reel Teaser (60s)",
-          "Hollywood Grade Film Tone & Color Palette",
-          "Dialogue Clean-up & Ambient Audio Mastering",
-          "Licensed Background Music Sync",
-          "2 Rounds of Precision Revisions"
-        ],
-        "exclusions": [
-          "Raw footage shooting / camera equipment on location",
-          "Travel, food, lodging for shoot crew",
-          "Drone license permits or venue access charges"
-        ],
-        "turnaroundDays": 5,
-        "snapshotDate": "2026-08-10T09:36:32.911Z"
-      },
-      "quotedAmount": 14999,
-      "finalAmount": 14999,
-      "status": "rejected",
-      "createdAt": "2026-08-10T09:36:32.911Z",
-      "rejectionReason": "Due to Personal problems"
-    },
-    {
-      "id": "book-1",
-      "bookingRef": "KBK-2026-8941",
-      "clientId": "client-1",
-      "clientName": "Venkatesh & Divya",
-      "clientPhone": "9440187654",
-      "clientEmail": "venkatesh.divya@gmail.com",
-      "clientCity": "Hindupur, AP",
-      "serviceId": "srv-2",
-      "serviceTitle": "Wedding Video Highlights",
-      "eventDate": "2026-02-28",
-      "preferredDeliveryDate": "2026-03-08",
-      "budgetRange": "₹25,000 - ₹35,000",
-      "footageDetails": "Sony FX3 + A7IV multi-cam footage, 4K 10-bit S-Log3, approx 350GB on external SSD.",
-      "referenceLinks": "https://youtube.com/@bharathkumarglp2003",
-      "customNotes": "Looking for a royal emotional theme with Mangalashtak dialogue sync and fast Instagram teaser.",
-      "agreedTerms": true,
-      "priceSnapshot": {
-        "serviceId": "srv-2",
-        "serviceTitle": "Wedding Video Highlights",
-        "priceType": "starting_from",
-        "basePrice": 24999,
-        "currency": "INR",
-        "priceLabel": "Starting from ₹24,999",
-        "inclusions": [
-          "Full Cinematic Highlight Film (7-12 mins)",
-          "2x Vertical Teaser Reels for Social Sharing",
-          "Custom Multi-Camera Synchronization (up to 4 cams)",
-          "Indian Silk & Gold Optimized Color Grading",
-          "Traditional Mantras & Speeches Sound Mastering",
-          "Private High-Speed Isolated Master Delivery Locker"
-        ],
-        "exclusions": [
-          "On-venue videographers/photographers arrangements",
-          "Travel & accommodation for editing crew if spot-requested",
-          "Physical storage hard drives delivery couriers"
-        ],
-        "turnaroundDays": 7,
-        "snapshotDate": "2026-02-05T08:30:00Z"
-      },
-      "quotedAmount": 24999,
-      "finalAmount": 24999,
-      "status": "accepted",
-      "createdAt": "2026-02-05T08:30:00Z"
-    }
-  ],
+  "bookingRequests": [],
   "bookingPriceHistories": [],
-  "serviceProjects": [
-    {
-      "id": "proj-1786374184508",
-      "bookingId": "book-1786373835535",
-      "bookingRef": "KBK-2026-8522",
-      "clientId": "client-1786354592911",
-      "clientName": "indra",
-      "clientPhone": "9346476951",
-      "clientEmail": "email1@gmail.com",
-      "serviceId": "srv-6",
-      "serviceTitle": "House Warming Ceremonies (Gruhapravesam)",
-      "trackingToken": "TRK-2026-8522-SECURE",
-      "currentStage": "testimonial_received",
-      "stageProgressPercent": 100,
-      "startDate": "2026-08-10",
-      "estimatedDeliveryDate": "2026-09-04",
-      "statusHistory": [
-        {
-          "id": "stat-1786374184508",
-          "stage": "booking_requested",
-          "stageLabel": "Booking Requested",
-          "message": "Booking submitted and received by KBK Film Studios.",
-          "updatedBy": "Client",
-          "timestamp": "2026-08-10T14:57:15.535Z"
-        },
-        {
-          "id": "stat-1786374184509",
-          "stage": "accepted_scheduled",
-          "stageLabel": "Accepted & Scheduled",
-          "message": "editing under progress",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:03:04.508Z"
-        },
-        {
-          "id": "stat-1786376116626",
-          "stage": "raw_footage_received",
-          "stageLabel": "3. Raw Footage Ingested",
-          "message": "Advanced to 3. Raw Footage Ingested by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:35:16.626Z"
-        },
-        {
-          "id": "stat-1786376117959",
-          "stage": "in_progress",
-          "stageLabel": "4. Rough Cut In Progress",
-          "message": "Advanced to 4. Rough Cut In Progress by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:35:17.959Z"
-        },
-        {
-          "id": "stat-1786376120465",
-          "stage": "color_grading_audio",
-          "stageLabel": "5. Color Grading & Sound",
-          "message": "Advanced to 5. Color Grading & Sound by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:35:20.465Z"
-        },
-        {
-          "id": "stat-1786376121981",
-          "stage": "in_review",
-          "stageLabel": "6. In Client Review",
-          "message": "Advanced to 6. In Client Review by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:35:21.981Z"
-        },
-        {
-          "id": "stat-1786376126029",
-          "stage": "service_completed",
-          "stageLabel": "7. Master Exported",
-          "message": "Advanced to 7. Master Exported by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:35:26.029Z"
-        },
-        {
-          "id": "stat-1786376128076",
-          "stage": "files_delivered",
-          "stageLabel": "8. Delivered to Locker",
-          "message": "Advanced to 8. Delivered to Locker by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:35:28.076Z"
-        },
-        {
-          "id": "stat-1786376291567",
-          "stage": "testimonial_received",
-          "stageLabel": "9. Completed & Archived",
-          "message": "Advanced to 9. Completed & Archived by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:38:11.567Z"
-        }
-      ],
-      "internalNotes": "editing under progress",
-      "clientMessages": [
-        {
-          "id": "msg-1786374184508",
-          "sender": "owner",
-          "senderName": "Kurudi Bharath Kumar",
-          "text": "Welcome to KBK Film Studios! We have accepted your booking for House Warming Ceremonies (Gruhapravesam). We will begin processing upon raw footage receipt.",
-          "timestamp": "2026-08-10T15:03:04.508Z"
-        }
-      ],
-      "deliveries": [
-        {
-          "id": "del-1786376169042",
-          "projectId": "proj-1786374184508",
-          "bookingRef": "KBK-2026-8522",
-          "title": "project delivery1",
-          "fileName": "Screen Recording 2026-08-05 105955.mp4",
-          "fileSizeBytes": 25884546,
-          "fileSizeFormatted": "24.69 MB",
-          "mimeType": "video/mp4",
-          "fileCategory": "master_video",
-          "storagePath": "private_deliveries/proj-1786374184508/Screen Recording 2026-08-05 105955.mp4",
-          "downloadToken": "dl_token_2026-8522_4op9qc",
-          "expiryDate": "2026-11-08T15:36:09.042Z",
-          "downloadCount": 1,
-          "maxDownloads": 50,
-          "isStreamable": true,
-          "streamUrl": "/api/client/stream/dl_token_2026-8522_4op9qc",
-          "createdAt": "2026-08-10T15:36:09.042Z"
-        }
-      ],
-      "createdAt": "2026-08-10T15:03:04.508Z",
-      "updatedAt": "2026-08-10T15:38:11.567Z"
-    },
-    {
-      "id": "proj-1786356797106",
-      "bookingId": "book-1786356554818",
-      "bookingRef": "KBK-2026-7235",
-      "clientId": "client-1786354592911",
-      "clientName": "KUMAR",
-      "clientPhone": "9346476951",
-      "clientEmail": "ksindrakumar59@gmail.com",
-      "serviceId": "srv-1",
-      "serviceTitle": "Pre-Wedding Video Editing",
-      "trackingToken": "TRK-2026-7235-SECURE",
-      "currentStage": "testimonial_received",
-      "stageProgressPercent": 100,
-      "startDate": "2026-08-10",
-      "estimatedDeliveryDate": "2026-11-11",
-      "statusHistory": [
-        {
-          "id": "stat-1786356797106",
-          "stage": "booking_requested",
-          "stageLabel": "Booking Requested",
-          "message": "Booking submitted and received by KBK Film Studios.",
-          "updatedBy": "Client",
-          "timestamp": "2026-08-10T10:09:14.818Z"
-        },
-        {
-          "id": "stat-1786356797107",
-          "stage": "accepted_scheduled",
-          "stageLabel": "Accepted & Scheduled",
-          "message": "yes ........................",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T10:13:17.106Z"
-        },
-        {
-          "id": "stat-1786356837521",
-          "stage": "raw_footage_received",
-          "stageLabel": "3. Raw Footage Ingested",
-          "message": "Advanced to 3. Raw Footage Ingested by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T10:13:57.521Z"
-        },
-        {
-          "id": "stat-1786356840359",
-          "stage": "in_progress",
-          "stageLabel": "4. Rough Cut In Progress",
-          "message": "Advanced to 4. Rough Cut In Progress by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T10:14:00.359Z"
-        },
-        {
-          "id": "stat-1786356843135",
-          "stage": "color_grading_audio",
-          "stageLabel": "5. Color Grading & Sound",
-          "message": "Advanced to 5. Color Grading & Sound by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T10:14:03.135Z"
-        },
-        {
-          "id": "stat-1786356844634",
-          "stage": "in_review",
-          "stageLabel": "6. In Client Review",
-          "message": "Advanced to 6. In Client Review by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T10:14:04.634Z"
-        },
-        {
-          "id": "stat-1786356846903",
-          "stage": "testimonial_received",
-          "stageLabel": "9. Completed & Archived",
-          "message": "Advanced to 9. Completed & Archived by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T10:14:06.903Z"
-        },
-        {
-          "id": "stat-1786356848891",
-          "stage": "files_delivered",
-          "stageLabel": "8. Delivered to Locker",
-          "message": "Advanced to 8. Delivered to Locker by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T10:14:08.891Z"
-        },
-        {
-          "id": "stat-1786385108203",
-          "stage": "testimonial_received",
-          "stageLabel": "9. Completed & Archived",
-          "message": "Advanced to 9. Completed & Archived by Kurudi Bharath Kumar",
-          "updatedBy": "K S Indra Kumar",
-          "timestamp": "2026-08-10T18:05:08.203Z"
-        }
-      ],
-      "internalNotes": "yes ........................",
-      "clientMessages": [
-        {
-          "id": "msg-1786356797106",
-          "sender": "owner",
-          "senderName": "Kurudi Bharath Kumar",
-          "text": "Welcome to KBK Film Studios! We have accepted your booking for Pre-Wedding Video Editing. We will begin processing upon raw footage receipt.",
-          "timestamp": "2026-08-10T10:13:17.106Z"
-        }
-      ],
-      "deliveries": [
-        {
-          "id": "del-1786356868624",
-          "projectId": "proj-1786356797106",
-          "bookingRef": "KBK-2026-7235",
-          "title": "KUMAR 4K Master Video Highlight",
-          "fileName": "KBK-2026-7235_Master_4K.mp4",
-          "fileSizeBytes": 4886163,
-          "fileSizeFormatted": "4.66 MB",
-          "mimeType": "video/mp4",
-          "fileCategory": "teaser_reel",
-          "storagePath": "private_deliveries/proj-1786356797106/KBK-2026-7235_Master_4K.mp4",
-          "downloadToken": "dl_token_2026-7235_jmur5u",
-          "expiryDate": "2026-11-08T10:14:28.624Z",
-          "downloadCount": 0,
-          "maxDownloads": 50,
-          "isStreamable": true,
-          "streamUrl": "/api/client/stream/dl_token_2026-7235_jmur5u",
-          "createdAt": "2026-08-10T10:14:28.624Z"
-        },
-        {
-          "id": "del-1786374457836",
-          "projectId": "proj-1786356797106",
-          "bookingRef": "KBK-2026-7235",
-          "title": "project delevery",
-          "fileName": "Screen Recording 2026-08-05 105955.mp4",
-          "fileSizeBytes": 25884546,
-          "fileSizeFormatted": "24.69 MB",
-          "mimeType": "video/mp4",
-          "fileCategory": "master_video",
-          "storagePath": "private_deliveries/proj-1786356797106/Screen Recording 2026-08-05 105955.mp4",
-          "downloadToken": "dl_token_2026-7235_p2zjqa",
-          "expiryDate": "2026-11-08T15:07:37.836Z",
-          "downloadCount": 0,
-          "maxDownloads": 50,
-          "isStreamable": true,
-          "streamUrl": "/api/client/stream/dl_token_2026-7235_p2zjqa",
-          "createdAt": "2026-08-10T15:07:37.837Z"
-        },
-        {
-          "id": "del-1786385040816",
-          "projectId": "proj-1786356797106",
-          "bookingRef": "KBK-2026-7235",
-          "title": "Screen Recording 2025 08 25 001832",
-          "fileName": "Screen Recording 2025-08-25 001832.mp4",
-          "fileSizeBytes": 89496665,
-          "fileSizeFormatted": "85.35 MB",
-          "mimeType": "video/mp4",
-          "fileCategory": "master_video",
-          "storagePath": "private_deliveries/proj-1786356797106/Screen Recording 2025-08-25 001832.mp4",
-          "downloadToken": "dl_token_2026-7235_gkiqsa",
-          "expiryDate": "2026-11-08T18:04:00.816Z",
-          "downloadCount": 0,
-          "maxDownloads": 50,
-          "isStreamable": true,
-          "streamUrl": "/api/client/stream/dl_token_2026-7235_gkiqsa",
-          "createdAt": "2026-08-10T18:04:00.820Z"
-        }
-      ],
-      "createdAt": "2026-08-10T10:13:17.106Z",
-      "updatedAt": "2026-08-10T18:05:08.203Z"
-    },
-    {
-      "id": "proj-1",
-      "bookingId": "book-1",
-      "bookingRef": "KBK-2026-8941",
-      "clientId": "client-1",
-      "clientName": "Venkatesh & Divya",
-      "clientPhone": "9440187654",
-      "clientEmail": "venkatesh.divya@gmail.com",
-      "serviceId": "srv-2",
-      "serviceTitle": "Wedding Video Highlights",
-      "trackingToken": "TRK-KBK-8941-SECURE",
-      "currentStage": "testimonial_received",
-      "stageProgressPercent": 100,
-      "startDate": "2026-02-06",
-      "estimatedDeliveryDate": "2026-03-08",
-      "statusHistory": [
-        {
-          "id": "stat-1",
-          "stage": "booking_requested",
-          "stageLabel": "Booking Requested",
-          "message": "Booking submitted and received by KBK Film Studios.",
-          "updatedBy": "System",
-          "timestamp": "2026-02-05T08:30:00Z"
-        },
-        {
-          "id": "stat-2",
-          "stage": "accepted_scheduled",
-          "stageLabel": "Accepted & Scheduled",
-          "message": "Booking accepted by Kurudi Bharath Kumar. Delivery timeline scheduled.",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-02-05T11:00:00Z"
-        },
-        {
-          "id": "stat-3",
-          "stage": "raw_footage_received",
-          "stageLabel": "Raw Footage Received",
-          "message": "350GB 4K raw footage ingested and verified in editing workstation.",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-02-06T15:00:00Z"
-        },
-        {
-          "id": "stat-4",
-          "stage": "in_progress",
-          "stageLabel": "In Progress (Rough Cut)",
-          "message": "Multi-cam timeline synced and main emotional narrative assembly completed.",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-02-07T18:00:00Z"
-        },
-        {
-          "id": "stat-5",
-          "stage": "color_grading_audio",
-          "stageLabel": "Color Grading & Audio Mastering",
-          "message": "Gold & silk palette HDR color grading and mantra sound restoration in DaVinci Resolve.",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-02-08T14:30:00Z"
-        },
-        {
-          "id": "stat-1786355312319",
-          "stage": "in_review",
-          "stageLabel": "6. In Client Review",
-          "message": "Advanced to 6. In Client Review by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T09:48:32.319Z"
-        },
-        {
-          "id": "stat-1786355314053",
-          "stage": "testimonial_received",
-          "stageLabel": "9. Completed & Archived",
-          "message": "Advanced to 9. Completed & Archived by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T09:48:34.053Z"
-        },
-        {
-          "id": "stat-1786355315740",
-          "stage": "files_delivered",
-          "stageLabel": "8. Delivered to Locker",
-          "message": "Advanced to 8. Delivered to Locker by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T09:48:35.740Z"
-        },
-        {
-          "id": "stat-1786355318300",
-          "stage": "service_completed",
-          "stageLabel": "7. Master Exported",
-          "message": "Advanced to 7. Master Exported by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T09:48:38.300Z"
-        },
-        {
-          "id": "stat-1786355320019",
-          "stage": "testimonial_received",
-          "stageLabel": "9. Completed & Archived",
-          "message": "Advanced to 9. Completed & Archived by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T09:48:40.019Z"
-        },
-        {
-          "id": "stat-1786374487071",
-          "stage": "files_delivered",
-          "stageLabel": "8. Delivered to Locker",
-          "message": "Advanced to 8. Delivered to Locker by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:08:07.071Z"
-        },
-        {
-          "id": "stat-1786374488308",
-          "stage": "testimonial_received",
-          "stageLabel": "9. Completed & Archived",
-          "message": "Advanced to 9. Completed & Archived by Kurudi Bharath Kumar",
-          "updatedBy": "Kurudi Bharath Kumar",
-          "timestamp": "2026-08-10T15:08:08.308Z"
-        }
-      ],
-      "internalNotes": "Client requested focus on bride entrance and father-daughter emotion.",
-      "clientMessages": [
-        {
-          "id": "msg-1",
-          "sender": "owner",
-          "senderName": "Kurudi Bharath Kumar",
-          "text": "Hi Venkatesh & Divya! Your 350GB raw footage has been ingested. The timeline sync is looking phenomenal!",
-          "timestamp": "2026-02-06T16:00:00Z"
-        },
-        {
-          "id": "msg-2",
-          "sender": "client",
-          "senderName": "Venkatesh",
-          "text": "Thank you Bharath! Really excited to see the teaser and highlight master!",
-          "timestamp": "2026-02-06T17:15:00Z"
-        },
-        {
-          "id": "msg-1786354819296",
-          "sender": "client",
-          "senderName": "Venkatesh & Divya",
-          "text": "ok",
-          "timestamp": "2026-08-10T09:40:19.296Z"
-        }
-      ],
-      "deliveries": [
-        {
-          "id": "del-1",
-          "projectId": "proj-1",
-          "bookingRef": "KBK-2026-8941",
-          "title": "Venkatesh & Divya - 4K Master Teaser Reel (9:16)",
-          "fileName": "KBK_Venkatesh_Divya_Teaser_4K.mp4",
-          "fileSizeBytes": 4886163,
-          "fileSizeFormatted": "4.88 MB",
-          "mimeType": "video/mp4",
-          "fileCategory": "teaser_reel",
-          "storagePath": "private_deliveries/proj-1/KBK_Venkatesh_Divya_Teaser_4K.mp4",
-          "downloadToken": "dl_token_8941_teaser_preview",
-          "expiryDate": "2026-05-30T23:59:59Z",
-          "downloadCount": 3,
-          "maxDownloads": 50,
-          "isStreamable": true,
-          "streamUrl": "/api/client/stream/dl_token_8941_teaser_preview",
-          "createdAt": "2026-02-08T15:00:00Z"
-        },
-        {
-          "id": "del-1786355336057",
-          "projectId": "proj-1",
-          "bookingRef": "KBK-2026-8941",
-          "title": "Venkatesh & Divya 4K Master Video Highlight",
-          "fileName": "KBK-2026-8941_Master_4K.mp4",
-          "fileSizeBytes": 4886163,
-          "fileSizeFormatted": "4.66 MB",
-          "mimeType": "video/mp4",
-          "fileCategory": "master_video",
-          "storagePath": "private_deliveries/proj-1/KBK-2026-8941_Master_4K.mp4",
-          "downloadToken": "dl_token_2026-8941_1oxlqp",
-          "expiryDate": "2026-11-08T09:48:56.057Z",
-          "downloadCount": 1,
-          "maxDownloads": 50,
-          "isStreamable": true,
-          "streamUrl": "/api/client/stream/dl_token_2026-8941_1oxlqp",
-          "createdAt": "2026-08-10T09:48:56.059Z"
-        },
-        {
-          "id": "del-1786355340527",
-          "projectId": "proj-1",
-          "bookingRef": "KBK-2026-8941",
-          "title": "Venkatesh & Divya 4K Master Video Highlight",
-          "fileName": "KBK-2026-8941_Master_4K.mp4",
-          "fileSizeBytes": 4886163,
-          "fileSizeFormatted": "4.66 MB",
-          "mimeType": "video/mp4",
-          "fileCategory": "master_video",
-          "storagePath": "private_deliveries/proj-1/KBK-2026-8941_Master_4K.mp4",
-          "downloadToken": "dl_token_2026-8941_elf7z3",
-          "expiryDate": "2026-11-08T09:49:00.527Z",
-          "downloadCount": 0,
-          "maxDownloads": 50,
-          "isStreamable": true,
-          "streamUrl": "/api/client/stream/dl_token_2026-8941_elf7z3",
-          "createdAt": "2026-08-10T09:49:00.527Z"
-        }
-      ],
-      "createdAt": "2026-02-05T11:00:00Z",
-      "updatedAt": "2026-08-10T15:08:08.308Z"
-    }
-  ],
+  "serviceProjects": [],
   "privateDeliveries": [
     {
       "id": "del-1",
@@ -1200,126 +478,44 @@
   ],
   "publicWorks": [
     {
-      "id": "work-muhurtham",
-      "title": "Grand Traditional Muhurtham Master Film",
+      "id": "work-1786554723187",
+      "title": "RECEPTION VIDEO",
       "category": "Wedding Highlights",
-      "eventLocation": "Hindupur, Andhra Pradesh",
+      "eventLocation": "Hindupur, AP",
       "eventYear": "2026",
-      "thumbnailUrl": "https://lh3.googleusercontent.com/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs",
-      "videoUrl": "https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link",
-      "videoSourceType": "google_drive",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
-      "description": "Sacred Vedic muhurtham rituals, mangalashtak dialogue synchronization, and authentic gold silk color grading in DaVinci Resolve Studio.",
-      "softwareUsed": [
-        "DaVinci Resolve Studio",
-        "Premiere Pro",
-        "FabFilter Pro"
-      ],
-      "isFeatured": true,
-      "isPublished": true,
-      "sortOrder": 1,
-      "createdAt": "2026-08-10T12:00:00Z"
-    },
-    {
-      "id": "work-reception",
-      "title": "Grand Wedding Reception & Gala Night Highlights",
-      "category": "Wedding Highlights",
-      "eventLocation": "Bengaluru, Karnataka",
-      "eventYear": "2026",
-      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP",
+      "thumbnailUrl": "/assets/kbk-logo.jpg",
       "videoUrl": "https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link",
-      "videoSourceType": "google_drive",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
-      "description": "High-energy reception celebrations, stage entry pacing, dynamic lighting restoration, and cinematic multi-cam edit.",
-      "softwareUsed": [
-        "Premiere Pro",
-        "DaVinci Resolve Studio"
-      ],
-      "isFeatured": true,
-      "isPublished": true,
-      "sortOrder": 2,
-      "createdAt": "2026-08-10T12:00:00Z"
-    },
-    {
-      "id": "work-prewedding",
-      "title": "Enchanted Mist Romance | Pre-Wedding Narrative",
-      "category": "Pre-Wedding Video Editing",
-      "eventLocation": "Ooty Hills, Nilgiris",
-      "eventYear": "2026",
-      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y",
-      "videoUrl": "https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view?usp=share_link",
-      "videoSourceType": "google_drive",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
-      "description": "Moody, slow-paced cinematic pre-wedding narrative in the pine forests of Ooty with custom color grading and warm acoustic melody.",
-      "softwareUsed": [
-        "DaVinci Resolve Studio",
-        "After Effects",
-        "FabFilter Pro"
-      ],
-      "isFeatured": true,
-      "isPublished": true,
-      "sortOrder": 3,
-      "createdAt": "2026-08-10T12:00:00Z"
-    },
-    {
-      "id": "work-haldi",
-      "title": "Yellow Splash Festivity | Haldi & Sangeeth Blast",
-      "category": "Haldi & Sangeeth Ceremonies",
-      "eventLocation": "Hindupur, Andhra Pradesh",
-      "eventYear": "2026",
-      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn",
-      "videoUrl": "https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view?usp=share_link",
-      "videoSourceType": "google_drive",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
-      "description": "Ultra high-energy 120fps slow-motion water splash editing synced to electrifying folk beats and dance rhythms.",
-      "softwareUsed": [
-        "Premiere Pro",
-        "DaVinci Resolve Color Studio"
-      ],
-      "isFeatured": true,
-      "isPublished": true,
-      "sortOrder": 4,
-      "createdAt": "2026-08-10T12:00:00Z"
-    },
-    {
-      "id": "work-maternity",
-      "title": "Miracle of Motherhood | Maternity Visual Story",
-      "category": "Maternity Shoot Videos",
-      "eventLocation": "Nandi Hills Sunrise",
-      "eventYear": "2025",
-      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji",
-      "videoUrl": "https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view?usp=share_link",
-      "videoSourceType": "google_drive",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
-      "description": "Golden hour pastel aesthetic maternity visual keepsake celebrating the beauty of new parenthood.",
-      "softwareUsed": [
-        "DaVinci Resolve Studio",
-        "iZotope RX 10"
-      ],
-      "isFeatured": false,
-      "isPublished": true,
-      "sortOrder": 5,
-      "createdAt": "2026-08-10T12:00:00Z"
-    },
-    {
-      "id": "work-spot-editing",
-      "title": "On-Venue Spot Editing & Reception Projection Showcase",
-      "category": "Spot Editing Available",
-      "eventLocation": "Anantapur, Andhra Pradesh",
-      "eventYear": "2026",
-      "thumbnailUrl": "https://lh3.googleusercontent.com/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q",
-      "videoUrl": "https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/view?usp=share_link",
-      "videoSourceType": "google_drive",
-      "externalDestUrl": "https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX",
-      "description": "Same-day on-venue live edit ingested in the morning and projected on large reception LED screens with instant teaser delivery.",
+      "videoSourceType": "direct_mp4",
+      "externalDestUrl": "",
+      "description": "A cinematic reception video capturing the joy, elegance, and memorable moments of the celebration. Smooth transitions, warm tones, balanced audio, and well-paced visuals create a polished and emotional presentation.\n",
       "softwareUsed": [
         "Premiere Pro",
         "DaVinci Resolve"
       ],
-      "isFeatured": false,
+      "isFeatured": true,
+      "isPublished": true,
+      "sortOrder": 2,
+      "createdAt": "2026-08-12T17:12:03.187Z"
+    },
+    {
+      "id": "work-1786551429958",
+      "title": "MUHURTHAM VIDEO",
+      "category": "Wedding Highlights",
+      "eventLocation": "Hindupur, AP",
+      "eventYear": "2026",
+      "thumbnailUrl": "/assets/kbk-logo.jpg",
+      "videoUrl": "https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link",
+      "videoSourceType": "direct_mp4",
+      "externalDestUrl": "",
+      "description": "A cinematic Muhūrtham video capturing the traditional and emotional essence of the special occasion. Smooth transitions, warm cinematic tones, balanced audio, and carefully paced visuals create an elegant and memorable presentation.\n",
+      "softwareUsed": [
+        "Premiere Pro",
+        "DaVinci Resolve"
+      ],
+      "isFeatured": true,
       "isPublished": true,
       "sortOrder": 6,
-      "createdAt": "2026-08-10T12:00:00Z"
+      "createdAt": "2026-08-12T16:17:09.958Z"
     }
   ],
   "testimonials": [
@@ -1337,32 +533,6 @@
       "isPublished": false,
       "bookingRef": "KBK-2026-8801",
       "createdAt": "2026-02-01T10:00:00Z"
-    },
-    {
-      "id": "test-3",
-      "clientName": "Vikram & Sandhya",
-      "serviceTitle": "Pre-Wedding Video Editing",
-      "eventDate": "December 2025",
-      "location": "Anantapur, AP",
-      "rating": 5,
-      "reviewText": "The private client delivery locker made it so easy for us to stream the master cut and download our full-res 4K videos without sharing it on a messy public Google Drive. 10/10 service and true data isolation!",
-      "isVerified": true,
-      "isPublished": true,
-      "bookingRef": "KBK-2025-7920",
-      "createdAt": "2025-12-28T14:15:00Z"
-    },
-    {
-      "id": "test-4",
-      "clientName": "Prasad Rao & Family",
-      "serviceTitle": "House Warming Ceremonies",
-      "eventDate": "January 2026",
-      "location": "Hindupur, AP",
-      "rating": 5,
-      "reviewText": "KBK Film Studios covered our Gruhapravesam video editing with immense dignity, clear Vedic mantras audio, and crisp cinematic lighting. Highly recommended for any family celebration.",
-      "isVerified": true,
-      "isPublished": true,
-      "bookingRef": "KBK-2026-8104",
-      "createdAt": "2026-01-20T09:40:00Z"
     }
   ],
   "studioCMS": {
@@ -1421,6 +591,600 @@
     "contactClarificationMsg": "Hi Bharath Kumar, I was reviewing the pricing for your video editing services on KBK Film Studios and would love a custom quote/clarification for my upcoming event."
   },
   "auditLogs": [
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "09346476951",
+      "action": "CO_OWNER_UPDATED",
+      "details": "Reactivated/updated co-owner K S Indra Kumar (09346476951, ik9893344@gmail.com).",
+      "id": "audit-1786629516753-ww9o",
+      "timestamp": "2026-08-13T13:58:36.753Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "i",
+      "actorIdentifier": "7777777777",
+      "action": "CO_OWNER_REMOVED",
+      "details": "Revoked ownership access for i (8888888888).",
+      "id": "audit-1786629486821-8g8q",
+      "timestamp": "2026-08-13T13:58:06.821Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786629433235-kwcg",
+      "timestamp": "2026-08-13T13:57:13.235Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "i",
+      "actorIdentifier": "8888888888",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner i logged in to Owner Space.",
+      "id": "audit-1786629398647-4mvx",
+      "timestamp": "2026-08-13T13:56:38.647Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "i",
+      "actorIdentifier": "7777777777",
+      "action": "CO_OWNER_INVITED",
+      "details": "Added new co-owner i (8888888888, ksindrakumar59@gmail.com).",
+      "id": "audit-1786629233563-53g8",
+      "timestamp": "2026-08-13T13:53:53.563Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "i",
+      "actorIdentifier": "7777777777",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner i logged in to Owner Space.",
+      "id": "audit-1786629167417-7am3",
+      "timestamp": "2026-08-13T13:52:47.417Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "i",
+      "actorIdentifier": "7777777777",
+      "action": "CO_OWNER_UPDATED",
+      "details": "Reactivated/updated co-owner i (7777777777, ik9893344@gmail.com).",
+      "id": "audit-1786629162466-5an2",
+      "timestamp": "2026-08-13T13:52:42.467Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "indra",
+      "actorIdentifier": "9346476951",
+      "action": "CO_OWNER_UPDATED",
+      "details": "Reactivated/updated co-owner indra (9346476951, ik9893344@gmail.com).",
+      "id": "audit-1786629143157-2mrd",
+      "timestamp": "2026-08-13T13:52:23.157Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "7777777777",
+      "action": "CO_OWNER_UPDATED",
+      "details": "Reactivated/updated co-owner K S Indra Kumar (7777777777, ik9893344@gmail.com).",
+      "id": "audit-1786629079673-f2vn",
+      "timestamp": "2026-08-13T13:51:19.673Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786629030115-qo0b",
+      "timestamp": "2026-08-13T13:50:30.115Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786629028379-4ejl",
+      "timestamp": "2026-08-13T13:50:28.379Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "CO_OWNER_UPDATED",
+      "details": "Reactivated/updated co-owner K S Indra Kumar (9346476951, ik9893344@gmail.com).",
+      "id": "audit-1786628963262-3cnh",
+      "timestamp": "2026-08-13T13:49:23.263Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "kk",
+      "actorIdentifier": "7777777777",
+      "action": "CO_OWNER_REMOVED",
+      "details": "Revoked ownership access for KBK Studio Lead Editor (9845012345).",
+      "id": "audit-1786628941928-74qv",
+      "timestamp": "2026-08-13T13:49:01.928Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "kk",
+      "actorIdentifier": "7777777777",
+      "action": "CO_OWNER_UPDATED",
+      "details": "Reactivated/updated co-owner kk (7777777777, ik9893344@gmail.com).",
+      "id": "audit-1786628888204-yhw7",
+      "timestamp": "2026-08-13T13:48:08.204Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786628586593-kljt",
+      "timestamp": "2026-08-13T13:43:06.593Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786628555510-mbyv",
+      "timestamp": "2026-08-13T13:42:35.510Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786627954854-zinj",
+      "timestamp": "2026-08-13T13:32:34.854Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786627736508-c24s",
+      "timestamp": "2026-08-13T13:28:56.508Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786627724368-6smp",
+      "timestamp": "2026-08-13T13:28:44.368Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "BOOKING_DELETED",
+      "details": "Booking KBK-2026-8941 for client Venkatesh & Divya was deleted by K S Indra Kumar.",
+      "id": "audit-1786627271098-cpxg",
+      "timestamp": "2026-08-13T13:21:11.098Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "BOOKING_DELETED",
+      "details": "Booking KBK-2026-7133 for client Indra Kumar was deleted by K S Indra Kumar.",
+      "id": "audit-1786627269676-qccc",
+      "timestamp": "2026-08-13T13:21:09.676Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "BOOKING_DELETED",
+      "details": "Booking KBK-2026-7878 for client kumar was deleted by K S Indra Kumar.",
+      "id": "audit-1786627268260-2nd6",
+      "timestamp": "2026-08-13T13:21:08.260Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "BOOKING_DELETED",
+      "details": "Booking KBK-2026-7235 for client KUMAR was deleted by K S Indra Kumar.",
+      "id": "audit-1786627266977-u92u",
+      "timestamp": "2026-08-13T13:21:06.977Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "BOOKING_DELETED",
+      "details": "Booking KBK-2026-8522 for client indra was deleted by K S Indra Kumar.",
+      "id": "audit-1786627265053-f1sz",
+      "timestamp": "2026-08-13T13:21:05.053Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "BOOKING_DELETED",
+      "details": "Booking KBK-2026-3115 for client i1 was deleted by K S Indra Kumar.",
+      "id": "audit-1786627262412-2vk9",
+      "timestamp": "2026-08-13T13:21:02.412Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786627219300-4nda",
+      "timestamp": "2026-08-13T13:20:19.301Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "CO_OWNER_REMOVED",
+      "details": "Revoked ownership access for KBK Studio Lead Editor (9845012345).",
+      "id": "audit-1786626825773-76f7",
+      "timestamp": "2026-08-13T13:13:45.774Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "LIFECYCLE_STAGE_ADVANCED",
+      "details": "Project KBK-2026-3115 updated to stage: testimonial_received.",
+      "id": "audit-1786625247518-demd",
+      "timestamp": "2026-08-13T12:47:27.518Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "BOOKING_ACCEPTED",
+      "details": "Booking KBK-2026-3115 marked as accepted by Kuridi Bharath Kumar.",
+      "id": "audit-1786625202596-q3aw",
+      "timestamp": "2026-08-13T12:46:42.596Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786625172652-b9u5",
+      "timestamp": "2026-08-13T12:46:12.652Z"
+    },
+    {
+      "actorRole": "client",
+      "actorName": "i1",
+      "actorIdentifier": "9346476951",
+      "action": "BOOKING_SUBMITTED",
+      "details": "Booking KBK-2026-3115 created for Pre-Wedding Video Editing (Snapshot Price: ₹14,999).",
+      "id": "audit-1786625125668-ez5o",
+      "timestamp": "2026-08-13T12:45:25.668Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "STUDIO_CMS_UPDATED",
+      "details": "Updated studio profile settings, bio, education, or counters.",
+      "id": "audit-1786623846304-22mu",
+      "timestamp": "2026-08-13T12:24:06.304Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786623798218-e919",
+      "timestamp": "2026-08-13T12:23:18.218Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786606159733-2w82",
+      "timestamp": "2026-08-13T07:29:19.733Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kuridi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kuridi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786603152152-jf7a",
+      "timestamp": "2026-08-13T06:39:12.152Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "CO_OWNER_INVITED",
+      "details": "Added new co-owner Kuridi Bharath Kumar (9346227894, kbkfilms.official@gmail.com).",
+      "id": "audit-1786603137019-ea06",
+      "timestamp": "2026-08-13T06:38:57.019Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "CO_OWNER_REMOVED",
+      "details": "Revoked ownership access for Kurudi Bharath Kumar (9346227894).",
+      "id": "audit-1786603027193-e7tj",
+      "timestamp": "2026-08-13T06:37:07.193Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kurudi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786602997996-co16",
+      "timestamp": "2026-08-13T06:36:37.996Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kurudi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786602877195-hc3j",
+      "timestamp": "2026-08-13T06:34:37.195Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786602675533-wchd",
+      "timestamp": "2026-08-13T06:31:15.533Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "CO_OWNER_REMOVED",
+      "details": "Revoked ownership access for KBK Studio Lead Editor (9845012345).",
+      "id": "audit-1786602395637-9xls",
+      "timestamp": "2026-08-13T06:26:35.637Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kurudi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786601979612-iym6",
+      "timestamp": "2026-08-13T06:19:39.612Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "CO_OWNER_INVITED",
+      "details": "Added new co-owner Kurudi Bharath Kumar (9346227894, kbkfilms.official@gmail.com).",
+      "id": "audit-1786601979600-g43t",
+      "timestamp": "2026-08-13T06:19:39.600Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "CO_OWNER_REMOVED",
+      "details": "Revoked ownership access for Kurudi Bharath Kumar (9346227894).",
+      "id": "audit-1786601979583-s6xq",
+      "timestamp": "2026-08-13T06:19:39.583Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786601979566-e9xi",
+      "timestamp": "2026-08-13T06:19:39.566Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786601936738-gndl",
+      "timestamp": "2026-08-13T06:18:56.738Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "LIFECYCLE_STAGE_ADVANCED",
+      "details": "Project KBK-2026-8522 updated to stage: testimonial_received.",
+      "id": "audit-1786601581669-524q",
+      "timestamp": "2026-08-13T06:13:01.669Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kurudi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786601568142-3tiv",
+      "timestamp": "2026-08-13T06:12:48.142Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786601351883-w3i6",
+      "timestamp": "2026-08-13T06:09:11.883Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786600685703-ybgc",
+      "timestamp": "2026-08-13T05:58:05.703Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kurudi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786554652783-9xc9",
+      "timestamp": "2026-08-12T17:10:52.783Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"MUHURTHAM VIDEO\" (work-1786551429947)",
+      "id": "audit-1786551471558-73cf",
+      "timestamp": "2026-08-12T16:17:51.558Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"MUHURTHAM VIDEO\" (work-1786551429794)",
+      "id": "audit-1786551466379-aizs",
+      "timestamp": "2026-08-12T16:17:46.380Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"MUHURTHAM VIDEO\" (work-1786551427590)",
+      "id": "audit-1786551466364-j3m6",
+      "timestamp": "2026-08-12T16:17:46.364Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"MUHURTHAM VIDEO\" (work-1786551427656)",
+      "id": "audit-1786551466282-y63r",
+      "timestamp": "2026-08-12T16:17:46.282Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"MUHURTHAM VIDEO\" (work-1786551427679)",
+      "id": "audit-1786551466266-60ka",
+      "timestamp": "2026-08-12T16:17:46.266Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"RECEPTION VIDEO\" (work-1786550620936)",
+      "id": "audit-1786551349927-dz3q",
+      "timestamp": "2026-08-12T16:15:49.927Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"MUHURTHAM VIDEO\" (work-1786549747724)",
+      "id": "audit-1786551345137-ibmt",
+      "timestamp": "2026-08-12T16:15:45.137Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "Kurudi Bharath Kumar",
+      "actorIdentifier": "9346227894",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner Kurudi Bharath Kumar logged in to Owner Space.",
+      "id": "audit-1786549427474-7bik",
+      "timestamp": "2026-08-12T15:43:47.474Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"On-Venue Spot Editing & Reception Projection Showcase\" (work-spot-editing)",
+      "id": "audit-1786471770628-0ok2",
+      "timestamp": "2026-08-11T18:09:30.628Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"Miracle of Motherhood | Maternity Visual Story\" (work-maternity)",
+      "id": "audit-1786471768263-5xaw",
+      "timestamp": "2026-08-11T18:09:28.263Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"Yellow Splash Festivity | Haldi & Sangeeth Blast\" (work-haldi)",
+      "id": "audit-1786471765940-rm8a",
+      "timestamp": "2026-08-11T18:09:25.940Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"Enchanted Mist Romance | Pre-Wedding Narrative\" (work-prewedding)",
+      "id": "audit-1786471763625-a9w9",
+      "timestamp": "2026-08-11T18:09:23.625Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"Grand Wedding Reception & Gala Night Highlights\" (work-reception)",
+      "id": "audit-1786471760763-m470",
+      "timestamp": "2026-08-11T18:09:20.763Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"Grand Traditional Muhurtham Master Film\" (work-muhurtham)",
+      "id": "audit-1786471758254-eayx",
+      "timestamp": "2026-08-11T18:09:18.254Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "9346476951",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"m\" (work-1786471726953)",
+      "id": "audit-1786471753003-knec",
+      "timestamp": "2026-08-11T18:09:13.003Z"
+    },
     {
       "actorRole": "primary_owner",
       "actorName": "K S Indra Kumar",
@@ -2205,6 +1969,253 @@
       "expiresAt": 1786387752406,
       "verified": false,
       "createdAt": "2026-08-10T18:39:12.406Z"
+    },
+    {
+      "id": "otp-1786549425961",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786550025961,
+      "verified": false,
+      "createdAt": "2026-08-12T15:43:45.961Z"
+    },
+    {
+      "id": "otp-1786554651413",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786555251413,
+      "verified": false,
+      "createdAt": "2026-08-12T17:10:51.413Z"
+    },
+    {
+      "id": "otp-1786600681800",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786601281800,
+      "verified": false,
+      "createdAt": "2026-08-13T05:58:01.800Z"
+    },
+    {
+      "id": "otp-1786601350015",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786601950015,
+      "verified": false,
+      "createdAt": "2026-08-13T06:09:10.015Z"
+    },
+    {
+      "id": "otp-1786601566334",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786602166334,
+      "verified": false,
+      "createdAt": "2026-08-13T06:12:46.334Z"
+    },
+    {
+      "id": "otp-1786601979606",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786602579606,
+      "verified": false,
+      "createdAt": "2026-08-13T06:19:39.606Z"
+    },
+    {
+      "id": "otp-1786602648598",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786603248597,
+      "verified": false,
+      "createdAt": "2026-08-13T06:30:48.598Z"
+    },
+    {
+      "id": "otp-1786602828647",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786603428647,
+      "verified": false,
+      "createdAt": "2026-08-13T06:33:48.647Z"
+    },
+    {
+      "id": "otp-1786602994286",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786603594286,
+      "verified": false,
+      "createdAt": "2026-08-13T06:36:34.286Z"
+    },
+    {
+      "id": "otp-1786603149590",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786603749590,
+      "verified": false,
+      "createdAt": "2026-08-13T06:39:09.590Z"
+    },
+    {
+      "id": "otp-1786623796747",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786624396747,
+      "verified": false,
+      "createdAt": "2026-08-13T12:23:16.747Z"
+    },
+    {
+      "id": "otp-1786625149710",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "client_tracking",
+      "bookingRef": "KBK-2026-3115",
+      "expiresAt": 1786626049710,
+      "verified": false,
+      "createdAt": "2026-08-13T12:45:49.710Z"
+    },
+    {
+      "id": "otp-1786625168945",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786625768945,
+      "verified": false,
+      "createdAt": "2026-08-13T12:46:08.945Z"
+    },
+    {
+      "id": "otp-1786625849287",
+      "identifier": "9440187654",
+      "otpCode": "123456",
+      "purpose": "client_tracking",
+      "bookingRef": "KBK-2026-8941",
+      "expiresAt": 1786626749287,
+      "verified": false,
+      "createdAt": "2026-08-13T12:57:29.287Z"
+    },
+    {
+      "id": "otp-1786625864797",
+      "identifier": "9440187654",
+      "otpCode": "123456",
+      "purpose": "client_tracking",
+      "bookingRef": "KBK-2026-8941",
+      "expiresAt": 1786626764797,
+      "verified": false,
+      "createdAt": "2026-08-13T12:57:44.797Z"
+    },
+    {
+      "id": "otp-1786626215868",
+      "identifier": "9440187654",
+      "otpCode": "123456",
+      "purpose": "client_tracking",
+      "bookingRef": "KBK-2026-8941",
+      "expiresAt": 1786627115868,
+      "verified": false,
+      "createdAt": "2026-08-13T13:03:35.868Z"
+    },
+    {
+      "id": "otp-1786627219078",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786627819078,
+      "verified": false,
+      "createdAt": "2026-08-13T13:20:19.078Z"
+    },
+    {
+      "id": "otp-1786627724333",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786628324333,
+      "verified": false,
+      "createdAt": "2026-08-13T13:28:44.333Z"
+    },
+    {
+      "id": "otp-1786627736462",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786628336462,
+      "verified": false,
+      "createdAt": "2026-08-13T13:28:56.462Z"
+    },
+    {
+      "id": "otp-1786627954730",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786628554730,
+      "verified": false,
+      "createdAt": "2026-08-13T13:32:34.730Z"
+    },
+    {
+      "id": "otp-1786628555461",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786629155461,
+      "verified": false,
+      "createdAt": "2026-08-13T13:42:35.461Z"
+    },
+    {
+      "id": "otp-1786628584282",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786629184282,
+      "verified": false,
+      "createdAt": "2026-08-13T13:43:04.282Z"
+    },
+    {
+      "id": "otp-1786629028348",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786629628348,
+      "verified": false,
+      "createdAt": "2026-08-13T13:50:28.348Z"
+    },
+    {
+      "id": "otp-1786629030089",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786629630089,
+      "verified": false,
+      "createdAt": "2026-08-13T13:50:30.089Z"
+    },
+    {
+      "id": "otp-1786629167391",
+      "identifier": "7777777777",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786629767391,
+      "verified": false,
+      "createdAt": "2026-08-13T13:52:47.391Z"
+    },
+    {
+      "id": "otp-1786629398628",
+      "identifier": "8888888888",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786629998628,
+      "verified": false,
+      "createdAt": "2026-08-13T13:56:38.628Z"
+    },
+    {
+      "id": "otp-1786629431970",
+      "identifier": "9346227894",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786630031970,
+      "verified": false,
+      "createdAt": "2026-08-13T13:57:11.970Z"
     }
   ]
 }

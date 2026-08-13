@@ -25,10 +25,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static assets (hero reel and logo)
+// Serve static assets (hero reel, client videos, and logo)
 const clientPublicPath = path.resolve(process.cwd(), '..', 'client', 'public');
 if (fs.existsSync(clientPublicPath)) {
   app.use(express.static(clientPublicPath));
+}
+
+// Serve private deliveries storage for direct streaming
+const storagePath = path.resolve(process.cwd(), 'storage');
+if (fs.existsSync(storagePath)) {
+  app.use('/storage', express.static(storagePath));
 }
 
 // ----------------------------------------------------
@@ -128,6 +134,203 @@ app.get('/api/services', (req: Request, res: Response) => {
 app.get('/api/works', (req: Request, res: Response) => {
   const works = db.getPublicWorks().filter(w => w.isPublished);
   res.json(works);
+});
+
+// In-memory cache for resolved Google Drive download links
+const driveStreamCache = new Map<string, { downloadUrl: string; cookies: string; expiresAt: number }>();
+const VIDEO_CACHE_DIR = path.resolve(__dirname, '../uploads/video-cache');
+if (!fs.existsSync(VIDEO_CACHE_DIR)) {
+  fs.mkdirSync(VIDEO_CACHE_DIR, { recursive: true });
+}
+
+// Set of files currently downloading in background
+const downloadingSet = new Set<string>();
+
+async function ensureVideoCached(fileId: string): Promise<string | null> {
+  const cachePath = path.join(VIDEO_CACHE_DIR, `${fileId}.mp4`);
+  if (fs.existsSync(cachePath) && fs.statSync(cachePath).size > 1000000) {
+    return cachePath;
+  }
+
+  if (downloadingSet.has(fileId)) {
+    return null;
+  }
+
+  downloadingSet.add(fileId);
+  (async () => {
+    try {
+      const initialUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+      const initialRes = await fetch(initialUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+      });
+      const cookies = initialRes.headers.get('set-cookie') || '';
+      const text = await initialRes.text();
+
+      let downloadUrl = initialUrl;
+      if (text.includes('id="download-form"')) {
+        const actionMatch = text.match(/action="([^"]+)"/);
+        const action = actionMatch ? actionMatch[1] : 'https://drive.usercontent.google.com/download';
+        const uuidMatch = text.match(/name="uuid" value="([^"]+)"/);
+        const uuid = uuidMatch ? uuidMatch[1] : '';
+        const confirmMatch = text.match(/name="confirm" value="([^"]+)"/);
+        const confirm = confirmMatch ? confirmMatch[1] : 't';
+        downloadUrl = `${action}?id=${fileId}&export=download&confirm=${confirm}${uuid ? `&uuid=${uuid}` : ''}`;
+      }
+
+      const driveRes = await fetch(downloadUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+          'Cookie': cookies
+        }
+      });
+
+      if (driveRes.ok && driveRes.body) {
+        const tempPath = `${cachePath}.tmp`;
+        const fileStream = fs.createWriteStream(tempPath);
+        const { Readable } = await import('stream');
+        await new Promise((resolve, reject) => {
+          // @ts-ignore
+          Readable.fromWeb(driveRes.body).pipe(fileStream);
+          fileStream.on('finish', () => resolve(true));
+          fileStream.on('error', (err) => reject(err));
+        });
+        if (fs.existsSync(tempPath) && fs.statSync(tempPath).size > 1000000) {
+          fs.renameSync(tempPath, cachePath);
+          console.log(`[StreamCache] Cached video ${fileId} (${fs.statSync(cachePath).size} bytes)`);
+        }
+      }
+    } catch (err) {
+      console.error(`[StreamCache] Failed caching ${fileId}:`, err);
+    } finally {
+      downloadingSet.delete(fileId);
+    }
+  })();
+
+  return null;
+}
+
+async function getDriveDirectDownloadUrl(fileId: string): Promise<{ downloadUrl: string; cookies: string }> {
+  const cached = driveStreamCache.get(fileId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return { downloadUrl: cached.downloadUrl, cookies: cached.cookies };
+  }
+
+  const initialUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+  const initialRes = await fetch(initialUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+    }
+  });
+
+  const cookies = initialRes.headers.get('set-cookie') || '';
+  const text = await initialRes.text();
+
+  let downloadUrl = initialUrl;
+  if (text.includes('id="download-form"')) {
+    const actionMatch = text.match(/action="([^"]+)"/);
+    const action = actionMatch ? actionMatch[1] : 'https://drive.usercontent.google.com/download';
+    const uuidMatch = text.match(/name="uuid" value="([^"]+)"/);
+    const uuid = uuidMatch ? uuidMatch[1] : '';
+    const confirmMatch = text.match(/name="confirm" value="([^"]+)"/);
+    const confirm = confirmMatch ? confirmMatch[1] : 't';
+
+    downloadUrl = `${action}?id=${fileId}&export=download&confirm=${confirm}${uuid ? `&uuid=${uuid}` : ''}`;
+  }
+
+  const result = { downloadUrl, cookies, expiresAt: Date.now() + 15 * 60 * 1000 };
+  driveStreamCache.set(fileId, result);
+  return result;
+}
+
+// Public Google Drive Video Stream Proxy (Supports instant local disk streaming + HTML5 autoplay)
+app.get('/api/public/stream-drive/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!id) {
+    res.status(400).send('File ID required');
+    return;
+  }
+
+  const cachePath = path.join(VIDEO_CACHE_DIR, `${id}.mp4`);
+  if (fs.existsSync(cachePath) && fs.statSync(cachePath).size > 1000000) {
+    const stat = fs.statSync(cachePath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunksize = (end - start) + 1;
+      const file = fs.createReadStream(cachePath, { start, end });
+      const head = {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': 'video/mp4',
+      };
+      res.writeHead(206, head);
+      file.pipe(res);
+    } else {
+      const head = {
+        'Content-Length': fileSize,
+        'Content-Type': 'video/mp4',
+        'Accept-Ranges': 'bytes'
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(cachePath).pipe(res);
+    }
+    return;
+  }
+
+  // Trigger background caching for future instant streams
+  ensureVideoCached(id);
+
+  try {
+    const { downloadUrl, cookies } = await getDriveDirectDownloadUrl(id);
+    const headers: Record<string, string> = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+    };
+    if (cookies) headers['Cookie'] = cookies;
+    if (req.headers.range) {
+      headers['Range'] = req.headers.range;
+    }
+
+    const driveRes = await fetch(downloadUrl, { headers });
+
+    if (!driveRes.ok && driveRes.status !== 206) {
+      driveStreamCache.delete(id);
+      res.status(driveRes.status).send('Unable to stream media from Google Drive');
+      return;
+    }
+
+    const contentType = driveRes.headers.get('content-type') || 'video/mp4';
+    const contentLength = driveRes.headers.get('content-length');
+    const contentRange = driveRes.headers.get('content-range');
+    const acceptRanges = driveRes.headers.get('accept-ranges') || 'bytes';
+
+    const responseHeaders: Record<string, string> = {
+      'Content-Type': contentType.includes('html') ? 'video/mp4' : contentType,
+      'Accept-Ranges': acceptRanges
+    };
+
+    if (contentLength) responseHeaders['Content-Length'] = contentLength;
+    if (contentRange) responseHeaders['Content-Range'] = contentRange;
+
+    res.writeHead(driveRes.status, responseHeaders);
+
+    if (driveRes.body) {
+      const { Readable } = await import('stream');
+      // @ts-ignore
+      Readable.fromWeb(driveRes.body).pipe(res);
+    } else {
+      res.end();
+    }
+  } catch (err: any) {
+    console.error('Error streaming Google Drive video:', err);
+    if (!res.headersSent) {
+      res.status(500).send('Streaming error');
+    }
+  }
 });
 
 // Get Public Testimonials
@@ -903,6 +1106,61 @@ app.post('/api/owner/bookings/:id/price-revision', requireOwnerAuth, (req: AuthR
   res.json({ success: true, booking, history: historyEntry });
 });
 
+// Delete Booking Request (and associated lifecycle project)
+app.delete('/api/owner/bookings/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const index = db.getBookingRequests().findIndex(b => b.id === id || b.bookingRef === id);
+  if (index === -1) {
+    res.status(404).json({ error: 'Booking not found' });
+    return;
+  }
+
+  const removed = db.getBookingRequests().splice(index, 1)[0];
+
+  // Also remove corresponding project if any exists
+  const projIndex = db.getServiceProjects().findIndex(
+    p => p.bookingId === removed.id || p.bookingRef === removed.bookingRef
+  );
+  if (projIndex !== -1) {
+    db.getServiceProjects().splice(projIndex, 1);
+  }
+
+  db.saveDatabase();
+
+  db.addAuditLog({
+    actorRole: req.owner?.role as any || 'primary_owner',
+    actorName: req.owner?.name || 'Owner',
+    actorIdentifier: req.owner?.phone || 'owner',
+    action: 'BOOKING_DELETED',
+    details: `Booking ${removed.bookingRef} for client ${removed.clientName} was deleted by ${req.owner?.name}.`
+  });
+
+  res.json({ success: true, message: `Booking ${removed.bookingRef} deleted successfully.` });
+});
+
+// Delete Service Project Lifecycle
+app.delete('/api/owner/projects/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const index = db.getServiceProjects().findIndex(p => p.id === id || p.bookingRef === id);
+  if (index === -1) {
+    res.status(404).json({ error: 'Project not found' });
+    return;
+  }
+
+  const removed = db.getServiceProjects().splice(index, 1)[0];
+  db.saveDatabase();
+
+  db.addAuditLog({
+    actorRole: req.owner?.role as any || 'primary_owner',
+    actorName: req.owner?.name || 'Owner',
+    actorIdentifier: req.owner?.phone || 'owner',
+    action: 'PROJECT_DELETED',
+    details: `Lifecycle Project ${removed.bookingRef} for client ${removed.clientName} was deleted by ${req.owner?.name}.`
+  });
+
+  res.json({ success: true, message: `Project ${removed.bookingRef} deleted successfully.` });
+});
+
 // Manage Service Projects Lifecycle (9 Stages)
 app.get('/api/owner/projects', requireOwnerAuth, (req: AuthRequest, res: Response) => {
   res.json(db.getServiceProjects());
@@ -1098,7 +1356,7 @@ app.post('/api/owner/works', requireOwnerAuth, (req: AuthRequest, res: Response)
     thumbnailUrl: thumbnailUrl || '/assets/kbk-logo.jpg',
     videoUrl: videoUrl || '/assets/hero-reel.mp4',
     videoSourceType: videoSourceType || 'direct_mp4',
-    externalDestUrl: externalDestUrl || 'https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX',
+    externalDestUrl: externalDestUrl || '',
     description: description || '',
     softwareUsed: Array.isArray(softwareUsed) ? softwareUsed : ['Premiere Pro', 'DaVinci Resolve'],
     isFeatured: true,
@@ -1127,16 +1385,25 @@ app.put('/api/owner/works/:id', requireOwnerAuth, (req: AuthRequest, res: Respon
 });
 
 app.delete('/api/owner/works/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
-  const index = db.getPublicWorks().findIndex(w => w.id === id);
+  const cleanId = decodeURIComponent(req.params.id || '').trim();
+  const index = db.getPublicWorks().findIndex(w => w.id === cleanId || w.id.toLowerCase() === cleanId.toLowerCase());
   if (index === -1) {
     res.status(404).json({ error: 'Work not found' });
     return;
   }
 
-  db.getPublicWorks().splice(index, 1);
+  const removed = db.getPublicWorks().splice(index, 1);
   db.saveDatabase();
-  res.json({ success: true, message: 'Work deleted' });
+
+  db.addAuditLog({
+    actorRole: req.owner?.role as any || 'primary_owner',
+    actorName: req.owner?.name || 'Owner',
+    actorIdentifier: req.owner?.phone || 'owner',
+    action: 'SHOWCASE_WORK_DELETED',
+    details: `Deleted showcase work "${removed[0]?.title || cleanId}" (${cleanId})`
+  });
+
+  res.json({ success: true, message: 'Work deleted successfully' });
 });
 
 // Manage Testimonials CRUD
@@ -1206,7 +1473,61 @@ app.put('/api/owner/cms', requireOwnerAuth, (req: AuthRequest, res: Response) =>
 
 // Manage Co-Owners Team
 app.get('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response) => {
-  res.json(db.getOwners());
+  const activeOwners = db.getOwners().filter(o => o.isActive !== false);
+  res.json(activeOwners);
+});
+
+// Check if an identifier is authorized as owner / staff
+app.post('/api/owner/check-access', (req: Request, res: Response) => {
+  const { identifier } = req.body;
+  if (!identifier) {
+    res.status(400).json({ error: 'Phone number or email is required' });
+    return;
+  }
+  const raw = identifier.trim().toLowerCase();
+  const digitsOnly = raw.replace(/\D/g, '');
+
+  // Protect Developer Root Account from public footer access
+  if (digitsOnly.endsWith('9346476951') || raw === 'ik9893344@gmail.com') {
+    res.json({
+      authorized: false,
+      message: 'Access Restricted: Developer root credentials (9346476951) cannot be unlocked via public footer field. Developer must authenticate via the Developer Portfolio Management Console.'
+    });
+    return;
+  }
+
+  const owner = db.getOwners().find(o => {
+    if (o.isActive === false) return false;
+    // Exclude primary developer from public footer check
+    if (o.role === 'primary_owner' || o.phone === '9346476951') return false;
+
+    const ownerDigits = (o.phone || '').replace(/\D/g, '');
+    const matchesPhone = digitsOnly.length >= 10 && (
+      ownerDigits === digitsOnly ||
+      (digitsOnly.length === 10 && ownerDigits.endsWith(digitsOnly)) ||
+      (ownerDigits.length === 10 && digitsOnly.endsWith(ownerDigits))
+    );
+    const matchesEmail = (o.email || '').toLowerCase() === raw;
+    return matchesPhone || matchesEmail;
+  });
+
+  if (owner) {
+    res.json({
+      authorized: true,
+      owner: {
+        id: owner.id,
+        name: owner.name,
+        phone: owner.phone,
+        email: owner.email,
+        role: owner.role
+      }
+    });
+  } else {
+    res.json({
+      authorized: false,
+      message: 'Access restricted: This phone number or email is not registered as an authorized studio administrator. Access must be granted by Developer K S Indra Kumar via the Developer Portfolio Management Console.'
+    });
+  }
 });
 
 app.post('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response) => {
@@ -1219,9 +1540,29 @@ app.post('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response
   const cleanPhone = phone.trim();
   const cleanEmail = email.trim().toLowerCase();
 
-  const existing = db.getOwners().find(o => o.phone === cleanPhone || o.email.toLowerCase() === cleanEmail);
-  if (existing) {
-    res.status(400).json({ error: 'An owner with this phone or email already exists.' });
+  const existingIndex = db.getOwners().findIndex(
+    o => o.phone === cleanPhone || o.email.toLowerCase() === cleanEmail
+  );
+
+  if (existingIndex !== -1) {
+    const existing = db.getOwners()[existingIndex];
+    existing.name = name;
+    existing.phone = cleanPhone;
+    existing.email = cleanEmail;
+    existing.role = role || existing.role || 'co_owner';
+    existing.permissions = Array.isArray(permissions) ? permissions : (existing.permissions || ['manage_bookings', 'manage_lifecycle', 'manage_deliveries', 'manage_works', 'manage_pricing', 'manage_cms']);
+    existing.isActive = true;
+    db.saveDatabase();
+
+    db.addAuditLog({
+      actorRole: req.owner?.role as any || 'primary_owner',
+      actorName: req.owner?.name || 'Primary Owner',
+      actorIdentifier: req.owner?.phone || 'owner',
+      action: 'CO_OWNER_UPDATED',
+      details: `Reactivated/updated co-owner ${name} (${cleanPhone}, ${cleanEmail}).`
+    });
+
+    res.status(200).json({ success: true, owner: existing, message: 'Co-owner updated and activated successfully' });
     return;
   }
 
@@ -1231,7 +1572,7 @@ app.post('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response
     phone: cleanPhone,
     email: cleanEmail,
     role: role || 'co_owner',
-    permissions: Array.isArray(permissions) ? permissions : ['manage_bookings', 'manage_lifecycle', 'manage_deliveries'],
+    permissions: Array.isArray(permissions) ? permissions : ['manage_bookings', 'manage_lifecycle', 'manage_deliveries', 'manage_works', 'manage_pricing', 'manage_cms'],
     isActive: true,
     createdAt: new Date().toISOString()
   };
@@ -1252,22 +1593,32 @@ app.post('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response
 
 app.delete('/api/owner/owners/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const owner = db.getOwners().find(o => o.id === id);
+  const owner = db.getOwners().find(o => o.id === id || o.phone === id || o.email.toLowerCase() === id.toLowerCase());
   if (!owner) {
     res.status(404).json({ error: 'Owner not found' });
     return;
   }
 
-  if (owner.role === 'primary_owner') {
-    res.status(403).json({ error: 'Primary Owner account cannot be removed.' });
+  if (owner.role === 'primary_owner' || owner.phone === '9346476951' || owner.email.toLowerCase() === 'ik9893344@gmail.com') {
+    res.status(403).json({ error: 'Primary Owner account cannot be removed under any circumstances.' });
     return;
   }
 
-  const index = db.getOwners().findIndex(o => o.id === id);
-  db.getOwners().splice(index, 1);
+  const index = db.getOwners().findIndex(o => o.id === owner.id);
+  if (index !== -1) {
+    db.getOwners().splice(index, 1);
+  }
   db.saveDatabase();
 
-  res.json({ success: true, message: 'Co-owner removed successfully' });
+  db.addAuditLog({
+    actorRole: req.owner?.role as any || 'primary_owner',
+    actorName: req.owner?.name || 'Primary Owner',
+    actorIdentifier: req.owner?.phone || 'owner',
+    action: 'CO_OWNER_REMOVED',
+    details: `Revoked ownership access for ${owner.name} (${owner.phone}).`
+  });
+
+  res.json({ success: true, message: `Access revoked for ${owner.name}` });
 });
 
 // Audit Logs

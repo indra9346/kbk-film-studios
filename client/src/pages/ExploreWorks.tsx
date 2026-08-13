@@ -3,6 +3,7 @@ import { Film, Search, Filter, Sparkles, SlidersHorizontal } from 'lucide-react'
 import { useStudio } from '../context/StudioContext';
 import { VideoCard } from '../components/video/VideoCard';
 import { VideoModal } from '../components/video/VideoModal';
+import { YoutubeChannelShowcase } from '../components/video/YoutubeChannelShowcase';
 import { PublicWork } from '../types';
 
 export const ExploreWorks: React.FC = () => {
@@ -11,14 +12,18 @@ export const ExploreWorks: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedWorkModal, setSelectedWorkModal] = useState<PublicWork | null>(null);
 
-  const categories = [
-    'all',
+  const defaultCategories = [
     'Wedding Highlights',
     'Pre-Wedding Video Editing',
     'Haldi & Sangeeth Ceremonies',
     'Maternity Shoot Videos',
     'House Warming Ceremonies',
     'Spot Editing Available',
+  ];
+
+  const categories = [
+    'all',
+    ...Array.from(new Set([...defaultCategories, ...works.map((w) => w.category).filter(Boolean)])),
   ];
 
   const filteredWorks = works.filter((work) => {
@@ -111,6 +116,9 @@ export const ExploreWorks: React.FC = () => {
           </div>
         )}
       </section>
+
+      {/* YouTube Channel & Live Activity Streams */}
+      <YoutubeChannelShowcase />
 
       {/* Video Modal Cinema View */}
       <VideoModal

@@ -63,7 +63,16 @@ export const api = {
     return json;
   },
 
-  // Passwordless Owner Auth
+  // Passwordless Owner Auth & Access Verification
+  async checkOwnerAccess(identifier: string): Promise<{ authorized: boolean; owner?: any; message?: string }> {
+    const res = await fetch(`${API_BASE}/owner/check-access`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier }),
+    });
+    return res.json();
+  },
+
   async requestOwnerOTP(identifier: string): Promise<{ success: boolean; message: string; demoHint?: string }> {
     const res = await fetch(`${API_BASE}/auth/owner-request-otp`, {
       method: 'POST',
@@ -276,6 +285,24 @@ export const api = {
       headers: getAuthHeaders('owner'),
     });
     if (!res.ok) throw new Error('Failed to delete work');
+    return res.json();
+  },
+
+  async deleteBooking(id: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/owner/bookings/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders('owner'),
+    });
+    if (!res.ok) throw new Error('Failed to delete booking request');
+    return res.json();
+  },
+
+  async deleteProject(id: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/owner/projects/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders('owner'),
+    });
+    if (!res.ok) throw new Error('Failed to delete lifecycle project');
     return res.json();
   },
 

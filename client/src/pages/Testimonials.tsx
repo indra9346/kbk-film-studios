@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star, MessageSquare, Volume2, VolumeX, ShieldCheck, Film, Sparkles, Play } from 'lucide-react';
 import { useStudio } from '../context/StudioContext';
 import { Testimonial } from '../types';
+import { getVideoType, getCleanVideoUrl } from '../components/video/VideoCard';
 
 export const Testimonials: React.FC = () => {
   const { testimonials } = useStudio();
@@ -12,7 +13,7 @@ export const Testimonials: React.FC = () => {
     setMutedMap((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const categories = ['all', 'Wedding Video Highlights', 'Pre-Wedding Video Editing', 'Spot Editing Live (Same-Day)', 'House Warming Ceremonies'];
+  const categories = ['all', 'Wedding Video Highlights', 'Pre-Wedding Video Editing', 'Haldi & Sangeeth Ceremonies', 'Spot Editing Available', 'House Warming Ceremonies'];
 
   const filteredTestimonials = testimonials.filter((t) => {
     if (selectedCategory === 'all') return true;
@@ -56,31 +57,48 @@ export const Testimonials: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredTestimonials.map((t) => {
             const isMuted = mutedMap[t.id] !== false; // default true
+            const media = t.videoUrl ? getVideoType(t.videoUrl) : null;
 
             return (
               <div
                 key={t.id}
-                className="p-6 rounded-3xl glass-panel border border-gold/20 flex flex-col justify-between space-y-6 hover:border-gold/40 transition-all"
+                className="p-6 rounded-3xl glass-panel border border-gold/20 flex flex-col justify-between space-y-6 hover:border-gold/40 transition-all shadow-xl"
               >
-                {/* If Video Attached */}
+                {/* If Customer Video Feedback Attached */}
                 {t.videoUrl && (
                   <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-gold/20">
-                    <video
-                      src={t.videoUrl}
-                      poster={t.thumbnailUrl || '/assets/kbk-logo.jpg'}
-                      autoPlay
-                      loop
-                      muted={isMuted}
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={() => toggleVideoSound(t.id)}
-                      className="absolute bottom-3 right-3 p-2 rounded-full bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 transition-all"
-                      title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-                    >
-                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-gold" />}
-                    </button>
+                    {media && media.type === 'youtube' && media.id ? (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1&rel=0`}
+                        title={`Customer Video Review - ${t.clientName}`}
+                        className="w-full h-full object-cover border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <>
+                        <video
+                          src={getCleanVideoUrl(t.videoUrl)}
+                          poster={media && media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (t.thumbnailUrl || '/assets/kbk-logo.jpg')}
+                          autoPlay
+                          loop
+                          muted={isMuted}
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          onClick={() => toggleVideoSound(t.id)}
+                          className="absolute bottom-3 right-3 p-2 rounded-full bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 transition-all z-10"
+                          title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+                        >
+                          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-gold" />}
+                        </button>
+                      </>
+                    )}
+                    <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 flex items-center gap-1 z-10">
+                      <Film className="w-2.5 h-2.5" />
+                      <span>Video Review</span>
+                    </div>
                   </div>
                 )}
 

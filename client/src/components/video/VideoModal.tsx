@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { X, ExternalLink, Calendar, MapPin, Layers, Film, Sparkles, CheckCircle2 } from 'lucide-react';
 import { PublicWork } from '../../types';
-import { getVideoType } from './VideoCard';
+import { getVideoType, getCleanVideoUrl } from './VideoCard';
 
 interface VideoModalProps {
   work: PublicWork | null;
@@ -23,18 +23,18 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-xl animate-fadeIn">
       <div className="relative w-full max-w-4xl max-h-[95vh] flex flex-col bg-surface-200 border border-gold/40 rounded-2xl shadow-2xl overflow-hidden">
         {/* Top Control Bar */}
-        <div className="p-4 sm:p-5 border-b border-gold/20 flex items-center justify-between bg-surface-100/90">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-50 bg-surface-100/90">
           <div className="flex items-center gap-3">
-            <span className="px-3 py-1 rounded-md bg-gold/15 border border-gold/30 text-gold text-xs font-bold uppercase tracking-wider">
+            <span className="px-2.5 py-1 rounded bg-gold/15 text-gold text-xs font-bold uppercase tracking-wider border border-gold/30">
               {work.category}
             </span>
-            <h3 className="font-serif text-base sm:text-lg font-bold text-ivory-100 line-clamp-1">
+            <h3 className="font-serif font-bold text-base sm:text-lg text-white">
               {work.title}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-ivory-400 hover:text-white rounded-full bg-surface-50 border border-gold/20 transition-all"
+            className="p-2 rounded-lg bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -44,7 +44,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
         <div className="relative aspect-video w-full bg-black flex flex-col items-center justify-center">
           {(() => {
             const media = getVideoType(work.videoUrl);
-            if (media.type === 'youtube') {
+            if (media.type === 'youtube' && media.id) {
               return (
                 <iframe
                   src={`https://www.youtube.com/embed/${media.id}?autoplay=1&rel=0`}
@@ -56,22 +56,10 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
                 />
               );
             }
-            if (media.type === 'google-drive') {
-              return (
-                <iframe
-                  src={`https://drive.google.com/file/d/${media.id}/preview`}
-                  title={work.title}
-                  className="w-full h-full object-contain border-0"
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                  frameBorder="0"
-                />
-              );
-            }
             return (
               <video
                 ref={videoRef}
-                src={work.videoUrl || '/assets/hero-reel.mp4'}
+                src={getCleanVideoUrl(work.videoUrl)}
                 controls
                 autoPlay
                 playsInline
@@ -94,23 +82,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
                 {work.eventYear}
               </span>
             </div>
-
-            {/* External Full YouTube / Drive Link */}
-            {work.externalDestUrl && (
-              <a
-                href={work.externalDestUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent-crimson/15 hover:bg-accent-crimson/25 border border-accent-crimson/40 text-white font-semibold text-xs transition-all shadow-sm"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>
-                  {work.externalDestUrl.includes('drive.google.com')
-                    ? 'Watch on Google Drive'
-                    : 'Watch Full Master on YouTube'}
-                </span>
-              </a>
-            )}
           </div>
 
           <div>

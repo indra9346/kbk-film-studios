@@ -25,11 +25,14 @@ import {
   AlertCircle,
   Send,
   RefreshCw,
-  FileText
+  FileText,
+  Play,
+  Star
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStudio } from '../context/StudioContext';
 import { api } from '../api/client';
+import { getVideoType, getCleanVideoUrl } from '../components/video/VideoCard';
 import {
   BookingRequest,
   ServiceProject,
@@ -97,6 +100,17 @@ export const OwnerSpace: React.FC = () => {
 
   // Work Edit / Create Modal
   const [editingWork, setEditingWork] = useState<Partial<PublicWork> | null>(null);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategoryName, setCustomCategoryName] = useState('');
+  const [deletingWorkId, setDeletingWorkId] = useState<string | null>(null);
+
+  // Testimonial Edit / Create Modal
+  const [editingTestimonial, setEditingTestimonial] = useState<Partial<Testimonial> | null>(null);
+  const [deletingTestimonialId, setDeletingTestimonialId] = useState<string | null>(null);
+
+  // Deletion Confirmation States
+  const [deletingBookingId, setDeletingBookingId] = useState<string | null>(null);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
 
   // Upload Delivery Modal
   const [deliveryProject, setDeliveryProject] = useState<ServiceProject | null>(null);
@@ -212,6 +226,35 @@ export const OwnerSpace: React.FC = () => {
     }
   };
 
+  const handleDeleteBooking = async (id: string) => {
+    try {
+      setBookings((prev) => prev.filter((b) => b.id !== id && b.bookingRef !== id));
+      setProjects((prev) => prev.filter((p) => p.bookingId !== id && p.bookingRef !== id));
+      setDeletingBookingId(null);
+      await api.deleteBooking(id);
+      loadOwnerData();
+      refreshData();
+    } catch (err: any) {
+      console.error('Delete booking error:', err);
+      alert(err.message || 'Failed to delete booking');
+      loadOwnerData();
+    }
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    try {
+      setProjects((prev) => prev.filter((p) => p.id !== id && p.bookingRef !== id));
+      setDeletingProjectId(null);
+      await api.deleteProject(id);
+      loadOwnerData();
+      refreshData();
+    } catch (err: any) {
+      console.error('Delete project error:', err);
+      alert(err.message || 'Failed to delete project');
+      loadOwnerData();
+    }
+  };
+
   // Price Revision Handler
   const handleRevisePrice = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -301,8 +344,19 @@ export const OwnerSpace: React.FC = () => {
     e.preventDefault();
     if (!editingWork || !editingWork.title) return;
     try {
-      await api.saveWork(editingWork);
+      const finalCategory = (isCustomCategory && customCategoryName.trim())
+        ? customCategoryName.trim()
+        : editingWork.category || 'Wedding Highlights';
+
+      const payload = {
+        ...editingWork,
+        category: finalCategory,
+      };
+
+      await api.saveWork(payload);
       setEditingWork(null);
+      setIsCustomCategory(false);
+      setCustomCategoryName('');
       loadOwnerData();
       refreshData();
     } catch (err: any) {
@@ -311,24 +365,53 @@ export const OwnerSpace: React.FC = () => {
   };
 
   const handleDeleteWork = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this showcase film?')) return;
     try {
+      // Optimistic update for instant UI feedback
+      setWorks((prev) => prev.filter((w) => w.id !== id));
+      setDeletingWorkId(null);
       await api.deleteWork(id);
       loadOwnerData();
       refreshData();
     } catch (err: any) {
+      console.error('Delete work error:', err);
       alert(err.message || 'Failed to delete work');
+      loadOwnerData();
+    }
+  };
+
+  const handleSaveTestimonial = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTestimonial || !editingTestimonial.clientName || !editingTestimonial.reviewText) return;
+    try {
+      const payload = {
+        ...editingTestimonial,
+        serviceTitle: editingTestimonial.serviceTitle || 'Wedding Video Highlights',
+        location: editingTestimonial.location || 'Hindupur, AP',
+        eventDate: editingTestimonial.eventDate || '2026',
+        rating: Number(editingTestimonial.rating) || 5,
+        isPublished: editingTestimonial.isPublished !== false,
+        isVerified: true
+      };
+      await api.saveTestimonial(payload);
+      setEditingTestimonial(null);
+      loadOwnerData();
+      refreshData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to save testimonial');
     }
   };
 
   const handleDeleteTestimonial = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this testimonial?')) return;
     try {
+      setTestimonials((prev) => prev.filter((t) => t.id !== id));
+      setDeletingTestimonialId(null);
       await api.deleteTestimonial(id);
       loadOwnerData();
       refreshData();
     } catch (err: any) {
+      console.error('Delete testimonial error:', err);
       alert(err.message || 'Failed to delete testimonial');
+      loadOwnerData();
     }
   };
 
@@ -388,7 +471,7 @@ export const OwnerSpace: React.FC = () => {
               {ownerData && (
                 <span className="text-xs text-accent-emerald font-semibold flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  {ownerData.name} ({ownerData.role.replace('_', ' ')})
+                  {ownerData.name} ({ownerData.role === 'primary_owner' || ownerData.phone === '9346476951' ? 'DEVELOPER' : 'STUDIO OWNER'})
                 </span>
               )}
             </div>
@@ -456,8 +539,9 @@ export const OwnerSpace: React.FC = () => {
                 </div>
 
                 <div className="p-3 rounded-xl bg-surface-100 border border-surface-50 text-[11px] text-ivory-400 space-y-1">
-                  <div>👑 <span className="text-gold font-semibold">Primary Owners:</span></div>
+                  <div>💻 <span className="text-gold font-semibold">Developer & Creator:</span></div>
                   <div>• K S Indra Kumar (<span className="text-white font-mono">9346476951</span> / <span className="text-white font-mono">ik9893344@gmail.com</span>)</div>
+                  <div className="pt-1">🎬 <span className="text-gold font-semibold">Studio Co-Owner:</span></div>
                   <div>• Kurudi Bharath Kumar (<span className="text-white font-mono">9346227894</span> / <span className="text-white font-mono">kbkfilms.official@gmail.com</span>)</div>
                 </div>
 
@@ -615,6 +699,7 @@ export const OwnerSpace: React.FC = () => {
                           <th className="pb-3">Event Date</th>
                           <th className="pb-3">Quote Snapshot</th>
                           <th className="pb-3">Status</th>
+                          <th className="pb-3 text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-surface-50 text-ivory-200">
@@ -631,6 +716,34 @@ export const OwnerSpace: React.FC = () => {
                               }`}>
                                 {b.status}
                               </span>
+                            </td>
+                            <td className="py-3 text-right">
+                              {deletingBookingId === b.id ? (
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <span className="text-[10px] text-accent-crimson font-bold animate-pulse">Delete?</span>
+                                  <button
+                                    onClick={() => handleDeleteBooking(b.id)}
+                                    className="px-2 py-0.5 rounded bg-accent-crimson hover:bg-accent-crimson/80 text-white text-[10px] font-bold shadow-sm"
+                                  >
+                                    Yes
+                                  </button>
+                                  <button
+                                    onClick={() => setDeletingBookingId(null)}
+                                    className="px-1.5 py-0.5 rounded bg-surface-100 text-ivory-400 text-[10px]"
+                                  >
+                                    No
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setDeletingBookingId(b.id)}
+                                  className="p-1 rounded text-accent-crimson/70 hover:text-accent-crimson hover:bg-accent-crimson/15 transition-all inline-flex items-center gap-1 text-[11px]"
+                                  title="Delete Booking Record"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span className="hidden sm:inline">Delete</span>
+                                </button>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -761,28 +874,62 @@ export const OwnerSpace: React.FC = () => {
                         )}
 
                         {/* Action Buttons */}
-                        {booking.status === 'pending' && (
-                          <div className="pt-2 flex flex-wrap gap-3">
-                            <button
-                              onClick={() => {
-                                setSelectedBookingForAction(booking);
-                                setActionQuoteAmount(booking.quotedAmount);
-                                setActionScheduleDate(booking.preferredDeliveryDate || '');
-                              }}
-                              className="px-5 py-2 rounded-xl bg-accent-emerald text-black font-bold text-xs uppercase tracking-wider hover:bg-accent-emerald/90 transition-all flex items-center gap-1.5"
-                            >
-                              <CheckCircle2 className="w-4 h-4" />
-                              <span>Accept & Schedule</span>
-                            </button>
+                        <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-surface-50">
+                          <div className="flex flex-wrap gap-2.5">
+                            {booking.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setSelectedBookingForAction(booking);
+                                    setActionQuoteAmount(booking.quotedAmount);
+                                    setActionScheduleDate(booking.preferredDeliveryDate || '');
+                                  }}
+                                  className="px-5 py-2 rounded-xl bg-accent-emerald text-black font-bold text-xs uppercase tracking-wider hover:bg-accent-emerald/90 transition-all flex items-center gap-1.5 shadow-sm"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                  <span>Accept & Schedule</span>
+                                </button>
 
-                            <button
-                              onClick={() => handleRejectBooking(booking)}
-                              className="px-5 py-2 rounded-xl bg-accent-crimson/20 hover:bg-accent-crimson/30 text-accent-crimson border border-accent-crimson/40 font-semibold text-xs transition-all"
-                            >
-                              Decline Request
-                            </button>
+                                <button
+                                  onClick={() => handleRejectBooking(booking)}
+                                  className="px-4 py-2 rounded-xl bg-accent-crimson/20 hover:bg-accent-crimson/30 text-accent-crimson border border-accent-crimson/40 font-semibold text-xs transition-all"
+                                >
+                                  Decline Request
+                                </button>
+                              </>
+                            )}
                           </div>
-                        )}
+
+                          {/* Delete Booking Button */}
+                          <div>
+                            {deletingBookingId === booking.id ? (
+                              <div className="flex items-center gap-2 p-1 bg-accent-crimson/10 border border-accent-crimson/30 rounded-xl">
+                                <span className="text-[11px] text-accent-crimson font-bold pl-2">Delete permanently?</span>
+                                <button
+                                  onClick={() => handleDeleteBooking(booking.id)}
+                                  className="px-3 py-1 rounded-lg bg-accent-crimson hover:bg-accent-crimson/80 text-white text-xs font-bold shadow-sm"
+                                >
+                                  Yes, Delete
+                                </button>
+                                <button
+                                  onClick={() => setDeletingBookingId(null)}
+                                  className="px-2 py-1 rounded-lg bg-surface-100 text-ivory-400 text-xs"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setDeletingBookingId(booking.id)}
+                                className="px-3 py-1.5 rounded-xl bg-surface-100 hover:bg-accent-crimson/20 text-ivory-400 hover:text-accent-crimson border border-surface-50 hover:border-accent-crimson/40 text-xs font-medium transition-all flex items-center gap-1.5"
+                                title="Delete Booking"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-accent-crimson/80" />
+                                <span>Delete Record</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     ));
                   })()}
@@ -930,20 +1077,49 @@ export const OwnerSpace: React.FC = () => {
                             </p>
                           </div>
 
-                          {/* Quick Action to upload delivery */}
-                          {proj.currentStage !== 'testimonial_received' && (
-                            <button
-                              onClick={() => {
-                                setDeliveryProject(proj);
-                                setDeliveryTitle(`${proj.clientName} 4K Master Video Highlight`);
-                                setDeliveryFileName(`${proj.bookingRef}_Master_4K.mp4`);
-                              }}
-                              className="px-4 py-2 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm flex items-center gap-1.5"
-                            >
-                              <Upload className="w-4 h-4" />
-                              <span>Deliver File to Locker</span>
-                            </button>
-                          )}
+                          <div className="flex flex-wrap items-center gap-2">
+                            {/* Quick Action to upload delivery */}
+                            {proj.currentStage !== 'testimonial_received' && (
+                              <button
+                                onClick={() => {
+                                  setDeliveryProject(proj);
+                                  setDeliveryTitle(`${proj.clientName} 4K Master Video Highlight`);
+                                  setDeliveryFileName(`${proj.bookingRef}_Master_4K.mp4`);
+                                }}
+                                className="px-4 py-2 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm flex items-center gap-1.5"
+                              >
+                                <Upload className="w-4 h-4" />
+                                <span>Deliver File to Locker</span>
+                              </button>
+                            )}
+
+                            {/* Delete Project Action */}
+                            {deletingProjectId === proj.id ? (
+                              <div className="flex items-center gap-1.5 p-1 bg-accent-crimson/10 border border-accent-crimson/30 rounded-xl">
+                                <span className="text-[10px] text-accent-crimson font-bold pl-2">Delete project?</span>
+                                <button
+                                  onClick={() => handleDeleteProject(proj.id)}
+                                  className="px-2.5 py-1 rounded-lg bg-accent-crimson hover:bg-accent-crimson/80 text-white text-xs font-bold shadow-sm"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={() => setDeletingProjectId(null)}
+                                  className="px-2 py-1 rounded-lg bg-surface-100 text-ivory-400 text-xs"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setDeletingProjectId(proj.id)}
+                                className="p-2 rounded-xl bg-surface-100 hover:bg-accent-crimson/20 text-ivory-400 hover:text-accent-crimson border border-surface-50 hover:border-accent-crimson/40 transition-all text-xs"
+                                title="Delete Lifecycle Project"
+                              >
+                                <Trash2 className="w-4 h-4 text-accent-crimson/80" />
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         {/* Advance Stage Controls */}
@@ -1032,8 +1208,21 @@ export const OwnerSpace: React.FC = () => {
                     Public Works Showcase Portfolio CMS
                   </h3>
                   <button
-                    onClick={() => setEditingWork({ title: '', category: 'Wedding Highlights', eventLocation: 'Hindupur, AP', eventYear: '2026', videoUrl: '/assets/hero-reel.mp4', isFeatured: true, isPublished: true, softwareUsed: ['Premiere Pro', 'DaVinci Resolve'] })}
-                    className="px-4 py-2 rounded-xl bg-gold text-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-gold-sm"
+                    onClick={() => {
+                      setEditingWork({
+                        title: '',
+                        category: 'Wedding Highlights',
+                        eventLocation: 'Hindupur, AP',
+                        eventYear: '2026',
+                        videoUrl: '',
+                        isFeatured: true,
+                        isPublished: true,
+                        softwareUsed: ['Premiere Pro', 'DaVinci Resolve']
+                      });
+                      setIsCustomCategory(false);
+                      setCustomCategoryName('');
+                    }}
+                    className="px-4 py-2 rounded-xl bg-gold text-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-gold-sm hover:bg-gold-light transition-all"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add New Showcase Film</span>
@@ -1044,12 +1233,44 @@ export const OwnerSpace: React.FC = () => {
                   {works.map((work) => (
                     <div
                       key={work.id}
-                      className="p-5 rounded-2xl glass-panel border border-gold/20 flex flex-col justify-between space-y-4"
+                      className="p-5 rounded-2xl glass-panel border border-gold/20 flex flex-col justify-between space-y-4 hover:border-gold/40 transition-colors overflow-hidden"
                     >
-                      <div className="space-y-2">
-                        <span className="px-2 py-0.5 rounded bg-gold/15 text-gold text-[10px] font-bold uppercase">
+                      {/* Live Video Preview in Muted Autoplay Loop */}
+                      <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20">
+                        {(() => {
+                          const media = getVideoType(work.videoUrl);
+                          if (media.type === 'youtube' && media.id) {
+                            return (
+                              <iframe
+                                src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0`}
+                                title={work.title}
+                                className="w-full h-full object-cover border-0 pointer-events-none scale-105"
+                                allow="autoplay; encrypted-media"
+                                frameBorder="0"
+                              />
+                            );
+                          }
+                          return (
+                            <video
+                              src={getCleanVideoUrl(work.videoUrl)}
+                              poster={media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (work.thumbnailUrl || undefined)}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              className="w-full h-full object-cover"
+                            />
+                          );
+                        })()}
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10">
                           {work.category}
-                        </span>
+                        </div>
+                        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 text-[9px] font-mono border border-emerald-500/30 z-10">
+                          Live Preview
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
                         <h4 className="font-serif text-base font-bold text-white">
                           {work.title}
                         </h4>
@@ -1060,17 +1281,53 @@ export const OwnerSpace: React.FC = () => {
 
                       <div className="pt-3 border-t border-surface-50 flex items-center justify-between">
                         <button
-                          onClick={() => setEditingWork(work)}
-                          className="text-xs text-gold hover:underline font-semibold"
+                          onClick={() => {
+                            setEditingWork(work);
+                            const isPreset = [
+                              'Wedding Highlights',
+                              'Pre-Wedding Video Editing',
+                              'Haldi & Sangeeth Ceremonies',
+                              'Maternity Shoot Videos',
+                              'House Warming Ceremonies',
+                              'Spot Editing Available',
+                              'AI-Assisted Video Creation & 3D Animation',
+                              'Cinematic Teasers/Reels (9:16)',
+                              'YouTube Videos & Commercials'
+                            ].includes(work.category);
+                            setIsCustomCategory(!isPreset);
+                            setCustomCategoryName(!isPreset ? work.category : '');
+                          }}
+                          className="text-xs text-gold hover:underline font-semibold flex items-center gap-1"
                         >
-                          Edit Film
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Edit Film</span>
                         </button>
-                        <button
-                          onClick={() => handleDeleteWork(work.id)}
-                          className="text-xs text-accent-crimson hover:underline"
-                        >
-                          Delete
-                        </button>
+
+                        {deletingWorkId === work.id ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] text-accent-crimson font-bold animate-pulse">Confirm?</span>
+                            <button
+                              onClick={() => handleDeleteWork(work.id)}
+                              className="px-2.5 py-1 rounded bg-accent-crimson hover:bg-accent-crimson/80 text-white text-[11px] font-bold shadow-sm transition-all"
+                            >
+                              Yes, Delete
+                            </button>
+                            <button
+                              onClick={() => setDeletingWorkId(null)}
+                              className="px-2 py-1 rounded bg-surface-100 text-ivory-300 text-[11px] hover:text-white"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeletingWorkId(work.id)}
+                            className="text-xs text-accent-crimson hover:bg-accent-crimson/15 px-2 py-1 rounded transition-all flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1081,31 +1338,122 @@ export const OwnerSpace: React.FC = () => {
             {/* TAB 7: TESTIMONIALS CMS */}
             {activeTab === 'testimonials' && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-serif text-xl font-bold text-ivory-100">
-                    Client Testimonials & Public Reviews
-                  </h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-ivory-100">
+                      Client Testimonials & Customer Video Feedback
+                    </h3>
+                    <p className="text-xs text-ivory-400">
+                      Add, edit, and curate client reviews, wedding testimonials, and video feedback recordings.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setEditingTestimonial({
+                      clientName: '',
+                      serviceTitle: 'Wedding Video Highlights',
+                      location: 'Hindupur, AP',
+                      eventDate: '2026',
+                      rating: 5,
+                      reviewText: '',
+                      videoUrl: '',
+                      isPublished: true,
+                      isVerified: true
+                    })}
+                    className="px-4 py-2.5 rounded-xl bg-gold text-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-gold-sm hover:bg-gold-light transition-all shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add New Client Testimonial</span>
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {testimonials.map((test) => (
                     <div
                       key={test.id}
-                      className="p-6 rounded-2xl glass-panel border border-gold/20 space-y-3"
+                      className="p-5 rounded-2xl glass-panel border border-gold/20 flex flex-col justify-between space-y-4 hover:border-gold/40 transition-all overflow-hidden"
                     >
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-serif text-base font-bold text-gold">
-                          {test.clientName}
-                        </h4>
-                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${test.isPublished ? 'bg-accent-emerald/20 text-accent-emerald' : 'bg-surface-100 text-ivory-400'}`}>
-                          {test.isPublished ? 'Published' : 'Hidden'}
-                        </span>
+                      {/* If Video Attached -> Live Video Preview */}
+                      {test.videoUrl ? (
+                        <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20">
+                          {(() => {
+                            const media = getVideoType(test.videoUrl);
+                            if (media.type === 'youtube' && media.id) {
+                              return (
+                                <iframe
+                                  src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0`}
+                                  title={test.clientName}
+                                  className="w-full h-full object-cover border-0 pointer-events-none scale-105"
+                                  allow="autoplay; encrypted-media"
+                                  frameBorder="0"
+                                />
+                              );
+                            }
+                            return (
+                              <video
+                                src={getCleanVideoUrl(test.videoUrl)}
+                                poster={media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (test.thumbnailUrl || '/assets/kbk-logo.jpg')}
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                                className="w-full h-full object-cover"
+                              />
+                            );
+                          })()}
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10 flex items-center gap-1">
+                            <Film className="w-2.5 h-2.5" />
+                            <span>Video Feedback</span>
+                          </div>
+                          <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 text-[9px] font-mono border border-emerald-500/30 z-10">
+                            Live Preview
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-3 rounded-xl bg-surface-100/50 border border-surface-50 text-[11px] text-ivory-400 flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-gold shrink-0" />
+                          <span>Written Review Quote (No video attached)</span>
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-serif text-base font-bold text-white">
+                              {test.clientName}
+                            </h4>
+                            <p className="text-[11px] text-ivory-400 font-medium">
+                              {test.serviceTitle} • {test.location}
+                            </p>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${test.isPublished ? 'bg-accent-emerald/20 text-accent-emerald' : 'bg-surface-100 text-ivory-400'}`}>
+                            {test.isPublished ? 'Published' : 'Hidden'}
+                          </span>
+                        </div>
+
+                        {/* Rating Stars */}
+                        <div className="flex items-center gap-1 text-gold">
+                          {[...Array(test.rating || 5)].map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-gold" />
+                          ))}
+                          <span className="text-[11px] text-ivory-400 font-bold ml-1">
+                            {test.rating || 5}.0
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-ivory-300 italic line-clamp-3 leading-relaxed">
+                          "{test.reviewText}"
+                        </p>
                       </div>
-                      <p className="text-xs text-ivory-300 italic">
-                        "{test.reviewText}"
-                      </p>
-                      <div className="pt-2 border-t border-surface-50 flex items-center justify-between text-[11px] text-ivory-400">
-                        <span>{test.serviceTitle} • {test.location}</span>
+
+                      <div className="pt-3 border-t border-surface-50 flex items-center justify-between">
+                        <button
+                          onClick={() => setEditingTestimonial(test)}
+                          className="text-xs text-gold hover:underline font-semibold flex items-center gap-1"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Edit Review</span>
+                        </button>
+
                         <div className="flex items-center gap-3">
                           <button
                             onClick={async () => {
@@ -1114,19 +1462,39 @@ export const OwnerSpace: React.FC = () => {
                                 loadOwnerData();
                                 refreshData();
                               } catch (err: any) {
-                                alert(err.message || 'Failed to update testimonial status');
+                                alert(err.message || 'Failed to update status');
                               }
                             }}
-                            className="text-gold hover:underline font-semibold text-[10px]"
+                            className="text-[11px] text-ivory-400 hover:text-white font-medium"
                           >
                             {test.isPublished ? 'Hide' : 'Publish'}
                           </button>
-                          <button
-                            onClick={() => handleDeleteTestimonial(test.id)}
-                            className="text-accent-crimson hover:underline text-[10px]"
-                          >
-                            Delete
-                          </button>
+
+                          {deletingTestimonialId === test.id ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] text-accent-crimson font-bold animate-pulse">Confirm?</span>
+                              <button
+                                onClick={() => handleDeleteTestimonial(test.id)}
+                                className="px-2.5 py-1 rounded bg-accent-crimson hover:bg-accent-crimson/80 text-white text-[11px] font-bold shadow-sm transition-all"
+                              >
+                                Yes, Delete
+                              </button>
+                              <button
+                                onClick={() => setDeletingTestimonialId(null)}
+                                className="px-2 py-1 rounded bg-surface-100 text-ivory-400 hover:text-white text-[11px]"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeletingTestimonialId(test.id)}
+                              className="text-xs text-accent-crimson hover:bg-accent-crimson/15 px-2 py-1 rounded transition-all flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Delete</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1187,6 +1555,56 @@ export const OwnerSpace: React.FC = () => {
                       className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm"
                     />
                   </div>
+
+                  {/* YouTube Channel Handle & URL */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-ivory-300 flex items-center gap-1.5">
+                      <span className="text-red-400">YouTube Channel Handle</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.youtubeHandle || ''}
+                      onChange={(e) => setCmsData({ ...cmsData, youtubeHandle: e.target.value })}
+                      placeholder="@bharathkumarglp2003"
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-ivory-300 flex items-center gap-1.5">
+                      <span className="text-red-400">YouTube Destination URL</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={cmsData.youtubeUrl || ''}
+                      onChange={(e) => setCmsData({ ...cmsData, youtubeUrl: e.target.value })}
+                      placeholder="https://youtube.com/@bharathkumarglp2003"
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm font-mono"
+                    />
+                  </div>
+
+                  {/* Instagram & Facebook */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-ivory-300">Instagram Handle</label>
+                    <input
+                      type="text"
+                      value={cmsData.instagramHandle || ''}
+                      onChange={(e) => setCmsData({ ...cmsData, instagramHandle: e.target.value })}
+                      placeholder="@kurudi_bharathkumar_official"
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-ivory-300">Instagram URL</label>
+                    <input
+                      type="url"
+                      value={cmsData.instagramUrl || ''}
+                      onChange={(e) => setCmsData({ ...cmsData, instagramUrl: e.target.value })}
+                      placeholder="https://instagram.com/..."
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm font-mono"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -1227,7 +1645,7 @@ export const OwnerSpace: React.FC = () => {
                       Co-Owner & Editor Access Management
                     </h3>
                     <p className="text-xs text-ivory-400">
-                      Primary owner (Kurudi Bharath Kumar) can invite trusted editors by phone and email without passwords.
+                      Authorize and manage studio co-owners and editing assistants.
                     </p>
                   </div>
                 </div>
@@ -1280,31 +1698,42 @@ export const OwnerSpace: React.FC = () => {
 
                 {/* Owners List */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {ownersList.map((owner) => (
-                    <div key={owner.id} className="p-5 rounded-2xl glass-panel border border-gold/20 flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-serif text-base font-bold text-white">{owner.name}</h4>
-                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${owner.role === 'primary_owner' ? 'bg-gold text-black' : 'bg-surface-100 text-gold'}`}>
-                            {owner.role.replace('_', ' ')}
-                          </span>
+                  {ownersList.map((owner) => {
+                    const isDeveloper = owner.role === 'primary_owner' || owner.phone === '9346476951';
+                    const isStudioOwner = owner.phone === '9346227894' || owner.name.toLowerCase().includes('bharath');
+                    const isStudioHead = isDeveloper || isStudioOwner;
+                    return (
+                      <div key={owner.id} className="p-5 rounded-2xl glass-panel border border-gold/20 flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-serif text-base font-bold text-white">{owner.name}</h4>
+                            {isDeveloper ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] uppercase font-extrabold bg-gold text-black">
+                                DEVELOPER
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-surface-100 text-gold border border-gold/30">
+                                STUDIO OWNER
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-ivory-400 font-mono mt-1">
+                            {owner.phone} • {owner.email}
+                          </p>
                         </div>
-                        <p className="text-xs text-ivory-400 font-mono mt-1">
-                          {owner.phone} • {owner.email}
-                        </p>
-                      </div>
 
-                      {owner.role !== 'primary_owner' && (
-                        <button
-                          onClick={() => handleRemoveOwner(owner.id)}
-                          className="p-2 text-accent-crimson hover:bg-accent-crimson/20 rounded-lg transition-all"
-                          title="Revoke Access"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                        {!isStudioHead && (
+                          <button
+                            onClick={() => handleRemoveOwner(owner.id)}
+                            className="p-2 text-accent-crimson hover:bg-accent-crimson/20 rounded-lg transition-all"
+                            title="Revoke Access"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1653,19 +2082,66 @@ export const OwnerSpace: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-ivory-300">Category / Service Section</label>
-                <select
-                  value={editingWork.category || 'Wedding Highlights'}
-                  onChange={(e) => setEditingWork({ ...editingWork, category: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-medium"
-                >
-                  <option value="Wedding Highlights">Wedding Highlights</option>
-                  <option value="Pre-Wedding Video Editing">Pre-Wedding Video Editing</option>
-                  <option value="Haldi & Sangeeth Ceremonies">Haldi & Sangeeth Ceremonies</option>
-                  <option value="Maternity Shoot Videos">Maternity Shoot Videos</option>
-                  <option value="House Warming Ceremonies">House Warming Ceremonies</option>
-                  <option value="Spot Editing Available">Spot Editing Available</option>
-                </select>
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-ivory-300">Category / Service Section</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextState = !isCustomCategory;
+                      setIsCustomCategory(nextState);
+                      if (nextState) {
+                        setCustomCategoryName(editingWork.category || '');
+                      }
+                    }}
+                    className="text-[11px] text-gold hover:underline font-semibold"
+                  >
+                    {isCustomCategory ? '← Choose from Preset List' : '+ Enter Custom Category / Title'}
+                  </button>
+                </div>
+
+                {isCustomCategory ? (
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      value={customCategoryName}
+                      onChange={(e) => {
+                        setCustomCategoryName(e.target.value);
+                        setEditingWork({ ...editingWork, category: e.target.value });
+                      }}
+                      placeholder="e.g. YouTube Videos, Corporate Commercials, Drone Films..."
+                      required
+                      autoFocus
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold text-gold font-bold text-xs sm:text-sm placeholder:text-ivory-400/50"
+                    />
+                    <p className="text-[10px] text-ivory-400">
+                      Type any custom category name. It will automatically create a dedicated section & filter tab in Explore Works.
+                    </p>
+                  </div>
+                ) : (
+                  <select
+                    value={editingWork.category || 'Wedding Highlights'}
+                    onChange={(e) => {
+                      if (e.target.value === '__custom__') {
+                        setIsCustomCategory(true);
+                        setCustomCategoryName('');
+                      } else {
+                        setEditingWork({ ...editingWork, category: e.target.value });
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-medium"
+                  >
+                    <option value="Wedding Highlights">Wedding Highlights</option>
+                    <option value="Pre-Wedding Video Editing">Pre-Wedding Video Editing</option>
+                    <option value="Haldi & Sangeeth Ceremonies">Haldi & Sangeeth Ceremonies</option>
+                    <option value="Maternity Shoot Videos">Maternity Shoot Videos</option>
+                    <option value="House Warming Ceremonies">House Warming Ceremonies</option>
+                    <option value="Spot Editing Available">Spot Editing Available</option>
+                    <option value="AI-Assisted Video Creation & 3D Animation">AI-Assisted Video Creation & 3D Animation</option>
+                    <option value="Cinematic Teasers/Reels (9:16)">Cinematic Teasers/Reels (9:16)</option>
+                    <option value="YouTube Videos & Commercials">YouTube Videos & Commercials</option>
+                    <option value="__custom__">+ Enter Custom Category / Title...</option>
+                  </select>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -1686,16 +2162,7 @@ export const OwnerSpace: React.FC = () => {
                 </p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-semibold text-ivory-300">External Full YouTube Destination URL</label>
-                <input
-                  type="url"
-                  value={editingWork.externalDestUrl || 'https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX'}
-                  onChange={(e) => setEditingWork({ ...editingWork, externalDestUrl: e.target.value })}
-                  placeholder="https://youtube.com/@bharathkumarglp2003?si=ai6BueJG5fmOkrGX"
-                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono"
-                />
-              </div>
+
 
               <div className="space-y-1.5">
                 <label className="font-semibold text-ivory-300">Description & Grading Breakdown</label>
@@ -1722,6 +2189,144 @@ export const OwnerSpace: React.FC = () => {
                 className="px-6 py-2.5 rounded-xl bg-gold text-black font-bold text-xs uppercase tracking-wider"
               >
                 Save Showcase Work
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Testimonial Edit / Create Modal */}
+      {editingTestimonial && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+          <form onSubmit={handleSaveTestimonial} className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-surface-200 border border-gold/40 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-gold/20 pb-3">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-ivory-100">
+                  {editingTestimonial.id ? 'Edit Client Testimonial' : 'Add New Client Testimonial & Video'}
+                </h3>
+                <p className="text-[11px] text-ivory-400">
+                  Add client written reviews and attach video feedback recordings.
+                </p>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] uppercase font-bold">
+                Customer Feedback CMS
+              </span>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-ivory-300">Client / Couple Name *</label>
+                  <input
+                    type="text"
+                    value={editingTestimonial.clientName || ''}
+                    onChange={(e) => setEditingTestimonial({ ...editingTestimonial, clientName: e.target.value })}
+                    placeholder="e.g. Vikram & Sandhya"
+                    required
+                    className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 placeholder:text-ivory-400/50"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-ivory-300">Location</label>
+                  <input
+                    type="text"
+                    value={editingTestimonial.location || ''}
+                    onChange={(e) => setEditingTestimonial({ ...editingTestimonial, location: e.target.value })}
+                    placeholder="e.g. Bangalore, Karnataka"
+                    className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 placeholder:text-ivory-400/50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-ivory-300">Service / Event Category</label>
+                  <select
+                    value={editingTestimonial.serviceTitle || 'Wedding Video Highlights'}
+                    onChange={(e) => setEditingTestimonial({ ...editingTestimonial, serviceTitle: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-medium"
+                  >
+                    <option value="Wedding Video Highlights">Wedding Video Highlights</option>
+                    <option value="Pre-Wedding Video Editing">Pre-Wedding Video Editing</option>
+                    <option value="Haldi & Sangeeth Ceremonies">Haldi & Sangeeth Ceremonies</option>
+                    <option value="Maternity Shoot Videos">Maternity Shoot Videos</option>
+                    <option value="House Warming Ceremonies">House Warming Ceremonies</option>
+                    <option value="Spot Editing Available">Spot Editing Available</option>
+                    <option value="Cinematic Teasers/Reels (9:16)">Cinematic Teasers/Reels (9:16)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-ivory-300">Star Rating</label>
+                  <select
+                    value={editingTestimonial.rating || 5}
+                    onChange={(e) => setEditingTestimonial({ ...editingTestimonial, rating: Number(e.target.value) })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-gold font-bold"
+                  >
+                    <option value={5}>⭐⭐⭐⭐⭐ (5.0 / 5.0 - Excellent)</option>
+                    <option value={4}>⭐⭐⭐⭐ (4.0 / 5.0 - Great)</option>
+                    <option value={3}>⭐⭐⭐ (3.0 / 5.0 - Good)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-ivory-300 flex items-center justify-between">
+                  <span>Customer Video Feedback Stream URL (Optional)</span>
+                  <span className="text-[10px] text-gold font-normal">Google Drive / YouTube / MP4</span>
+                </label>
+                <input
+                  type="text"
+                  value={editingTestimonial.videoUrl || ''}
+                  onChange={(e) => setEditingTestimonial({ ...editingTestimonial, videoUrl: e.target.value })}
+                  placeholder="e.g. https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link"
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono placeholder:text-ivory-400/50 text-xs"
+                />
+                <p className="text-[11px] text-ivory-400 font-light">
+                  Paste any Google Drive share link, YouTube link, or direct MP4 link of the customer's recorded video review.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-ivory-300">Written Client Review / Quote *</label>
+                <textarea
+                  rows={4}
+                  value={editingTestimonial.reviewText || ''}
+                  onChange={(e) => setEditingTestimonial({ ...editingTestimonial, reviewText: e.target.value })}
+                  placeholder="e.g. The cinematic film delivered by KBK Films exceeded all our expectations..."
+                  required
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 leading-relaxed"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-surface-100/70 border border-surface-50 flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-ivory-200">Publish to Live Website</div>
+                  <div className="text-[10px] text-ivory-400">Make visible on the public Testimonials & Homepage review sections</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={editingTestimonial.isPublished !== false}
+                  onChange={(e) => setEditingTestimonial({ ...editingTestimonial, isPublished: e.target.checked })}
+                  className="w-4 h-4 accent-gold cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditingTestimonial(null)}
+                className="px-4 py-2 rounded-xl bg-surface-100 text-ivory-300 text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm transition-all"
+              >
+                Save Client Testimonial
               </button>
             </div>
           </form>

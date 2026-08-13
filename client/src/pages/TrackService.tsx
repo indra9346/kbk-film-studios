@@ -393,12 +393,6 @@ export const TrackService: React.FC = () => {
                       />
                     </div>
 
-                    <div className="p-3 rounded-xl bg-surface-100 border border-surface-50 text-[11px] text-ivory-400 space-y-1">
-                      <div>💡 <span className="text-gold font-semibold">Test Client Logins:</span></div>
-                      <div>• Ref: <span className="text-white font-mono">KBK-2026-INDRA</span> (Phone: <span className="text-white font-mono">9346476951</span>)</div>
-                      <div>• Ref: <span className="text-white font-mono">KBK-2026-8941</span> (Phone: <span className="text-white font-mono">9440187654</span>)</div>
-                    </div>
-
                     <button
                       type="submit"
                       disabled={otpLoading}

@@ -5,6 +5,7 @@ import { useStudio } from '../context/StudioContext';
 import { CinematicHeroVideo } from '../components/hero/CinematicHeroVideo';
 import { VideoCard } from '../components/video/VideoCard';
 import { VideoModal } from '../components/video/VideoModal';
+import { YoutubeChannelShowcase } from '../components/video/YoutubeChannelShowcase';
 import { PublicWork } from '../types';
 
 export const Home: React.FC = () => {
@@ -137,7 +138,7 @@ export const Home: React.FC = () => {
               Selected Works & Master Highlight Cuts
             </h2>
             <p className="text-xs sm:text-sm text-ivory-300 max-w-xl font-light">
-              Hover over any film for a soundless preview, or tap the sound icon for audible playback. Only one video plays at a time for optimal 60fps performance.
+              All cinematic highlight films play in real-time 4K muted autoplay loop. Tap any film for full cinema view or tap the speaker icon to unmute.
             </p>
           </div>
 
@@ -151,18 +152,31 @@ export const Home: React.FC = () => {
         </div>
 
         {/* Video Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {featuredWorks.map((work) => (
-            <VideoCard
-              key={work.id}
-              work={work}
-              onSelect={(w) => setSelectedWorkModal(w)}
-            />
-          ))}
-        </div>
+        {featuredWorks.length === 0 ? (
+          <div className="p-12 rounded-3xl glass-panel text-center space-y-3 border border-gold/15">
+            <Film className="w-10 h-10 mx-auto text-gold opacity-60" />
+            <h3 className="font-serif text-lg font-bold text-ivory-100">Showcase Works Updating</h3>
+            <p className="text-xs text-ivory-300 max-w-md mx-auto">
+              New client films and cinematic highlight cuts are being published. Check back shortly or explore our specialized services below.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {featuredWorks.map((work) => (
+              <VideoCard
+                key={work.id}
+                work={work}
+                onSelect={(w) => setSelectedWorkModal(w)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* 4. Why Choose KBK Films (Competitive Edge) */}
+      {/* 4. Official YouTube Channel & Live Activity Streams */}
+      <YoutubeChannelShowcase />
+
+      {/* 5. Why Choose KBK Films (Competitive Edge) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="p-8 sm:p-12 rounded-3xl glass-panel gold-border-glow space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-2">

@@ -6,6 +6,8 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { PricingClarificationModal } from './components/pricing/PricingClarificationModal';
 import { TermsModal } from './components/pricing/TermsModal';
+import { SEOHead } from './components/seo/SEOHead';
+import { ScrollToTop } from './components/layout/ScrollToTop';
 
 // Pages
 import { Home } from './pages/Home';
@@ -22,6 +24,8 @@ export function App() {
     <AuthProvider>
       <StudioProvider>
         <BrowserRouter>
+          <ScrollToTop />
+          <SEOHead />
           <div className="min-h-screen flex flex-col bg-background text-ivory-100 selection:bg-gold selection:text-black">
             <Header />
             <main className="flex-grow">
@@ -33,6 +37,7 @@ export function App() {
                 <Route path="/testimonials" element={<Testimonials />} />
                 <Route path="/book" element={<BookService />} />
                 <Route path="/track" element={<TrackService />} />
+                <Route path="/owner" element={<OwnerSpace />} />
                 <Route path="/owner-space" element={<OwnerSpace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

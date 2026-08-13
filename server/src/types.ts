@@ -170,7 +170,7 @@ export interface PublicWork {
   eventYear: string;
   thumbnailUrl: string;
   videoUrl: string;
-  videoSourceType: 'direct_mp4' | 'youtube' | 'drive' | 'vimeo';
+  videoSourceType: 'direct_mp4' | 'youtube' | 'drive' | 'vimeo' | 'google_drive';
   externalDestUrl?: string;
   description: string;
   softwareUsed: string[];

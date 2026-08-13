@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { GraduationCap, Award, Film, Cpu, Heart, CheckCircle2, ArrowRight, Sparkles, ShieldCheck, BookOpen, Layers } from 'lucide-react';
 import { useStudio } from '../context/StudioContext';
+import { YoutubeChannelShowcase } from '../components/video/YoutubeChannelShowcase';
 
 export const About: React.FC = () => {
   const { cms } = useStudio();
@@ -62,7 +63,7 @@ export const About: React.FC = () => {
                 <Award className="w-6 h-6" />
               </div>
               <div>
-                <div className="font-serif text-lg font-extrabold text-gold">800+ Events</div>
+                <div className="font-serif text-lg font-extrabold text-gold">1,000+ Events</div>
                 <p className="text-[11px] text-ivory-400">Mastered & Delivered</p>
               </div>
             </div>
@@ -220,6 +221,9 @@ export const About: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* 4. YouTube Channel & Latest Activities */}
+      <YoutubeChannelShowcase />
     </div>
   );
 };

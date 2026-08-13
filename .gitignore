@@ -19,9 +19,11 @@ dist/
 build/
 .tsc-cache/
 
-# Local storage and private deliveries
+# Local storage, uploads and video cache
 server/storage/private_deliveries/*
 !server/storage/private_deliveries/.gitkeep
+server/uploads/*
+!server/uploads/.gitkeep
 
 # Env files
 .env

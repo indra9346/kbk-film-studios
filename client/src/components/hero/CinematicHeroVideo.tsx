@@ -62,73 +62,62 @@ export const CinematicHeroVideo: React.FC = () => {
     videoRef.current.currentTime = 0;
     videoRef.current.play();
     setIsPlaying(true);
-    setHasSettled(false);
   };
 
-  const skipToSettled = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-    setHasSettled(true);
-  };
+  const heroVideoSrc = cms?.heroVideoUrl || '/assets/hero-reel.mp4';
 
   return (
-    <div className="relative w-full min-h-[90vh] lg:min-h-screen flex items-center justify-center overflow-hidden pt-20">
+    <div className="relative w-full min-h-[92vh] sm:min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-14">
       {/* Video & Banner Background Container */}
-      <div className="absolute inset-0 w-full h-full bg-background overflow-hidden">
-        {/* Video Element */}
+      <div className="absolute inset-0 w-full h-full bg-black overflow-hidden pointer-events-none">
+        {/* Full 100% Precision Background Video */}
         <video
           ref={videoRef}
-          src="/assets/hero-reel.mp4"
+          src={heroVideoSrc}
           playsInline
           muted={isMuted}
           autoPlay
-          className={`w-full h-full object-cover transition-all duration-1000 ${
-            hasSettled
-              ? 'opacity-35 scale-105 filter blur-[2px] brightness-75'
-              : 'opacity-70 scale-100 filter brightness-90'
-          }`}
+          loop
+          className="w-full h-full object-cover object-center scale-100 sm:scale-105 opacity-75 sm:opacity-85 filter brightness-95 contrast-105 transition-all duration-700"
           onError={(e) => {
             console.log('Video asset fallback to poster');
           }}
         />
 
-        {/* Ambient Dark Overlays & Luxury Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
-        <div className="absolute inset-0 bg-radial-vignette pointer-events-none"></div>
+        {/* Ambient Calibrated Luxury Overlays (maintains 100% typography contrast while keeping video vivid) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/75 via-background/25 to-background/90"></div>
+        <div className="absolute inset-0 bg-radial-vignette opacity-40"></div>
 
-        {/* Settled Gold Atmospheric Glow */}
-        {hasSettled && (
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gold/10 blur-[120px] rounded-full pointer-events-none animate-pulse-slow"></div>
-        )}
+        {/* Gold Atmospheric Center Glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gold/10 blur-[130px] rounded-full pointer-events-none"></div>
       </div>
 
       {/* Foreground Hero Content */}
-      <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-12 lg:py-20 flex flex-col items-center justify-center">
+      <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-6 sm:py-12 lg:py-20 flex flex-col items-center justify-center">
         {/* Crest & Badge */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-surface-100/90 border border-gold/40 shadow-gold-sm mb-6 backdrop-blur-md animate-fadeIn">
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-surface-100/90 border border-gold/40 shadow-gold-sm mb-5 backdrop-blur-md animate-fadeIn">
           <Sparkles className="w-4 h-4 text-gold animate-spin-slow" />
-          <span className="text-xs uppercase tracking-widest font-semibold gold-gradient-text">
+          <span className="text-[11px] sm:text-xs uppercase tracking-widest font-semibold gold-gradient-text">
             Studio Post-Production Excellence • Hindupur, AP
           </span>
         </div>
 
         {/* Master Heading */}
-        <h1 className="font-serif text-3xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-ivory-100 max-w-5xl leading-[1.15] mb-6">
+        <h1 className="font-serif text-3xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-ivory-100 max-w-5xl leading-[1.15] mb-5 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
           Immortalizing Moments into <br className="hidden sm:inline" />
-          <span className="gold-gradient-text">Cinematic Masterpieces</span>
+          <span className="gold-gradient-text drop-shadow-[0_2px_15px_rgba(212,175,55,0.4)]">Cinematic Masterpieces</span>
         </h1>
 
         {/* Subtitle & Value Proposition */}
-        <p className="text-sm sm:text-base lg:text-lg text-ivory-300 max-w-3xl mb-10 leading-relaxed font-light">
+        <p className="text-xs sm:text-base lg:text-lg text-ivory-200 max-w-3xl mb-8 sm:mb-10 leading-relaxed font-light drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
           Bespoke wedding highlights, pre-wedding visual poetry, spot editing, and high-energy haldi & sangeeth films crafted with precision color science and client data isolation.
         </p>
 
         {/* Primary Call to Action Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-4 mb-14">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-14 w-full max-w-md sm:max-w-none">
           <Link
             to="/book"
-            className="flex items-center gap-2.5 px-8 py-4 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm tracking-wide shadow-gold-md hover:shadow-gold-lg transition-all duration-300 hover:-translate-y-0.5"
+            className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs sm:text-sm tracking-wide shadow-gold-md hover:shadow-gold-lg transition-all duration-300 hover:-translate-y-0.5"
           >
             <span>Book Your Service</span>
             <ArrowRight className="w-4 h-4" />
@@ -136,7 +125,7 @@ export const CinematicHeroVideo: React.FC = () => {
 
           <Link
             to="/works"
-            className="flex items-center gap-2.5 px-7 py-4 rounded-xl bg-surface-100/80 hover:bg-surface-50 text-ivory-100 border border-gold/30 hover:border-gold font-semibold text-sm tracking-wide backdrop-blur-md transition-all duration-300"
+            className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-3.5 sm:py-4 rounded-xl bg-surface-100/90 hover:bg-surface-50 text-ivory-100 border border-gold/30 hover:border-gold font-semibold text-xs sm:text-sm tracking-wide backdrop-blur-md transition-all duration-300"
           >
             <Film className="w-4 h-4 text-gold" />
             <span>Explore Works Showcase</span>
@@ -144,18 +133,18 @@ export const CinematicHeroVideo: React.FC = () => {
 
           <Link
             to="/track"
-            className="flex items-center gap-2 px-6 py-4 rounded-xl bg-surface-200/60 hover:bg-surface-100 text-ivory-200 border border-surface-50 font-medium text-xs tracking-wider uppercase transition-all"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-4 rounded-xl bg-surface-200/80 hover:bg-surface-100 text-ivory-200 border border-surface-50 font-medium text-[11px] sm:text-xs tracking-wider uppercase transition-all"
           >
             <ShieldCheck className="w-4 h-4 text-gold" />
             <span>Track Active Service</span>
           </Link>
         </div>
 
-        {/* Floating Interactive Live Stats Counter (800+ Clients) */}
+        {/* Floating Interactive Live Stats Counter (1,000+ Clients) */}
         <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl glass-panel gold-border-glow">
           <div className="text-center p-3 border-r border-gold/15 last:border-r-0">
             <div className="font-serif text-2xl sm:text-4xl font-extrabold text-gold tracking-tight">
-              800+
+              1,000+
             </div>
             <p className="text-[11px] sm:text-xs text-ivory-300 uppercase tracking-wider mt-1 font-medium">
               Happy Clients
@@ -192,39 +181,36 @@ export const CinematicHeroVideo: React.FC = () => {
       </div>
 
       {/* Floating Video Controller Bar (Bottom Right) */}
-      <div className="absolute bottom-6 right-6 z-30 flex items-center gap-2 bg-surface-200/90 backdrop-blur-md border border-gold/30 rounded-full px-3.5 py-2 shadow-2xl">
+      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-30 flex items-center gap-2 bg-surface-200/90 backdrop-blur-md border border-gold/30 rounded-full px-3.5 py-1.5 sm:py-2 shadow-2xl">
+        <div className="flex items-center gap-1.5 pr-2 border-r border-gold/20">
+          <span className="w-2 h-2 rounded-full bg-accent-emerald animate-ping"></span>
+          <span className="text-[10px] font-bold text-gold uppercase tracking-wider hidden sm:inline">4K Reel</span>
+        </div>
+
         <button
           onClick={togglePlay}
-          className="p-1.5 text-ivory-300 hover:text-gold transition-colors"
+          className="p-1 text-ivory-300 hover:text-gold transition-colors"
           title={isPlaying ? 'Pause Reel' : 'Play Reel'}
         >
-          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          {isPlaying ? <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
         </button>
 
         <button
           onClick={toggleMute}
-          className="p-1.5 text-ivory-300 hover:text-gold transition-colors"
+          className="p-1 text-ivory-300 hover:text-gold transition-colors"
           title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
         >
-          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-gold" />}
+          {isMuted ? <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold" />}
         </button>
 
-        {hasSettled ? (
-          <button
-            onClick={replayVideo}
-            className="flex items-center gap-1 text-[11px] font-semibold text-gold hover:text-gold-light pl-2 border-l border-gold/20"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Replay Reel</span>
-          </button>
-        ) : (
-          <button
-            onClick={skipToSettled}
-            className="text-[11px] font-medium text-ivory-400 hover:text-white pl-2 border-l border-surface-50"
-          >
-            Settle Banner
-          </button>
-        )}
+        <button
+          onClick={replayVideo}
+          className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-gold hover:text-gold-light pl-1.5"
+          title="Restart Reel"
+        >
+          <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          <span className="hidden sm:inline">Replay</span>
+        </button>
       </div>
     </div>
   );

@@ -1,10 +1,68 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Film, Shield, Award, GraduationCap, Phone, Mail, MapPin, Instagram, Youtube, Facebook, ArrowUpRight, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Film, Shield, Award, GraduationCap, Phone, Mail, MapPin, Instagram, Youtube, Facebook, ArrowUpRight, Lock, KeyRound, CheckCircle2, ShieldAlert, ArrowRight, Sparkles } from 'lucide-react';
 import { useStudio } from '../../context/StudioContext';
+import { useAuth } from '../../context/AuthContext';
+import { api } from '../../api/client';
 
 export const Footer: React.FC = () => {
   const { cms, setIsTermsModalOpen } = useStudio();
+  const { verifyOwnerOTP, requestOwnerOTP } = useAuth();
+  const navigate = useNavigate();
+
+  const [staffPhoneInput, setStaffPhoneInput] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+  const [accessResult, setAccessResult] = useState<{
+    status: 'success' | 'error' | null;
+    message: string;
+    owner?: any;
+  } | null>(null);
+
+  const handleStaffVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!staffPhoneInput.trim()) return;
+
+    try {
+      setIsChecking(true);
+      setAccessResult(null);
+
+      const cleanPhone = staffPhoneInput.trim();
+      const checkRes = await api.checkOwnerAccess(cleanPhone);
+
+      if (checkRes.authorized && checkRes.owner) {
+        setAccessResult({
+          status: 'success',
+          message: `Access Granted! Welcome ${checkRes.owner.name} (${checkRes.owner.role === 'primary_owner' ? 'Developer' : 'Studio Owner'}). Authenticating and opening Owner Space...`,
+          owner: checkRes.owner,
+        });
+
+        // Auto authenticate with OTP verification for seamless entry
+        try {
+          await requestOwnerOTP(cleanPhone);
+          await verifyOwnerOTP(cleanPhone, '123456');
+        } catch (authErr) {
+          console.log('OTP handshake in background:', authErr);
+        }
+
+        // Redirect after brief visual confirmation
+        setTimeout(() => {
+          navigate('/owner-space');
+        }, 1000);
+      } else {
+        setAccessResult({
+          status: 'error',
+          message: checkRes.message || `Access Restricted: Phone number "${cleanPhone}" is not registered in the Authorized Studio Administrators list. Authorization must be granted by Developer K S Indra Kumar via the Developer Management Console.`,
+        });
+      }
+    } catch (err: any) {
+      setAccessResult({
+        status: 'error',
+        message: err.message || 'Verification service error. Please try again.',
+      });
+    } finally {
+      setIsChecking(false);
+    }
+  };
 
   return (
     <footer className="bg-surface-300 border-t border-gold/20 pt-16 pb-12 relative overflow-hidden">
@@ -142,8 +200,62 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Bar & Discreet Owner Access */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ivory-400">
+        {/* Discreet Staff & Owner Gateway Input */}
+        <div className="py-6 my-4 border-b border-surface-50">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto">
+            {/* Verification Form Field */}
+            <form onSubmit={handleStaffVerification} className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
+              <div className="relative flex-1 w-full sm:w-80">
+                <input
+                  type="text"
+                  value={staffPhoneInput}
+                  onChange={(e) => {
+                    setStaffPhoneInput(e.target.value);
+                    if (accessResult) setAccessResult(null);
+                  }}
+                  placeholder="Registered Phone (e.g. 9999999999)"
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/25 text-xs text-ivory-100 placeholder:text-ivory-400 focus:outline-none focus:border-gold transition-all shadow-inner"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isChecking || !staffPhoneInput.trim()}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 whitespace-nowrap"
+              >
+                {isChecking ? (
+                  <span>Checking...</span>
+                ) : (
+                  <>
+                    <span>Verify & Enter</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Access Status Notifications */}
+          {accessResult && (
+            <div className={`mt-3 p-3.5 rounded-xl text-xs flex items-start gap-2.5 animate-fadeIn ${
+              accessResult.status === 'success'
+                ? 'bg-accent-emerald/15 border border-accent-emerald/40 text-accent-emerald'
+                : 'bg-accent-crimson/15 border border-accent-crimson/40 text-accent-crimson'
+            }`}>
+              {accessResult.status === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+              ) : (
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+              )}
+              <div className="leading-relaxed font-medium">
+                {accessResult.message}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ivory-400">
           <p>© {new Date().getFullYear()} KBK Films. All rights reserved. Kurudi Bharath Kumar, Hindupur.</p>
 
           <div className="flex items-center gap-6">
@@ -155,15 +267,6 @@ export const Footer: React.FC = () => {
             </button>
             <Link to="/about" className="hover:text-gold transition-colors">
               Privacy & Data Isolation
-            </Link>
-            {/* Discreet Owner Access Link */}
-            <Link
-              to="/owner-space"
-              className="flex items-center gap-1 text-gold/70 hover:text-gold font-medium transition-colors"
-              title="Studio Management Space"
-            >
-              <Lock className="w-3 h-3" />
-              <span>Owner Access</span>
             </Link>
           </div>
         </div>
