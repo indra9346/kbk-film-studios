@@ -2,48 +2,42 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-  
-  <!-- Home Page -->
+
+  <!-- Home page -->
   <url>
     <loc>https://www.kbkfilms.com/</loc>
     <lastmod>2026-08-13</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
     <image:image>
       <image:loc>https://www.kbkfilms.com/assets/kbk-logo.jpg</image:loc>
-      <image:title>KBK Film Studios Emblem</image:title>
-      <image:caption>Luxury Wedding Video Editing &amp; Master Film Post-Production India</image:caption>
+      <image:title>KBK Film Studios</image:title>
+      <image:caption>Cinematic wedding video editing and film post-production in India</image:caption>
     </image:image>
   </url>
 
-  <!-- Services & Transparent Pricing -->
+  <!-- Services -->
   <url>
     <loc>https://www.kbkfilms.com/services</loc>
     <lastmod>2026-08-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
   </url>
 
-  <!-- Works & Portfolio Showcase -->
+  <!-- Portfolio -->
   <url>
     <loc>https://www.kbkfilms.com/works</loc>
     <lastmod>2026-08-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+
     <video:video>
       <video:thumbnail_loc>https://www.kbkfilms.com/assets/kbk-logo.jpg</video:thumbnail_loc>
       <video:title>Grand Traditional Muhurtham Master Film</video:title>
-      <video:description>Sacred Mangalashtak ritual film with traditional mantra audio clean-up, gold silk color grading, and emotive visual storytelling by Kurudi Bharath Kumar.</video:description>
-      <video:content_loc>https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link</video:content_loc>
+      <video:description>Sacred wedding ceremony film edited by KBK Film Studios.</video:description>
       <video:player_loc>https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/preview</video:player_loc>
       <video:publication_date>2026-02-01T00:00:00Z</video:publication_date>
       <video:family_friendly>yes</video:family_friendly>
     </video:video>
+
     <video:video>
       <video:thumbnail_loc>https://www.kbkfilms.com/assets/kbk-logo.jpg</video:thumbnail_loc>
-      <video:title>Grand Wedding Reception &amp; Gala Night Highlights</video:title>
-      <video:description>High-fashion cinematic wedding reception film featuring dynamic multi-camera narrative sync, speed ramps, and Hollywood grade color grading.</video:description>
-      <video:content_loc>https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link</video:content_loc>
+      <video:title>Grand Wedding Reception Highlights</video:title>
+      <video:description>Cinematic wedding reception film edited by KBK Film Studios.</video:description>
       <video:player_loc>https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/preview</video:player_loc>
       <video:publication_date>2026-02-01T00:00:00Z</video:publication_date>
       <video:family_friendly>yes</video:family_friendly>
@@ -54,8 +48,6 @@
   <url>
     <loc>https://www.kbkfilms.com/about</loc>
     <lastmod>2026-08-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
     <image:image>
       <image:loc>https://www.kbkfilms.com/assets/founder.jpg</image:loc>
       <image:title>Kurudi Bharath Kumar - Founder &amp; Senior Colorist</image:title>
@@ -66,24 +58,13 @@
   <url>
     <loc>https://www.kbkfilms.com/testimonials</loc>
     <lastmod>2026-08-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
 
   <!-- Instant Booking & Quote Calculator -->
   <url>
     <loc>https://www.kbkfilms.com/book</loc>
     <lastmod>2026-08-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Private Project Tracking Portal -->
-  <url>
-    <loc>https://www.kbkfilms.com/track</loc>
-    <lastmod>2026-08-13</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
   </url>
 
 </urlset>
+

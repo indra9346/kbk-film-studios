@@ -1,9 +1,9 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
-Disallow: /owner-space
-Disallow: /api/
 
-# Host and Sitemap Specification
-Host: https://www.kbkfilms.com
+Disallow: /owner-space/
+Disallow: /api/
+Disallow: /track/
+
 Sitemap: https://www.kbkfilms.com/sitemap.xml
+
