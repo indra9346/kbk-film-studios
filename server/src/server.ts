@@ -457,9 +457,18 @@ app.post('/api/auth/owner-request-otp', (req: Request, res: Response) => {
   }
 
   const cleanIdentifier = identifier.trim().toLowerCase();
-  const owner = db.getOwners().find(
-    o => o.isActive && (o.phone === cleanIdentifier || o.email.toLowerCase() === cleanIdentifier)
-  );
+  const digitsOnly = cleanIdentifier.replace(/\D/g, '');
+  const owner = db.getOwners().find(o => {
+    if (!o.isActive) return false;
+    const ownerDigits = (o.phone || '').replace(/\D/g, '');
+    const matchesPhone = digitsOnly.length >= 10 && (
+      ownerDigits === digitsOnly ||
+      ownerDigits.endsWith(digitsOnly) ||
+      digitsOnly.endsWith(ownerDigits)
+    );
+    const matchesEmail = (o.email || '').toLowerCase() === cleanIdentifier;
+    return matchesPhone || matchesEmail;
+  });
 
   if (!owner) {
     res.status(403).json({
@@ -501,9 +510,18 @@ app.post('/api/auth/owner-verify-otp', (req: Request, res: Response) => {
   }
 
   const cleanIdentifier = identifier.trim().toLowerCase();
-  const owner = db.getOwners().find(
-    o => o.isActive && (o.phone === cleanIdentifier || o.email.toLowerCase() === cleanIdentifier)
-  );
+  const digitsOnly = cleanIdentifier.replace(/\D/g, '');
+  const owner = db.getOwners().find(o => {
+    if (!o.isActive) return false;
+    const ownerDigits = (o.phone || '').replace(/\D/g, '');
+    const matchesPhone = digitsOnly.length >= 10 && (
+      ownerDigits === digitsOnly ||
+      ownerDigits.endsWith(digitsOnly) ||
+      digitsOnly.endsWith(ownerDigits)
+    );
+    const matchesEmail = (o.email || '').toLowerCase() === cleanIdentifier;
+    return matchesPhone || matchesEmail;
+  });
 
   if (!owner) {
     res.status(403).json({ error: 'Unauthorized owner account' });
