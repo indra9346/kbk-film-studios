@@ -1,8 +1,9 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
+Disallow: /owner-space
 Disallow: /api/
 
 # Host and Sitemap Specification
-Host: https://kbkfilms.vercel.app
-Sitemap: https://kbkfilms.vercel.app/sitemap.xml
+Host: https://www.kbkfilms.com
+Sitemap: https://www.kbkfilms.com/sitemap.xml

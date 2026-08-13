@@ -5,12 +5,12 @@
   
   <!-- Home Page -->
   <url>
-    <loc>https://kbkfilms.com/</loc>
+    <loc>https://www.kbkfilms.com/</loc>
     <lastmod>2026-08-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://kbkfilms.com/assets/kbk-logo.jpg</image:loc>
+      <image:loc>https://www.kbkfilms.com/assets/kbk-logo.jpg</image:loc>
       <image:title>KBK Film Studios Emblem</image:title>
       <image:caption>Luxury Wedding Video Editing &amp; Master Film Post-Production India</image:caption>
     </image:image>
@@ -18,7 +18,7 @@
 
   <!-- Services & Transparent Pricing -->
   <url>
-    <loc>https://kbkfilms.com/services</loc>
+    <loc>https://www.kbkfilms.com/services</loc>
     <lastmod>2026-08-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -26,12 +26,12 @@
 
   <!-- Works & Portfolio Showcase -->
   <url>
-    <loc>https://kbkfilms.com/works</loc>
+    <loc>https://www.kbkfilms.com/works</loc>
     <lastmod>2026-08-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <video:video>
-      <video:thumbnail_loc>https://kbkfilms.com/assets/kbk-logo.jpg</video:thumbnail_loc>
+      <video:thumbnail_loc>https://www.kbkfilms.com/assets/kbk-logo.jpg</video:thumbnail_loc>
       <video:title>Grand Traditional Muhurtham Master Film</video:title>
       <video:description>Sacred Mangalashtak ritual film with traditional mantra audio clean-up, gold silk color grading, and emotive visual storytelling by Kurudi Bharath Kumar.</video:description>
       <video:content_loc>https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link</video:content_loc>
@@ -40,7 +40,7 @@
       <video:family_friendly>yes</video:family_friendly>
     </video:video>
     <video:video>
-      <video:thumbnail_loc>https://kbkfilms.com/assets/kbk-logo.jpg</video:thumbnail_loc>
+      <video:thumbnail_loc>https://www.kbkfilms.com/assets/kbk-logo.jpg</video:thumbnail_loc>
       <video:title>Grand Wedding Reception &amp; Gala Night Highlights</video:title>
       <video:description>High-fashion cinematic wedding reception film featuring dynamic multi-camera narrative sync, speed ramps, and Hollywood grade color grading.</video:description>
       <video:content_loc>https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link</video:content_loc>
@@ -52,19 +52,19 @@
 
   <!-- About Founder Kurudi Bharath Kumar -->
   <url>
-    <loc>https://kbkfilms.com/about</loc>
+    <loc>https://www.kbkfilms.com/about</loc>
     <lastmod>2026-08-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kbkfilms.com/assets/founder.jpg</image:loc>
+      <image:loc>https://www.kbkfilms.com/assets/founder.jpg</image:loc>
       <image:title>Kurudi Bharath Kumar - Founder &amp; Senior Colorist</image:title>
     </image:image>
   </url>
 
   <!-- Client Testimonials & Reviews -->
   <url>
-    <loc>https://kbkfilms.com/testimonials</loc>
+    <loc>https://www.kbkfilms.com/testimonials</loc>
     <lastmod>2026-08-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -72,7 +72,7 @@
 
   <!-- Instant Booking & Quote Calculator -->
   <url>
-    <loc>https://kbkfilms.com/book</loc>
+    <loc>https://www.kbkfilms.com/book</loc>
     <lastmod>2026-08-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -80,7 +80,7 @@
 
   <!-- Private Project Tracking Portal -->
   <url>
-    <loc>https://kbkfilms.com/track</loc>
+    <loc>https://www.kbkfilms.com/track</loc>
     <lastmod>2026-08-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
