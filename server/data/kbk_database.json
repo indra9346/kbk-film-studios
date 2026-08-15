@@ -493,44 +493,24 @@
   ],
   "publicWorks": [
     {
-      "id": "work-1786554723187",
-      "title": "RECEPTION VIDEO",
-      "category": "Wedding Highlights",
+      "id": "work-1786796063894",
+      "title": "SANGEETH VIDEO",
+      "category": "Pre-Wedding Video Editing",
       "eventLocation": "Hindupur, AP",
       "eventYear": "2026",
       "thumbnailUrl": "/assets/kbk-logo.jpg",
-      "videoUrl": "/assets/client-work-1.mp4",
+      "videoUrl": "https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view",
       "videoSourceType": "direct_mp4",
       "externalDestUrl": "",
-      "description": "A cinematic reception video capturing the joy, elegance, and memorable moments of the celebration. Smooth transitions, warm tones, balanced audio, and well-paced visuals create a polished and emotional presentation.\n",
+      "description": "Outstanding editing",
       "softwareUsed": [
         "Premiere Pro",
         "DaVinci Resolve"
       ],
       "isFeatured": true,
       "isPublished": true,
-      "sortOrder": 2,
-      "createdAt": "2026-08-12T17:12:03.187Z"
-    },
-    {
-      "id": "work-1786551429958",
-      "title": "MUHURTHAM VIDEO",
-      "category": "Wedding Highlights",
-      "eventLocation": "Hindupur, AP",
-      "eventYear": "2026",
-      "thumbnailUrl": "/assets/kbk-logo.jpg",
-      "videoUrl": "/assets/client-work-2.mp4",
-      "videoSourceType": "direct_mp4",
-      "externalDestUrl": "",
-      "description": "A cinematic Muhūrtham video capturing the traditional and emotional essence of the special occasion. Smooth transitions, warm cinematic tones, balanced audio, and carefully paced visuals create an elegant and memorable presentation.\n",
-      "softwareUsed": [
-        "Premiere Pro",
-        "DaVinci Resolve"
-      ],
-      "isFeatured": true,
-      "isPublished": true,
-      "sortOrder": 6,
-      "createdAt": "2026-08-12T16:17:09.958Z"
+      "sortOrder": 1,
+      "createdAt": "2026-08-15T12:14:23.894Z"
     }
   ],
   "testimonials": [
@@ -606,6 +586,96 @@
     "contactClarificationMsg": "Hi Bharath Kumar, I was reviewing the pricing for your video editing services on KBK Film Studios and would love a custom quote/clarification for my upcoming event."
   },
   "auditLogs": [
+    {
+      "actorRole": "co_owner",
+      "actorName": "KBK Studio Lead Editor",
+      "actorIdentifier": "9845012345",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner KBK Studio Lead Editor logged in to Owner Space.",
+      "id": "audit-1786796309381-gj23",
+      "timestamp": "2026-08-15T12:18:29.381Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "KBK Studio Lead Editor",
+      "actorIdentifier": "9845012345",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner KBK Studio Lead Editor logged in to Owner Space.",
+      "id": "audit-1786796308121-o1lq",
+      "timestamp": "2026-08-15T12:18:28.121Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "KBK Studio Lead Editor",
+      "actorIdentifier": "9845012345",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner KBK Studio Lead Editor logged in to Owner Space.",
+      "id": "audit-1786796306234-c356",
+      "timestamp": "2026-08-15T12:18:26.234Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "KBK Studio Lead Editor",
+      "actorIdentifier": "9845012345",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner KBK Studio Lead Editor logged in to Owner Space.",
+      "id": "audit-1786796304401-tgns",
+      "timestamp": "2026-08-15T12:18:24.401Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "KBK Studio Lead Editor",
+      "actorIdentifier": "9845012345",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner KBK Studio Lead Editor logged in to Owner Space.",
+      "id": "audit-1786796216053-f4qg",
+      "timestamp": "2026-08-15T12:16:56.053Z"
+    },
+    {
+      "actorRole": "co_owner",
+      "actorName": "KBK Studio Lead Editor",
+      "actorIdentifier": "9845012345",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner KBK Studio Lead Editor logged in to Owner Space.",
+      "id": "audit-1786796205786-mnt2",
+      "timestamp": "2026-08-15T12:16:45.786Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "09346476951",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"RECEPTION VIDEO\" (work-1786554723187)",
+      "id": "audit-1786795811828-0z7o",
+      "timestamp": "2026-08-15T12:10:11.828Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "09346476951",
+      "action": "SHOWCASE_WORK_DELETED",
+      "details": "Deleted showcase work \"MUHURTHAM VIDEO\" (work-1786551429958)",
+      "id": "audit-1786795794657-agtr",
+      "timestamp": "2026-08-15T12:09:54.657Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "09346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786795786349-xwk0",
+      "timestamp": "2026-08-15T12:09:46.349Z"
+    },
+    {
+      "actorRole": "primary_owner",
+      "actorName": "K S Indra Kumar",
+      "actorIdentifier": "09346476951",
+      "action": "OWNER_AUTHENTICATED",
+      "details": "Owner K S Indra Kumar logged in to Owner Space.",
+      "id": "audit-1786795785495-jrjd",
+      "timestamp": "2026-08-15T12:09:45.495Z"
+    },
     {
       "actorRole": "primary_owner",
       "actorName": "K S Indra Kumar",
@@ -2249,6 +2319,78 @@
       "expiresAt": 1786639991782,
       "verified": false,
       "createdAt": "2026-08-13T16:43:11.782Z"
+    },
+    {
+      "id": "otp-1786795785470",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786796385470,
+      "verified": false,
+      "createdAt": "2026-08-15T12:09:45.470Z"
+    },
+    {
+      "id": "otp-1786795786324",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786796386324,
+      "verified": false,
+      "createdAt": "2026-08-15T12:09:46.324Z"
+    },
+    {
+      "id": "otp-1786796203538",
+      "identifier": "9845012345",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786796803538,
+      "verified": false,
+      "createdAt": "2026-08-15T12:16:43.538Z"
+    },
+    {
+      "id": "otp-1786796216030",
+      "identifier": "9845012345",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786796816030,
+      "verified": false,
+      "createdAt": "2026-08-15T12:16:56.030Z"
+    },
+    {
+      "id": "otp-1786796304379",
+      "identifier": "9845012345",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786796904379,
+      "verified": false,
+      "createdAt": "2026-08-15T12:18:24.379Z"
+    },
+    {
+      "id": "otp-1786796306212",
+      "identifier": "9845012345",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786796906211,
+      "verified": false,
+      "createdAt": "2026-08-15T12:18:26.212Z"
+    },
+    {
+      "id": "otp-1786796308097",
+      "identifier": "9845012345",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786796908097,
+      "verified": false,
+      "createdAt": "2026-08-15T12:18:28.097Z"
+    },
+    {
+      "id": "otp-1786796309359",
+      "identifier": "9845012345",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786796909359,
+      "verified": false,
+      "createdAt": "2026-08-15T12:18:29.359Z"
     }
   ]
 }
