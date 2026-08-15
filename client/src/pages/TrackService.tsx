@@ -270,7 +270,7 @@ export const TrackService: React.FC = () => {
                         type="text"
                         value={forgotIdentifier}
                         onChange={(e) => setForgotIdentifier(e.target.value)}
-                        placeholder="e.g. 9346476951 or email"
+                        placeholder="e.g. phone or email"
                         required
                         className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold"
                       />

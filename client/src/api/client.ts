@@ -43,8 +43,8 @@ async function safeRequest<T>(url: string, options?: RequestInit, fallback?: () 
 
     if (res.ok && !contentType.includes('application/json')) {
       const text = await res.text();
-      if (text && text.includes('<!doctype html') || text.includes('<html')) {
-        throw new Error('API returned HTML instead of JSON. The deployment route may be misconfigured.');
+      if (text && (text.includes('<!doctype html') || text.includes('<html'))) {
+        throw new Error('API route misconfigured — server returned HTML instead of JSON.');
       }
     }
 

@@ -1533,7 +1533,7 @@ app.post('/api/owner/check-access', (req: Request, res: Response) => {
   } else {
     res.json({
       authorized: false,
-      message: 'Access restricted: This phone number or email is not registered as an authorized studio administrator. Access must be granted by Developer K S Indra Kumar via the Developer Portfolio Management Console.'
+      message: 'Access denied. This identifier is not registered as an authorized studio administrator.'
     });
   }
 });

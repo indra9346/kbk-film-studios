@@ -1,9 +1,9 @@
 {
-  "buildCommand": "npm install && npm --prefix client install && npm --prefix client run build",
+  "buildCommand": "npm install && npm --prefix server install && npm --prefix client install && npm --prefix client run build",
   "outputDirectory": "client/dist",
   "functions": {
     "api/[...path].ts": {
-      "includeFiles": "server/data/kbk_database.json"
+      "includeFiles": "server/data/**"
     }
   },
   "rewrites": [
@@ -17,3 +17,4 @@
     }
   ]
 }
+

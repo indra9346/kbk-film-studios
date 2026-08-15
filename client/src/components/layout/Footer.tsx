@@ -20,44 +20,40 @@ export const Footer: React.FC = () => {
 
   const handleStaffVerification = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!staffPhoneInput.trim()) return;
+    const cleanPhone = staffPhoneInput.trim();
+    if (!cleanPhone) return;
 
     try {
       setIsChecking(true);
       setAccessResult(null);
 
-      const cleanPhone = staffPhoneInput.trim();
+      // Step 1: Check if the identifier is registered
       const checkRes = await api.checkOwnerAccess(cleanPhone);
 
-      if (checkRes.authorized && checkRes.owner) {
-        setAccessResult({
-          status: 'success',
-          message: `Access Granted! Welcome ${checkRes.owner.name} (${checkRes.owner.role === 'primary_owner' ? 'Developer' : 'Studio Owner'}). Authenticating and opening Owner Space...`,
-          owner: checkRes.owner,
-        });
-
-        // Auto authenticate with OTP verification for seamless entry
-        try {
-          await requestOwnerOTP(cleanPhone);
-          await verifyOwnerOTP(cleanPhone, '123456');
-        } catch (authErr) {
-          console.log('OTP handshake in background:', authErr);
-        }
-
-        // Redirect after brief visual confirmation
-        setTimeout(() => {
-          navigate('/owner-space');
-        }, 1000);
-      } else {
+      if (!checkRes.authorized || !checkRes.owner) {
         setAccessResult({
           status: 'error',
-          message: checkRes.message || `Access Restricted: Phone number "${cleanPhone}" is not registered in the Authorized Studio Administrators list. Authorization must be granted by Developer K S Indra Kumar via the Developer Management Console.`,
+          message: checkRes.message || 'Access denied. This identifier is not registered.',
         });
+        return;
       }
+
+      setAccessResult({
+        status: 'success',
+        message: `Access Granted! Welcome ${checkRes.owner.name}. Authenticating...`,
+        owner: checkRes.owner,
+      });
+
+      // Step 2: Request OTP then verify with demo code
+      await requestOwnerOTP(cleanPhone);
+      await verifyOwnerOTP(cleanPhone, '123456');
+
+      // Step 3: Navigate to owner space
+      navigate('/owner-space');
     } catch (err: any) {
       setAccessResult({
         status: 'error',
-        message: err.message || 'Verification service error. Please try again.',
+        message: err.message || 'Verification error. Please try the Owner Space login page directly.',
       });
     } finally {
       setIsChecking(false);
@@ -213,7 +209,7 @@ export const Footer: React.FC = () => {
                     setStaffPhoneInput(e.target.value);
                     if (accessResult) setAccessResult(null);
                   }}
-                  placeholder="Registered Phone (e.g. 9999999999)"
+                  placeholder="Registered phone or email"
                   className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/25 text-xs text-ivory-100 placeholder:text-ivory-400 focus:outline-none focus:border-gold transition-all shadow-inner"
                 />
               </div>

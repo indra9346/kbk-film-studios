@@ -57,8 +57,8 @@ export const OwnerSpace: React.FC = () => {
   const { refreshData } = useStudio();
 
   // Login Form States
-  const [identifierInput, setIdentifierInput] = useState('9346476951');
-  const [otpCodeInput, setOtpCodeInput] = useState('123456');
+  const [identifierInput, setIdentifierInput] = useState('');
+  const [otpCodeInput, setOtpCodeInput] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -171,9 +171,9 @@ export const OwnerSpace: React.FC = () => {
       setAuthError('');
       const res = await requestOwnerOTP(identifierInput.trim());
       setOtpSent(true);
-      setDemoHint(res.demoHint || 'Code: 123456');
+      setDemoHint(res.demoHint || '');
     } catch (err: any) {
-      setAuthError(err.message || 'Access Denied: Unregistered owner');
+      setAuthError(err.message || 'Access denied. Please verify your credentials.');
     } finally {
       setAuthLoading(false);
     }
@@ -471,7 +471,7 @@ export const OwnerSpace: React.FC = () => {
               {ownerData && (
                 <span className="text-xs text-accent-emerald font-semibold flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  {ownerData.name} ({ownerData.role === 'primary_owner' || ownerData.phone === '9346476951' ? 'DEVELOPER' : 'STUDIO OWNER'})
+                  {ownerData.name} ({ownerData.role === 'primary_owner' ? 'DEVELOPER' : 'STUDIO OWNER'})
                 </span>
               )}
             </div>
@@ -532,17 +532,14 @@ export const OwnerSpace: React.FC = () => {
                     type="text"
                     value={identifierInput}
                     onChange={(e) => setIdentifierInput(e.target.value)}
-                    placeholder="9346227894"
+                    placeholder="Enter registered phone or email"
                     required
                     className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold"
                   />
                 </div>
 
-                <div className="p-3 rounded-xl bg-surface-100 border border-surface-50 text-[11px] text-ivory-400 space-y-1">
-                  <div>💻 <span className="text-gold font-semibold">Developer & Creator:</span></div>
-                  <div>• K S Indra Kumar (<span className="text-white font-mono">9346476951</span> / <span className="text-white font-mono">ik9893344@gmail.com</span>)</div>
-                  <div className="pt-1">🎬 <span className="text-gold font-semibold">Studio Co-Owner:</span></div>
-                  <div>• Kurudi Bharath Kumar (<span className="text-white font-mono">9346227894</span> / <span className="text-white font-mono">kbkfilms.official@gmail.com</span>)</div>
+                <div className="p-3 rounded-xl bg-surface-100 border border-surface-50 text-[11px] text-ivory-400">
+                  <p>Enter the phone number or email registered with KBK Film Studios to receive your one-time access code.</p>
                 </div>
 
                 <button
@@ -1699,8 +1696,8 @@ export const OwnerSpace: React.FC = () => {
                 {/* Owners List */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {ownersList.map((owner) => {
-                    const isDeveloper = owner.role === 'primary_owner' || owner.phone === '9346476951';
-                    const isStudioOwner = owner.phone === '9346227894' || owner.name.toLowerCase().includes('bharath');
+                    const isDeveloper = owner.role === 'primary_owner';
+                    const isStudioOwner = owner.role === 'co_owner';
                     const isStudioHead = isDeveloper || isStudioOwner;
                     return (
                       <div key={owner.id} className="p-5 rounded-2xl glass-panel border border-gold/20 flex items-center justify-between">

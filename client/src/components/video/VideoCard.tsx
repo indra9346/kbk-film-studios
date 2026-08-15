@@ -59,12 +59,12 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
           <video
             src={videoSrc}
             poster={media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (work.thumbnailUrl || undefined)}
-            preload="metadata"
-            controls={true}
+            preload="auto"
+            controls={false}
             playsInline
-            muted={false}
-            autoPlay={false}
-            loop={false}
+            muted
+            autoPlay
+            loop
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         )}

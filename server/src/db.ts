@@ -31,10 +31,13 @@ interface DatabaseSchema {
   otpVerifications: OTPVerification[];
 }
 
-// Resolve relative to this module, not process.cwd(). Vercel executes the
-// serverless function from the repository root, while local development runs
-// from /server; this keeps both environments pointed at server/data.
-const DATA_DIR = path.resolve(__dirname, '..', 'data');
+// Resolve the data directory correctly for both environments:
+// - Local dev: __dirname is server/src/, so ../data -> server/data/
+// - Vercel serverless: __dirname is unreliable in bundled code, but
+//   process.cwd() is /var/task/ and includeFiles places data at server/data/
+const DATA_DIR = process.env.VERCEL === '1'
+  ? path.join(process.cwd(), 'server', 'data')
+  : path.resolve(__dirname, '..', 'data');
 const DB_FILE = path.join(DATA_DIR, 'kbk_database.json');
 
 const INITIAL_SERVICES: ServiceItem[] = [
