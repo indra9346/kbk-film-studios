@@ -43,3 +43,6 @@ server/uploads/*
 *.njsproj
 *.sln
 *.sw?
+
+# Added by ggshield
+.cache_ggshield

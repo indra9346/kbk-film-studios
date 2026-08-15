@@ -12,6 +12,11 @@ import {
 import { localDb } from './localDb';
 
 const API_BASE = '/api';
+const isLocalRuntime = () => {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1';
+};
 
 function getAuthHeaders(type: 'owner' | 'client' = 'owner'): Record<string, string> {
   const headers: Record<string, string> = {
@@ -31,20 +36,31 @@ async function safeRequest<T>(url: string, options?: RequestInit, fallback?: () 
   try {
     const res = await fetch(url, options);
     const contentType = res.headers.get('content-type') || '';
+
     if (res.ok && contentType.includes('application/json')) {
       return await res.json();
     }
-    // If response returned HTML (like Vercel SPA rewrite) or 404, use fallback
-    if (fallback) {
+
+    if (res.ok && !contentType.includes('application/json')) {
+      const text = await res.text();
+      if (text && text.includes('<!doctype html') || text.includes('<html')) {
+        throw new Error('API returned HTML instead of JSON. The deployment route may be misconfigured.');
+      }
+    }
+
+    // Local dev can still use the browser fallback database, but production must not silently hide API failures.
+    if (fallback && isLocalRuntime()) {
       return fallback();
     }
+
     if (contentType.includes('application/json')) {
       const errJson = await res.json();
       throw new Error(errJson.error || errJson.message || 'API request failed');
     }
+
     throw new Error('API server returned unexpected format');
   } catch (err: any) {
-    if (fallback) {
+    if (fallback && isLocalRuntime()) {
       return fallback();
     }
     throw err;
@@ -307,14 +323,14 @@ export const api = {
       method,
       headers: getAuthHeaders('owner'),
       body: JSON.stringify(work),
-    }, () => ({ success: true, work }));
+    }, () => localDb.saveWork(work));
   },
 
   async deleteWork(id: string): Promise<any> {
     return safeRequest(`${API_BASE}/owner/works/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders('owner'),
-    }, () => ({ success: true, message: 'Work deleted' }));
+    }, () => localDb.deleteWork(id));
   },
 
   async deleteBooking(id: string): Promise<any> {
@@ -339,14 +355,14 @@ export const api = {
       method,
       headers: getAuthHeaders('owner'),
       body: JSON.stringify(testimonial),
-    }, () => ({ success: true, testimonial }));
+    }, () => localDb.saveTestimonial(testimonial));
   },
 
   async deleteTestimonial(id: string): Promise<any> {
     return safeRequest(`${API_BASE}/owner/testimonials/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders('owner'),
-    }, () => ({ success: true, message: 'Testimonial deleted' }));
+    }, () => localDb.deleteTestimonial(id));
   },
 
   async updateCMS(data: Partial<StudioCMSData>): Promise<any> {
@@ -354,7 +370,7 @@ export const api = {
       method: 'PUT',
       headers: getAuthHeaders('owner'),
       body: JSON.stringify(data),
-    }, () => ({ success: true, cms: { ...localDb.getCMS(), ...data } }));
+    }, () => localDb.updateCMS(data));
   },
 
   async getOwners(): Promise<Owner[]> {
@@ -380,4 +396,3 @@ export const api = {
     return safeRequest(`${API_BASE}/owner/audit-logs`, { headers: getAuthHeaders('owner') }, () => []);
   },
 };
-

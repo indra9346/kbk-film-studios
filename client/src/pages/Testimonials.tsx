@@ -7,11 +7,7 @@ import { getVideoType, getCleanVideoUrl } from '../components/video/VideoCard';
 export const Testimonials: React.FC = () => {
   const { testimonials } = useStudio();
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [mutedMap, setMutedMap] = useState<Record<string, boolean>>({});
-
-  const toggleVideoSound = (id: string) => {
-    setMutedMap((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  const [openVideoId, setOpenVideoId] = useState<string | null>(null);
 
   const categories = ['all', 'Wedding Video Highlights', 'Pre-Wedding Video Editing', 'Haldi & Sangeeth Ceremonies', 'Spot Editing Available', 'House Warming Ceremonies'];
 
@@ -56,8 +52,8 @@ export const Testimonials: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredTestimonials.map((t) => {
-            const isMuted = mutedMap[t.id] !== false; // default true
             const media = t.videoUrl ? getVideoType(t.videoUrl) : null;
+            const isOpen = openVideoId === t.id;
 
             return (
               <div
@@ -69,7 +65,7 @@ export const Testimonials: React.FC = () => {
                   <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-gold/20">
                     {media && media.type === 'youtube' && media.id ? (
                       <iframe
-                        src={`https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1&rel=0`}
+                        src={isOpen ? `https://www.youtube.com/embed/${media.id}?autoplay=1&controls=1&rel=0` : `https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1&rel=0`}
                         title={`Customer Video Review - ${t.clientName}`}
                         className="w-full h-full object-cover border-0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -77,28 +73,49 @@ export const Testimonials: React.FC = () => {
                       />
                     ) : (
                       <>
-                        <video
-                          src={getCleanVideoUrl(t.videoUrl)}
-                          poster={media && media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (t.thumbnailUrl || '/assets/kbk-logo.jpg')}
-                          autoPlay
-                          loop
-                          muted={isMuted}
-                          playsInline
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          onClick={() => toggleVideoSound(t.id)}
-                          className="absolute bottom-3 right-3 p-2 rounded-full bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 transition-all z-10"
-                          title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-                        >
-                          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-gold" />}
-                        </button>
+                        {isOpen ? (
+                          <video
+                            src={getCleanVideoUrl(t.videoUrl)}
+                            poster={media && media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (t.thumbnailUrl || '/assets/kbk-logo.jpg')}
+                            controls
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={t.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                            alt={`${t.clientName} testimonial`}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </>
                     )}
                     <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 flex items-center gap-1 z-10">
                       <Film className="w-2.5 h-2.5" />
                       <span>Video Review</span>
                     </div>
+                    {!isOpen && (
+                      <button
+                        onClick={() => setOpenVideoId(t.id)}
+                        className="absolute inset-0 flex items-center justify-center text-gold z-10"
+                        title="Play client review"
+                        type="button"
+                      >
+                        <span className="w-12 h-12 rounded-full bg-black/80 border border-gold/50 flex items-center justify-center">
+                          <Play className="w-5 h-5 fill-current ml-0.5" />
+                        </span>
+                      </button>
+                    )}
+                    {isOpen && (
+                      <button
+                        onClick={() => setOpenVideoId(null)}
+                        className="absolute top-3 right-3 z-20 px-2 py-1 rounded-full bg-black/80 border border-gold/30 text-[10px] text-ivory-100"
+                        type="button"
+                      >
+                        Close
+                      </button>
+                    )}
                   </div>
                 )}
 

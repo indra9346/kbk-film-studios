@@ -138,7 +138,7 @@ export const Home: React.FC = () => {
               Selected Works & Master Highlight Cuts
             </h2>
             <p className="text-xs sm:text-sm text-ivory-300 max-w-xl font-light">
-              All cinematic highlight films play in real-time 4K muted autoplay loop. Tap any film for full cinema view or tap the speaker icon to unmute.
+              Tap any film to open the full cinema view and use the built-in controls for a clean, intentional playback experience.
             </p>
           </div>
 

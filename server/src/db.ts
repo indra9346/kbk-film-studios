@@ -14,6 +14,7 @@ import {
   AuditLog,
   OTPVerification
 } from './types.js';
+import { isSupabaseEnabled, hydrateSupabaseData, persistSupabaseData } from './supabase.js';
 
 interface DatabaseSchema {
   owners: Owner[];
@@ -30,7 +31,10 @@ interface DatabaseSchema {
   otpVerifications: OTPVerification[];
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+// Resolve relative to this module, not process.cwd(). Vercel executes the
+// serverless function from the repository root, while local development runs
+// from /server; this keeps both environments pointed at server/data.
+const DATA_DIR = path.resolve(__dirname, '..', 'data');
 const DB_FILE = path.join(DATA_DIR, 'kbk_database.json');
 
 const INITIAL_SERVICES: ServiceItem[] = [
@@ -590,6 +594,31 @@ class DatabaseManager {
     this.data = this.loadDatabase();
   }
 
+  private async syncSupabaseIfAvailable() {
+    if (!isSupabaseEnabled()) return;
+
+    const hydrated = await hydrateSupabaseData();
+    if (!hydrated) return;
+
+    const nextData: DatabaseSchema = {
+      owners: hydrated.owners.length ? hydrated.owners : this.data.owners,
+      clients: this.data.clients,
+      services: this.data.services,
+      bookingRequests: this.data.bookingRequests,
+      bookingPriceHistories: this.data.bookingPriceHistories,
+      serviceProjects: this.data.serviceProjects,
+      privateDeliveries: this.data.privateDeliveries,
+      publicWorks: hydrated.works.length ? hydrated.works : this.data.publicWorks,
+      testimonials: hydrated.testimonials.length ? hydrated.testimonials : this.data.testimonials,
+      studioCMS: hydrated.studioCMS ?? this.data.studioCMS,
+      auditLogs: this.data.auditLogs,
+      otpVerifications: this.data.otpVerifications,
+    };
+
+    this.data = nextData;
+    this.saveDatabase(nextData);
+  }
+
   private ensureDataDirectory() {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -600,7 +629,73 @@ class DatabaseManager {
     }
   }
 
+  private normalizeBundledVideoUrls(data: DatabaseSchema): DatabaseSchema {
+    const replacements: Record<string, string> = {
+      '1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP': '/assets/client-work-1.mp4',
+      '14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs': '/assets/client-work-2.mp4'
+    };
+    data.publicWorks = data.publicWorks.map((work) => {
+      const replacement = Object.entries(replacements)
+        .find(([driveFileId]) => work.videoUrl?.includes(driveFileId))?.[1];
+      return replacement ? { ...work, videoUrl: replacement } : work;
+    });
+    if (data.studioCMS?.heroVideoUrl?.includes('1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP')) {
+      data.studioCMS.heroVideoUrl = '/assets/hero-reel.mp4';
+    }
+    return data;
+  }
+
   private loadDatabase(): DatabaseSchema {
+    if (isSupabaseEnabled()) {
+      const fallbackSchema = (() => {
+        try {
+          if (fs.existsSync(DB_FILE)) {
+            const fileContent = fs.readFileSync(DB_FILE, 'utf-8');
+            const parsed = JSON.parse(fileContent);
+            for (const initialOwner of INITIAL_OWNERS) {
+              if (!parsed.owners.some((o: any) => o.phone === initialOwner.phone || o.email === initialOwner.email)) {
+                parsed.owners.unshift(initialOwner);
+              }
+            }
+            return this.normalizeBundledVideoUrls(parsed);
+          }
+        } catch (err) {
+          console.error('Error reading database file, loading default initial schema:', err);
+        }
+
+        const defaultSchema: DatabaseSchema = {
+          owners: INITIAL_OWNERS,
+          clients: [INITIAL_DEMO_CLIENT],
+          services: INITIAL_SERVICES,
+          bookingRequests: [INITIAL_DEMO_BOOKING],
+          bookingPriceHistories: [],
+          serviceProjects: [INITIAL_DEMO_PROJECT],
+          privateDeliveries: INITIAL_DEMO_PROJECT.deliveries,
+          publicWorks: INITIAL_PUBLIC_WORKS,
+          testimonials: INITIAL_TESTIMONIALS,
+          studioCMS: INITIAL_STUDIO_CMS,
+          auditLogs: [
+            {
+              id: 'audit-1',
+              actorRole: 'primary_owner',
+              actorName: 'Kurudi Bharath Kumar',
+              actorIdentifier: '9346227894',
+              action: 'STUDIO_INITIALIZED',
+              details: 'KBK Film Studios database initialized with full service catalog & credentials.',
+              timestamp: new Date().toISOString()
+            }
+          ],
+          otpVerifications: []
+        };
+
+        return this.normalizeBundledVideoUrls(defaultSchema);
+      })();
+
+      const merged = fallbackSchema;
+      void this.syncSupabaseIfAvailable();
+      return merged;
+    }
+
     try {
       if (fs.existsSync(DB_FILE)) {
         const fileContent = fs.readFileSync(DB_FILE, 'utf-8');
@@ -611,7 +706,7 @@ class DatabaseManager {
             parsed.owners.unshift(initialOwner);
           }
         }
-        return parsed;
+        return this.normalizeBundledVideoUrls(parsed);
       }
     } catch (err) {
       console.error('Error reading database file, loading default initial schema:', err);
@@ -642,14 +737,20 @@ class DatabaseManager {
       otpVerifications: []
     };
 
-    this.saveDatabase(defaultSchema);
-    return defaultSchema;
+    const normalizedDefaultSchema = this.normalizeBundledVideoUrls(defaultSchema);
+    this.saveDatabase(normalizedDefaultSchema);
+    return normalizedDefaultSchema;
   }
 
   public saveDatabase(newData?: DatabaseSchema) {
     if (newData) {
       this.data = newData;
     }
+
+    if (isSupabaseEnabled()) {
+      void persistSupabaseData(this.data);
+    }
+
     try {
       fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf-8');
     } catch (err) {

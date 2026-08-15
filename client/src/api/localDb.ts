@@ -50,7 +50,7 @@ const DEFAULT_DB: LocalDBData = {
       currentPursuit: "MBA (2nd Year, Master of Business Administration)"
     },
     editingSuites: ["DaVinci Resolve Studio", "Adobe Premiere Pro", "After Effects", "FilmConvert Nitrate", "Dehancer Pro"],
-    heroVideoUrl: "https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link",
+    heroVideoUrl: "/assets/hero-reel.mp4",
     heroSettledPosterUrl: "/assets/kbk-logo.jpg",
     priceDisclaimer: "All prices are base estimates for standard multi-cam ceremonies. Final quotes may adjust slightly based on footage runtime, multi-cam angles, and express delivery requests.",
     termsAndConditions: [
@@ -185,7 +185,7 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: "Hindupur, AP",
       eventYear: "2026",
       thumbnailUrl: "/assets/kbk-logo.jpg",
-      videoUrl: "https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link",
+      videoUrl: "/assets/client-work-1.mp4",
       videoSourceType: "direct_mp4",
       description: "A cinematic reception video capturing the joy, elegance, and memorable moments of the celebration with smooth transitions, warm tones, and balanced audio.",
       softwareUsed: ["Premiere Pro", "DaVinci Resolve"],
@@ -201,7 +201,7 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: "Hindupur, AP",
       eventYear: "2026",
       thumbnailUrl: "/assets/kbk-logo.jpg",
-      videoUrl: "https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link",
+      videoUrl: "/assets/client-work-2.mp4",
       videoSourceType: "direct_mp4",
       description: "Sacred Mangalashtak and Muhurtham ceremony film with traditional mantra audio clean-up and gold silk color grading.",
       softwareUsed: ["Premiere Pro", "DaVinci Resolve"],
@@ -284,7 +284,29 @@ function getDB(): LocalDBData {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_DB));
       return DEFAULT_DB;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw) as LocalDBData;
+
+    // Upgrade installations that saved the previous Google Drive preview
+    // links. Those links return an HTML preview page and cannot be used as
+    // reliable autoplay media in a <video> element.
+    let upgraded = false;
+    if (parsed.cms?.heroVideoUrl?.includes('1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP')) {
+      parsed.cms.heroVideoUrl = '/assets/hero-reel.mp4';
+      upgraded = true;
+    }
+    const localVideoReplacements: Record<string, string> = {
+      '1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP': '/assets/client-work-1.mp4',
+      '14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs': '/assets/client-work-2.mp4'
+    };
+    parsed.works = parsed.works.map((work) => {
+      const replacement = Object.entries(localVideoReplacements)
+        .find(([fileId]) => work.videoUrl?.includes(fileId))?.[1];
+      if (!replacement) return work;
+      upgraded = true;
+      return { ...work, videoUrl: replacement };
+    });
+    if (upgraded) localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    return parsed;
   } catch (e) {
     return DEFAULT_DB;
   }
@@ -329,17 +351,8 @@ export const localDb = {
     const raw = identifier.trim().toLowerCase();
     const digitsOnly = raw.replace(/\D/g, '');
 
-    // Developer root credentials cannot be unlocked from public footer
-    if (digitsOnly.endsWith('9346476951') || raw === 'ik9893344@gmail.com') {
-      return {
-        authorized: false,
-        message: 'Access Restricted: Developer root credentials (9346476951) cannot be unlocked via public footer field. Developer must authenticate via the Developer Portfolio Management Console.'
-      };
-    }
-
     const owner = db.owners.find(o => {
       if (o.isActive === false) return false;
-      if (o.role === 'primary_owner' || o.phone === '9346476951') return false;
 
       const ownerDigits = (o.phone || '').replace(/\D/g, '');
       const matchesPhone = digitsOnly.length >= 10 && (
@@ -437,5 +450,61 @@ export const localDb = {
     db.serviceProjects = db.serviceProjects.filter(p => p.id !== id && p.bookingRef !== id);
     saveDB(db);
     return { success: true, message: 'Lifecycle project removed.' };
+  },
+
+  saveWork(work: any): { success: boolean; work: PublicWork } {
+    const db = getDB();
+    const normalized: PublicWork = {
+      ...work,
+      id: work.id && !String(work.id).startsWith('temp-') ? work.id : `work-${Date.now()}`,
+      isPublished: work.isPublished !== false,
+      eventYear: work.eventYear || new Date().getFullYear().toString(),
+      eventLocation: work.eventLocation || 'India',
+      softwareUsed: work.softwareUsed || ['DaVinci Resolve'],
+      createdAt: work.createdAt || new Date().toISOString()
+    };
+    const index = db.works.findIndex(item => item.id === normalized.id);
+    if (index >= 0) db.works[index] = normalized;
+    else db.works.unshift(normalized);
+    saveDB(db);
+    return { success: true, work: normalized };
+  },
+
+  deleteWork(id: string): { success: boolean; message: string } {
+    const db = getDB();
+    db.works = db.works.filter(work => work.id !== id);
+    saveDB(db);
+    return { success: true, message: 'Showcase work removed.' };
+  },
+
+  saveTestimonial(testimonial: any): { success: boolean; testimonial: Testimonial } {
+    const db = getDB();
+    const normalized: Testimonial = {
+      ...testimonial,
+      id: testimonial.id && !String(testimonial.id).startsWith('temp-') ? testimonial.id : `testimonial-${Date.now()}`,
+      isPublished: testimonial.isPublished !== false,
+      isVerified: testimonial.isVerified !== false,
+      rating: Number(testimonial.rating) || 5,
+      createdAt: testimonial.createdAt || new Date().toISOString()
+    };
+    const index = db.testimonials.findIndex(item => item.id === normalized.id);
+    if (index >= 0) db.testimonials[index] = normalized;
+    else db.testimonials.unshift(normalized);
+    saveDB(db);
+    return { success: true, testimonial: normalized };
+  },
+
+  deleteTestimonial(id: string): { success: boolean; message: string } {
+    const db = getDB();
+    db.testimonials = db.testimonials.filter(testimonial => testimonial.id !== id);
+    saveDB(db);
+    return { success: true, message: 'Testimonial removed.' };
+  },
+
+  updateCMS(data: Partial<StudioCMSData>): { success: boolean; cms: StudioCMSData } {
+    const db = getDB();
+    db.cms = { ...db.cms, ...data };
+    saveDB(db);
+    return { success: true, cms: db.cms };
   }
 };

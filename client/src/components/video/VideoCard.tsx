@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Play, Volume2, VolumeX, Maximize2, Sparkles } from 'lucide-react';
+import React from 'react';
+import { Maximize2 } from 'lucide-react';
 import { PublicWork } from '../../types';
 
 interface VideoCardProps {
@@ -37,75 +37,34 @@ export const getCleanVideoUrl = (url: string): string => {
 };
 
 export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
-  const [videoSrc, setVideoSrc] = useState<string>(() => getCleanVideoUrl(work.videoUrl));
   const media = getVideoType(work.videoUrl);
-
-  // Sync videoSrc when work changes
-  useEffect(() => {
-    setVideoSrc(getCleanVideoUrl(work.videoUrl));
-  }, [work.videoUrl]);
-
-  // Auto-play immediately on mount and ensure continuous loop
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.muted = isMuted;
-    video.play().catch(() => {
-      // Browser autoplay policy might require explicit muted trigger
-      if (video) {
-        video.muted = true;
-        video.play().catch(() => {});
-      }
-    });
-  }, [videoSrc, isMuted]);
-
-  const handleVideoError = () => {
-    // If external stream has error, fallback to hero reel
-    if (videoSrc !== '/assets/hero-reel.mp4') {
-      setVideoSrc('/assets/hero-reel.mp4');
-    }
-  };
-
-  const toggleSound = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const nextMuted = !isMuted;
-    setIsMuted(nextMuted);
-    if (videoRef.current) {
-      videoRef.current.muted = nextMuted;
-      if (videoRef.current.paused) {
-        videoRef.current.play().catch(() => {});
-      }
-    }
-  };
+  const videoSrc = getCleanVideoUrl(work.videoUrl);
 
   return (
     <div
       onClick={() => onSelect(work)}
       className="group relative rounded-2xl overflow-hidden glass-panel glass-panel-hover cursor-pointer border border-gold/20 flex flex-col transition-all duration-300 hover:border-gold/50 shadow-lg hover:shadow-gold-sm"
     >
-      {/* Video Container (16:9 Aspect Ratio) - Continuous Muted Autoplay Loop */}
+      {/* Video Container (16:9 Aspect Ratio) */}
       <div className="relative aspect-video w-full overflow-hidden bg-black group/preview">
         {media.type === 'youtube' && media.id ? (
           <iframe
-            src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0`}
+            src={`https://www.youtube.com/embed/${media.id}?autoplay=0&mute=0&controls=1&modestbranding=1&rel=0&playsinline=1`}
             title={work.title}
             className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-            allow="autoplay; encrypted-media"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             frameBorder="0"
           />
         ) : (
           <video
-            ref={videoRef}
             src={videoSrc}
             poster={media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (work.thumbnailUrl || undefined)}
-            autoPlay
-            muted={isMuted}
-            loop
+            preload="metadata"
+            controls={true}
             playsInline
-            onError={handleVideoError}
+            muted={false}
+            autoPlay={false}
+            loop={false}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         )}
@@ -130,18 +89,6 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
             <Maximize2 className="w-5 h-5" />
           </div>
         </div>
-
-        {/* Sound Toggle Button (Bottom Left) */}
-        {media.type !== 'youtube' && (
-          <button
-            type="button"
-            onClick={toggleSound}
-            className="absolute bottom-3 left-3 z-20 p-2 rounded-full bg-black/80 hover:bg-gold hover:text-black text-ivory-200 border border-gold/30 backdrop-blur-sm transition-all cursor-pointer shadow-md"
-            title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
-          >
-            {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-gold" />}
-          </button>
-        )}
 
         {/* Event Location & Year Pill (Bottom Right) */}
         <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-surface-200/85 backdrop-blur-sm border border-surface-50 text-[10px] text-ivory-300 z-10">

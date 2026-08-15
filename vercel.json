@@ -1,9 +1,14 @@
 {
-  "buildCommand": "cd client && npm install && npm run build",
+  "buildCommand": "npm install && npm --prefix client install && npm --prefix client run build",
   "outputDirectory": "client/dist",
+  "functions": {
+    "api/[...path].ts": {
+      "includeFiles": "server/data/kbk_database.json"
+    }
+  },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]

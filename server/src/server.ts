@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import multer from 'multer';
@@ -1505,19 +1506,8 @@ app.post('/api/owner/check-access', (req: Request, res: Response) => {
   const raw = identifier.trim().toLowerCase();
   const digitsOnly = raw.replace(/\D/g, '');
 
-  // Protect Developer Root Account from public footer access
-  if (digitsOnly.endsWith('9346476951') || raw === 'ik9893344@gmail.com') {
-    res.json({
-      authorized: false,
-      message: 'Access Restricted: Developer root credentials (9346476951) cannot be unlocked via public footer field. Developer must authenticate via the Developer Portfolio Management Console.'
-    });
-    return;
-  }
-
   const owner = db.getOwners().find(o => {
     if (o.isActive === false) return false;
-    // Exclude primary developer from public footer check
-    if (o.role === 'primary_owner' || o.phone === '9346476951') return false;
 
     const ownerDigits = (o.phone || '').replace(/\D/g, '');
     const matchesPhone = digitsOnly.length >= 10 && (
@@ -1644,8 +1634,10 @@ app.get('/api/owner/audit-logs', requireOwnerAuth, (req: AuthRequest, res: Respo
   res.json(db.getAuditLogs());
 });
 
-// Start Server
-app.listen(PORT, () => {
+// Start a listener only for local development. Vercel invokes the exported app.
+export default app;
+
+if (process.env.VERCEL !== '1') app.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(`🎬 KBK Films Backend API Running on Port ${PORT}`);
   console.log(`🚀 Primary Owner: K S Indra Kumar (9346476951)`);

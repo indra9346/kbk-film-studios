@@ -7,7 +7,6 @@ export const CinematicHeroVideo: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
-  const [hasSettled, setHasSettled] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
   const { cms } = useStudio();
 
@@ -15,8 +14,9 @@ export const CinematicHeroVideo: React.FC = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleEnded = () => {
-      setHasSettled(true);
+    const keepPlaying = () => {
+      video.currentTime = 0;
+      video.play().catch(() => setIsPlaying(false));
     };
 
     const handleTimeUpdate = () => {
@@ -25,7 +25,7 @@ export const CinematicHeroVideo: React.FC = () => {
       }
     };
 
-    video.addEventListener('ended', handleEnded);
+    video.addEventListener('ended', keepPlaying);
     video.addEventListener('timeupdate', handleTimeUpdate);
 
     // Attempt autoplay muted
@@ -35,7 +35,7 @@ export const CinematicHeroVideo: React.FC = () => {
     });
 
     return () => {
-      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('ended', keepPlaying);
       video.removeEventListener('timeupdate', handleTimeUpdate);
     };
   }, []);
@@ -64,7 +64,15 @@ export const CinematicHeroVideo: React.FC = () => {
     setIsPlaying(true);
   };
 
-  const heroVideoSrc = cms?.heroVideoUrl || '/assets/hero-reel.mp4';
+  // Drive preview links and other HTML preview URLs are not dependable autoplay sources.
+  // Always prefer a direct asset or fall back to the bundled MP4 for consistent playback.
+  const heroVideoSrc = (() => {
+    const rawUrl = cms?.heroVideoUrl?.trim();
+    if (!rawUrl) return '/assets/hero-reel.mp4';
+    if (rawUrl.startsWith('/assets/')) return rawUrl;
+    if (rawUrl.endsWith('.mp4') || rawUrl.endsWith('.webm') || rawUrl.endsWith('.mov')) return rawUrl;
+    return '/assets/hero-reel.mp4';
+  })();
 
   return (
     <div className="relative w-full min-h-[92vh] sm:min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-14">
@@ -78,6 +86,10 @@ export const CinematicHeroVideo: React.FC = () => {
           muted={isMuted}
           autoPlay
           loop
+          preload="auto"
+          onCanPlay={() => {
+            videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          }}
           className="w-full h-full object-cover object-center scale-100 sm:scale-105 opacity-75 sm:opacity-85 filter brightness-95 contrast-105 transition-all duration-700"
           onError={(e) => {
             console.log('Video asset fallback to poster');
