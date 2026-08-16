@@ -1634,6 +1634,192 @@ app.get('/api/owner/audit-logs', requireOwnerAuth, (req: AuthRequest, res: Respo
   res.json(db.getAuditLogs());
 });
 
+// ----------------------------------------------------
+// CLIENT VIDEO DELIVERIES (OWNER CRUD)
+// ----------------------------------------------------
+
+// GET all client video deliveries
+app.get('/api/owner/client-video-deliveries', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
+  await db.syncClientVideoDeliveriesFromSupabase();
+  res.json(db.getClientVideoDeliveries());
+});
+
+// GET deliveries for a specific booking ref (owner)
+app.get('/api/owner/client-video-deliveries/booking/:ref', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+  const { ref } = req.params;
+  const deliveries = db.getClientVideoDeliveries().filter(d => d.bookingRef === ref);
+  res.json(deliveries);
+});
+
+// POST create a new client video delivery
+app.post('/api/owner/client-video-deliveries', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
+  const {
+    bookingRef, clientId, clientName, projectId,
+    title, description, videoUrl, videoSourceType, thumbnailUrl,
+    fileName, fileSizeBytes, fileSizeFormatted, mimeType, fileCategory,
+    expiryDays, maxDownloads, isStreamable, ownerNotes
+  } = req.body;
+
+  if (!bookingRef || !title || !videoUrl) {
+    res.status(400).json({ error: 'bookingRef, title, and videoUrl are required' });
+    return;
+  }
+
+  const uniqueToken = `cvd_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + (expiryDays || 90));
+
+  // Detect video source type from URL
+  let detectedSourceType = videoSourceType || 'direct_mp4';
+  if (!videoSourceType) {
+    if (videoUrl.includes('drive.google.com') || videoUrl.includes('docs.google.com')) {
+      detectedSourceType = 'google_drive';
+    } else if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      detectedSourceType = 'youtube';
+    }
+  }
+
+  const newDelivery = {
+    id: `cvd-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    bookingRef,
+    clientId: clientId || 'client-unknown',
+    clientName: clientName || 'Client',
+    projectId: projectId || null,
+    title,
+    description: description || '',
+    videoUrl,
+    videoSourceType: detectedSourceType,
+    thumbnailUrl: thumbnailUrl || '/assets/kbk-logo.jpg',
+    fileName: fileName || `${bookingRef}_video.mp4`,
+    fileSizeBytes: fileSizeBytes || 0,
+    fileSizeFormatted: fileSizeFormatted || 'Unknown size',
+    mimeType: mimeType || 'video/mp4',
+    fileCategory: fileCategory || 'master_video',
+    downloadToken: uniqueToken,
+    expiryDate: expiryDate.toISOString(),
+    downloadCount: 0,
+    maxDownloads: maxDownloads || 50,
+    isStreamable: isStreamable !== false,
+    isActive: true,
+    ownerNotes: ownerNotes || '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const saved = await db.addClientVideoDelivery(newDelivery);
+
+  db.addAuditLog({
+    actorRole: req.owner?.role as any || 'co_owner',
+    actorName: req.owner?.name || 'Owner',
+    actorIdentifier: req.owner?.phone || 'owner',
+    action: 'CLIENT_VIDEO_DELIVERY_ADDED',
+    details: `Video delivery "${title}" added for booking ${bookingRef}. Drive URL: ${videoUrl.substring(0, 60)}...`
+  });
+
+  res.status(201).json({ success: true, delivery: saved });
+});
+
+// PUT update a client video delivery
+app.put('/api/owner/client-video-deliveries/:id', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  const updated = await db.updateClientVideoDelivery(id, updates);
+  if (!updated) {
+    res.status(404).json({ error: 'Client video delivery not found' });
+    return;
+  }
+
+  res.json({ success: true, delivery: updated });
+});
+
+// DELETE a client video delivery
+app.delete('/api/owner/client-video-deliveries/:id', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const success = await db.removeClientVideoDelivery(id);
+  if (!success) {
+    res.status(404).json({ error: 'Client video delivery not found' });
+    return;
+  }
+
+  db.addAuditLog({
+    actorRole: req.owner?.role as any || 'co_owner',
+    actorName: req.owner?.name || 'Owner',
+    actorIdentifier: req.owner?.phone || 'owner',
+    action: 'CLIENT_VIDEO_DELIVERY_DELETED',
+    details: `Video delivery ${id} deleted.`
+  });
+
+  res.json({ success: true, message: 'Delivery removed' });
+});
+
+// PUBLIC: Get client video deliveries by booking ref + download token (client access)
+app.get('/api/client/video-deliveries', async (req: Request, res: Response) => {
+  const { bookingRef, token } = req.query as { bookingRef: string; token: string };
+
+  if (!bookingRef) {
+    res.status(400).json({ error: 'bookingRef is required' });
+    return;
+  }
+
+  let deliveries = db.getClientVideoDeliveries().filter(
+    d => d.bookingRef === bookingRef && d.isActive
+  );
+
+  // If token provided, verify it (for single delivery access)
+  if (token) {
+    deliveries = deliveries.filter(d => d.downloadToken === token);
+  }
+
+  // Check expiry
+  const now = new Date();
+  deliveries = deliveries.filter(d => {
+    if (!d.expiryDate) return true;
+    return new Date(d.expiryDate) > now;
+  });
+
+  res.json(deliveries);
+});
+
+// Stream proxy for client video deliveries (Drive videos via server proxy)
+app.get('/api/client/stream-delivery/:token', async (req: Request, res: Response) => {
+  const { token } = req.params;
+  const delivery = db.getClientVideoDeliveries().find(d => d.downloadToken === token && d.isActive);
+
+  if (!delivery) {
+    res.status(404).json({ error: 'Delivery not found or expired' });
+    return;
+  }
+
+  // Check expiry
+  if (delivery.expiryDate && new Date(delivery.expiryDate) < new Date()) {
+    res.status(410).json({ error: 'Delivery link has expired' });
+    return;
+  }
+
+  // Redirect to appropriate source
+  const url = delivery.videoUrl;
+  if (delivery.videoSourceType === 'google_drive' || url.includes('drive.google.com')) {
+    const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    const fileId = match ? match[1] : '';
+    if (fileId) {
+      // Increment download count
+      await db.updateClientVideoDelivery(delivery.id, { downloadCount: delivery.downloadCount + 1 });
+      // Stream via existing Google Drive proxy
+      res.redirect(`/api/public/stream-drive/${fileId}`);
+      return;
+    }
+  }
+
+  // For direct URLs, redirect
+  await db.updateClientVideoDelivery(delivery.id, { downloadCount: delivery.downloadCount + 1 });
+  res.redirect(url);
+});
+
+// ----------------------------------------------------
+// START SERVER
+// ----------------------------------------------------
+
 // Start a listener only for local development. Vercel invokes the exported app.
 export default app;
 
@@ -1642,5 +1828,6 @@ if (process.env.VERCEL !== '1') app.listen(PORT, () => {
   console.log(`🎬 KBK Films Backend API Running on Port ${PORT}`);
   console.log(`🚀 Primary Owner: K S Indra Kumar (9346476951)`);
   console.log(`🔒 Client Isolation & Passwordless OTP Service Active`);
+  console.log(`📦 Client Video Deliveries API Active`);
   console.log(`====================================================`);
 });

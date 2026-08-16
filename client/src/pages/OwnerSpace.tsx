@@ -66,7 +66,7 @@ export const OwnerSpace: React.FC = () => {
 
   // Active Tab in Owner Space
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'bookings' | 'pricing' | 'lifecycle' | 'deliveries' | 'works' | 'testimonials' | 'cms' | 'owners' | 'audit'
+    'overview' | 'bookings' | 'pricing' | 'lifecycle' | 'deliveries' | 'works' | 'testimonials' | 'cms' | 'owners' | 'audit' | 'client_videos'
   >('overview');
 
   const [bookingSubFilter, setBookingSubFilter] = useState<'pending' | 'accepted' | 'rejected'>('pending');
@@ -83,6 +83,10 @@ export const OwnerSpace: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [cmsData, setCmsData] = useState<any | null>(null);
   const [dataLoading, setDataLoading] = useState(false);
+  // Client Video Deliveries
+  const [clientVideos, setClientVideos] = useState<any[]>([]);
+  const [editingClientVideo, setEditingClientVideo] = useState<any | null>(null);
+  const [deletingClientVideoId, setDeletingClientVideoId] = useState<string | null>(null);
 
   // Modals / Action States
   const [selectedBookingForAction, setSelectedBookingForAction] = useState<BookingRequest | null>(null);
@@ -148,6 +152,13 @@ export const OwnerSpace: React.FC = () => {
       setOwnersList(o);
       setAuditLogs(a);
       setCmsData(c);
+      // Load client video deliveries
+      try {
+        const cvd = await api.getClientVideoDeliveries();
+        setClientVideos(cvd || []);
+      } catch (e) {
+        console.warn('Client video deliveries not yet available:', e);
+      }
     } catch (err: any) {
       console.error('Failed to load owner data:', err);
     } finally {
@@ -610,6 +621,7 @@ export const OwnerSpace: React.FC = () => {
                 { id: 'pricing', label: 'Service Pricing CMS', icon: DollarSign },
                 { id: 'lifecycle', label: `Active Lifecycle (${projects.filter(p => p.currentStage !== 'testimonial_received').length})`, icon: Layers },
                 { id: 'deliveries', label: 'Client Delivery Locker', icon: Upload },
+                { id: 'client_videos', label: `Client Videos (${clientVideos.length})`, icon: Play },
                 { id: 'works', label: 'Works Showcase', icon: Film },
                 { id: 'testimonials', label: 'Testimonials', icon: Sparkles },
                 { id: 'cms', label: 'Studio Profile & Bio', icon: Settings },
@@ -1194,6 +1206,351 @@ export const OwnerSpace: React.FC = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* TAB 5.5: CLIENT VIDEO DELIVERIES */}
+            {activeTab === 'client_videos' && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-ivory-100">
+                      Client Video Deliveries — Private Locker
+                    </h3>
+                    <p className="text-xs text-ivory-400 mt-1">
+                      Deliver edited videos privately to clients via Google Drive, YouTube, or direct URL. Each client gets an isolated access token.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setEditingClientVideo({
+                      bookingRef: '',
+                      clientName: '',
+                      title: '',
+                      description: '',
+                      videoUrl: '',
+                      fileCategory: 'master_video',
+                      expiryDays: 90,
+                      maxDownloads: 50,
+                      ownerNotes: '',
+                    })}
+                    className="px-4 py-2.5 rounded-xl bg-gold text-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-gold-sm hover:bg-gold-light transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add New Client Video</span>
+                  </button>
+                </div>
+
+                {/* Test indicator for Amulya Haldi video */}
+                {clientVideos.some(v => v.bookingRef === 'KBK-2026-AMULYA') && (
+                  <div className="p-3.5 rounded-xl bg-accent-emerald/10 border border-accent-emerald/30 text-xs text-accent-emerald flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 shrink-0" />
+                    <span>
+                      <strong>Test Video Active:</strong> Amulya Haldi ceremony video (Google Drive) is loaded and ready for client delivery testing.
+                    </span>
+                  </div>
+                )}
+
+                {clientVideos.length === 0 ? (
+                  <div className="p-12 rounded-3xl glass-panel border border-gold/15 text-center space-y-3">
+                    <Play className="w-10 h-10 mx-auto text-gold opacity-50" />
+                    <h4 className="font-serif text-lg font-bold text-ivory-100">No Client Video Deliveries Yet</h4>
+                    <p className="text-xs text-ivory-400">Add a client's edited video to start delivering via private secure links.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {clientVideos.map((cvd) => {
+                      const isGoogleDrive = cvd.videoUrl?.includes('drive.google.com') || cvd.videoSourceType === 'google_drive';
+                      const isYoutube = cvd.videoUrl?.includes('youtube.com') || cvd.videoUrl?.includes('youtu.be');
+                      const driveFileId = isGoogleDrive
+                        ? (cvd.videoUrl?.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || cvd.videoUrl?.match(/[?&]id=([a-zA-Z0-9_-]+)/))?.[1]
+                        : null;
+                      const ytId = isYoutube
+                        ? cvd.videoUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([^&?#]+)/)?.[1]
+                        : null;
+
+                      return (
+                        <div
+                          key={cvd.id}
+                          className="p-5 rounded-2xl glass-panel border border-gold/20 space-y-4 hover:border-gold/40 transition-all"
+                        >
+                          {/* Video Preview */}
+                          <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20">
+                            {ytId ? (
+                              <iframe
+                                src={`https://www.youtube.com/embed/${ytId}?autoplay=0&mute=1&controls=1`}
+                                title={cvd.title}
+                                className="w-full h-full border-0"
+                                allow="encrypted-media"
+                              />
+                            ) : driveFileId ? (
+                              <iframe
+                                src={`https://drive.google.com/file/d/${driveFileId}/preview`}
+                                title={cvd.title}
+                                className="w-full h-full border-0"
+                                allow="autoplay"
+                              />
+                            ) : (
+                              <video
+                                src={cvd.videoUrl}
+                                controls
+                                muted
+                                className="w-full h-full object-cover"
+                                poster={cvd.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                              />
+                            )}
+                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10">
+                              {cvd.fileCategory?.replace(/_/g, ' ')}
+                            </div>
+                            <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 text-[9px] font-mono border border-emerald-500/30 z-10">
+                              {isGoogleDrive ? '📁 Drive' : isYoutube ? '▶ YT' : '🎬 Direct'}
+                            </div>
+                          </div>
+
+                          {/* Delivery Info */}
+                          <div className="space-y-2">
+                            <h4 className="font-serif text-base font-bold text-white line-clamp-1">{cvd.title}</h4>
+                            <p className="text-xs text-ivory-400 line-clamp-2">{cvd.description}</p>
+
+                            <div className="grid grid-cols-2 gap-2 text-[11px] text-ivory-400">
+                              <div>
+                                <span className="text-ivory-300 font-semibold block">Booking Ref:</span>
+                                <span className="font-mono text-gold">{cvd.bookingRef}</span>
+                              </div>
+                              <div>
+                                <span className="text-ivory-300 font-semibold block">Client:</span>
+                                <span>{cvd.clientName}</span>
+                              </div>
+                              <div>
+                                <span className="text-ivory-300 font-semibold block">Downloads:</span>
+                                <span>{cvd.downloadCount} / {cvd.maxDownloads}</span>
+                              </div>
+                              <div>
+                                <span className="text-ivory-300 font-semibold block">Expires:</span>
+                                <span>{cvd.expiryDate ? new Date(cvd.expiryDate).toLocaleDateString('en-IN') : 'Never'}</span>
+                              </div>
+                            </div>
+
+                            {/* Access Token */}
+                            <div className="p-2.5 rounded-lg bg-surface-100 border border-surface-50 text-[10px] font-mono text-ivory-400 break-all">
+                              <span className="text-gold font-bold block mb-0.5">Access Token:</span>
+                              {cvd.downloadToken}
+                            </div>
+
+                            {/* Stream URL */}
+                            <div className="p-2 rounded-lg bg-surface-100/60 border border-surface-50 text-[10px] text-ivory-400 break-all">
+                              <span className="text-accent-emerald font-bold block mb-0.5">Client Stream URL:</span>
+                              /api/client/stream-delivery/{cvd.downloadToken}
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="pt-3 border-t border-surface-50 flex items-center justify-between">
+                            <button
+                              onClick={() => setEditingClientVideo(cvd)}
+                              className="text-xs text-gold hover:underline font-semibold flex items-center gap-1"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              Edit Delivery
+                            </button>
+
+                            {deletingClientVideoId === cvd.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-accent-crimson font-bold animate-pulse">Delete?</span>
+                                <button
+                                  onClick={async () => {
+                                    await api.deleteClientVideoDelivery(cvd.id);
+                                    setClientVideos(prev => prev.filter(v => v.id !== cvd.id));
+                                    setDeletingClientVideoId(null);
+                                  }}
+                                  className="px-2 py-0.5 rounded bg-accent-crimson hover:bg-accent-crimson/80 text-white text-[10px] font-bold"
+                                >Yes</button>
+                                <button
+                                  onClick={() => setDeletingClientVideoId(null)}
+                                  className="px-1.5 py-0.5 rounded bg-surface-100 text-ivory-400 text-[10px]"
+                                >No</button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setDeletingClientVideoId(cvd.id)}
+                                className="flex items-center gap-1 text-xs text-accent-crimson/70 hover:text-accent-crimson transition-all"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Add/Edit Client Video Modal */}
+                {editingClientVideo && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+                    <div className="w-full max-w-lg bg-surface-200 border border-gold/30 rounded-3xl p-6 space-y-5 max-h-[90vh] overflow-y-auto shadow-2xl">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-serif text-lg font-bold text-gold">
+                          {editingClientVideo.id ? 'Edit Client Video Delivery' : 'Add New Client Video Delivery'}
+                        </h3>
+                        <button onClick={() => setEditingClientVideo(null)} className="text-ivory-400 hover:text-white text-sm font-bold">✕</button>
+                      </div>
+
+                      <div className="space-y-4 text-xs">
+                        {/* Booking Ref */}
+                        <div className="space-y-1">
+                          <label className="font-semibold text-ivory-300">Booking Reference *</label>
+                          <input
+                            type="text"
+                            value={editingClientVideo.bookingRef || ''}
+                            onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, bookingRef: e.target.value }))}
+                            placeholder="e.g. KBK-2026-8941"
+                            className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm"
+                          />
+                        </div>
+
+                        {/* Client Name */}
+                        <div className="space-y-1">
+                          <label className="font-semibold text-ivory-300">Client Name *</label>
+                          <input
+                            type="text"
+                            value={editingClientVideo.clientName || ''}
+                            onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, clientName: e.target.value }))}
+                            placeholder="e.g. Venkatesh & Divya"
+                            className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm"
+                          />
+                        </div>
+
+                        {/* Title */}
+                        <div className="space-y-1">
+                          <label className="font-semibold text-ivory-300">Delivery Title *</label>
+                          <input
+                            type="text"
+                            value={editingClientVideo.title || ''}
+                            onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, title: e.target.value }))}
+                            placeholder="e.g. Amulya Haldi Ceremony — 4K Master"
+                            className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm"
+                          />
+                        </div>
+
+                        {/* Video URL */}
+                        <div className="space-y-1">
+                          <label className="font-semibold text-ivory-300">Video URL * (Google Drive / YouTube / Direct MP4)</label>
+                          <input
+                            type="url"
+                            value={editingClientVideo.videoUrl || ''}
+                            onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, videoUrl: e.target.value }))}
+                            placeholder="https://drive.google.com/file/d/... or YouTube URL"
+                            className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm font-mono"
+                          />
+                          <p className="text-[10px] text-ivory-400">Paste the Google Drive share link, YouTube URL, or direct .mp4 URL</p>
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-1">
+                          <label className="font-semibold text-ivory-300">Description</label>
+                          <textarea
+                            rows={2}
+                            value={editingClientVideo.description || ''}
+                            onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, description: e.target.value }))}
+                            placeholder="Brief description of this edited video..."
+                            className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm resize-none"
+                          />
+                        </div>
+
+                        {/* File Category */}
+                        <div className="space-y-1">
+                          <label className="font-semibold text-ivory-300">Video Category</label>
+                          <select
+                            value={editingClientVideo.fileCategory || 'master_video'}
+                            onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, fileCategory: e.target.value }))}
+                            className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm"
+                          >
+                            <option value="master_video">Master Video (Full Edit)</option>
+                            <option value="teaser_reel">Teaser Reel (60s/90s)</option>
+                            <option value="raw_archive">Raw Archive</option>
+                            <option value="color_stills">Color Stills</option>
+                            <option value="document">Document / Invoice</option>
+                          </select>
+                        </div>
+
+                        {/* Expiry Days */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="font-semibold text-ivory-300">Expiry (Days)</label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={365}
+                              value={editingClientVideo.expiryDays || 90}
+                              onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, expiryDays: Number(e.target.value) }))}
+                              className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="font-semibold text-ivory-300">Max Downloads</label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={500}
+                              value={editingClientVideo.maxDownloads || 50}
+                              onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, maxDownloads: Number(e.target.value) }))}
+                              className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Owner Notes */}
+                        <div className="space-y-1">
+                          <label className="font-semibold text-ivory-300">Owner Notes (Internal)</label>
+                          <input
+                            type="text"
+                            value={editingClientVideo.ownerNotes || ''}
+                            onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, ownerNotes: e.target.value }))}
+                            placeholder="Internal notes for this delivery..."
+                            className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          onClick={async () => {
+                            if (!editingClientVideo.bookingRef || !editingClientVideo.title || !editingClientVideo.videoUrl) {
+                              alert('Please fill in Booking Ref, Title, and Video URL');
+                              return;
+                            }
+                            try {
+                              if (editingClientVideo.id) {
+                                // Update
+                                await api.updateClientVideoDelivery(editingClientVideo.id, editingClientVideo);
+                                setClientVideos(prev => prev.map(v => v.id === editingClientVideo.id ? { ...v, ...editingClientVideo } : v));
+                              } else {
+                                // Create new
+                                const result = await api.addClientVideoDelivery(editingClientVideo);
+                                if (result?.delivery) {
+                                  setClientVideos(prev => [result.delivery, ...prev]);
+                                }
+                              }
+                              setEditingClientVideo(null);
+                            } catch (err: any) {
+                              alert(err.message || 'Failed to save delivery');
+                            }
+                          }}
+                          className="flex-1 py-3 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm transition-all"
+                        >
+                          {editingClientVideo.id ? 'Update Delivery' : 'Add Video Delivery'}
+                        </button>
+                        <button
+                          onClick={() => setEditingClientVideo(null)}
+                          className="px-5 py-3 rounded-xl bg-surface-100 text-ivory-300 text-xs font-semibold border border-surface-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

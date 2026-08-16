@@ -14,7 +14,15 @@ import {
   AuditLog,
   OTPVerification
 } from './types.js';
-import { isSupabaseEnabled, hydrateSupabaseData, persistSupabaseData } from './supabase.js';
+import {
+  isSupabaseEnabled,
+  hydrateSupabaseData,
+  persistSupabaseData,
+  fetchClientVideoDeliveries,
+  upsertClientVideoDelivery,
+  deleteClientVideoDelivery,
+  ClientVideoDelivery
+} from './supabase.js';
 
 interface DatabaseSchema {
   owners: Owner[];
@@ -29,6 +37,7 @@ interface DatabaseSchema {
   studioCMS: StudioCMSData;
   auditLogs: AuditLog[];
   otpVerifications: OTPVerification[];
+  clientVideoDeliveries: ClientVideoDelivery[];
 }
 
 // Resolve the data directory correctly for both environments:
@@ -327,9 +336,59 @@ const INITIAL_SERVICES: ServiceItem[] = [
   }
 ];
 
-const INITIAL_PUBLIC_WORKS: PublicWork[] = [];
+const INITIAL_PUBLIC_WORKS: PublicWork[] = [
+  {
+    id: 'work-amulya-haldi-2026',
+    title: 'Amulya Haldi Ceremony — Cinematic Edit',
+    category: 'Haldi & Sangeeth Ceremonies',
+    eventLocation: 'Hindupur, AP',
+    eventYear: '2026',
+    thumbnailUrl: '/assets/kbk-logo.jpg',
+    videoUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
+    videoSourceType: 'google_drive',
+    externalDestUrl: '',
+    description: 'A vibrant and joyful Haldi ceremony cinematic highlight — yellow splash color isolation, beat-matched family dances, and warm festive energy captured in breathtaking 4K.',
+    softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+    isFeatured: true,
+    isPublished: true,
+    sortOrder: 1,
+    createdAt: '2026-08-10T10:00:00Z'
+  },
+  {
+    id: 'work-demo-wedding-2026',
+    title: 'Venkatesh & Divya — Wedding Master Highlight',
+    category: 'Wedding Highlights',
+    eventLocation: 'Hindupur, AP',
+    eventYear: '2026',
+    thumbnailUrl: '/assets/kbk-logo.jpg',
+    videoUrl: '/assets/client-work-1.mp4',
+    videoSourceType: 'direct_mp4',
+    externalDestUrl: '',
+    description: 'A breathtaking wedding master highlight film — Muhurtham, Mangalashtak, reception speeches, and candid family moments woven into a seamless 10-minute emotional cinematic narrative.',
+    softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro', 'After Effects'],
+    isFeatured: true,
+    isPublished: true,
+    sortOrder: 2,
+    createdAt: '2026-02-10T10:00:00Z'
+  }
+];
 
 const INITIAL_TESTIMONIALS: Testimonial[] = [
+  {
+    id: 'test-amulya-2026',
+    clientName: 'Amulya & Family',
+    serviceTitle: 'Haldi & Sangeeth Ceremonies',
+    eventDate: 'August 2026',
+    location: 'Hindupur, Andhra Pradesh',
+    rating: 5,
+    reviewText: 'The Haldi video editing is absolutely stunning! Bharath Kumar captured every splash, every smile, and every dance move with incredible cinematic precision. The yellow color grading was breathtaking — we cried watching it. Highly recommended for any family ceremony!',
+    videoUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
+    thumbnailUrl: '/assets/kbk-logo.jpg',
+    isVerified: true,
+    isPublished: true,
+    bookingRef: 'KBK-2026-AMULYA',
+    createdAt: '2026-08-10T10:00:00Z'
+  },
   {
     id: 'test-1',
     clientName: 'K S Indra Kumar (Demo Client)',
@@ -342,6 +401,35 @@ const INITIAL_TESTIMONIALS: Testimonial[] = [
     isPublished: true,
     bookingRef: 'KBK-2026-INDRA',
     createdAt: new Date().toISOString()
+  }
+];
+
+const INITIAL_CLIENT_VIDEO_DELIVERIES: ClientVideoDelivery[] = [
+  {
+    id: 'cvd-amulya-haldi-2026',
+    bookingRef: 'KBK-2026-AMULYA',
+    clientId: 'client-amulya',
+    clientName: 'Amulya Family',
+    projectId: 'proj-amulya',
+    title: 'Amulya - Haldi Ceremony Video (4K Master)',
+    description: 'Beautiful Haldi ceremony cinematic edit with vibrant yellow splash color grading, beat-synced choreography cuts, and festive music mastering.',
+    videoUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
+    videoSourceType: 'google_drive',
+    thumbnailUrl: '/assets/kbk-logo.jpg',
+    fileName: 'KBK_Amulya_Haldi_4K_Master.mp4',
+    fileSizeBytes: 524288000,
+    fileSizeFormatted: '~500 MB',
+    mimeType: 'video/mp4',
+    fileCategory: 'master_video',
+    downloadToken: 'cvd_token_amulya_haldi_2026_secure',
+    expiryDate: '2026-11-16T23:59:59Z',
+    downloadCount: 0,
+    maxDownloads: 50,
+    isStreamable: true,
+    isActive: true,
+    ownerNotes: 'Haldi ceremony - vibrant yellow grading, DaVinci Resolve. Client approved for delivery.',
+    createdAt: '2026-08-10T10:00:00Z',
+    updatedAt: '2026-08-10T10:00:00Z'
   }
 ];
 
@@ -616,6 +704,7 @@ class DatabaseManager {
       studioCMS: hydrated.studioCMS ?? this.data.studioCMS,
       auditLogs: this.data.auditLogs,
       otpVerifications: this.data.otpVerifications,
+      clientVideoDeliveries: hydrated.clientVideoDeliveries?.length ? hydrated.clientVideoDeliveries : this.data.clientVideoDeliveries,
     };
 
     this.data = nextData;
@@ -688,7 +777,8 @@ class DatabaseManager {
               timestamp: new Date().toISOString()
             }
           ],
-          otpVerifications: []
+          otpVerifications: [],
+          clientVideoDeliveries: INITIAL_CLIENT_VIDEO_DELIVERIES,
         };
 
         return this.normalizeBundledVideoUrls(defaultSchema);
@@ -737,7 +827,8 @@ class DatabaseManager {
           timestamp: new Date().toISOString()
         }
       ],
-      otpVerifications: []
+      otpVerifications: [],
+      clientVideoDeliveries: INITIAL_CLIENT_VIDEO_DELIVERIES,
     };
 
     const normalizedDefaultSchema = this.normalizeBundledVideoUrls(defaultSchema);
@@ -751,7 +842,15 @@ class DatabaseManager {
     }
 
     if (isSupabaseEnabled()) {
-      void persistSupabaseData(this.data);
+      void persistSupabaseData({
+        owners: this.data.owners,
+        works: this.data.publicWorks,
+        testimonials: this.data.testimonials,
+        studioCMS: this.data.studioCMS,
+        bookingRequests: this.data.bookingRequests,
+        serviceProjects: this.data.serviceProjects,
+        clients: this.data.clients,
+      });
     }
 
     try {
@@ -774,6 +873,56 @@ class DatabaseManager {
   public getStudioCMS() { return this.data.studioCMS; }
   public getAuditLogs() { return this.data.auditLogs; }
   public getOTPVerifications() { return this.data.otpVerifications; }
+  public getClientVideoDeliveries() { return this.data.clientVideoDeliveries || []; }
+
+  // Client Video Deliveries Management
+  public async addClientVideoDelivery(delivery: ClientVideoDelivery): Promise<ClientVideoDelivery> {
+    if (!this.data.clientVideoDeliveries) this.data.clientVideoDeliveries = [];
+    this.data.clientVideoDeliveries.unshift(delivery);
+    if (isSupabaseEnabled()) {
+      const saved = await upsertClientVideoDelivery(delivery);
+      if (saved) {
+        const idx = this.data.clientVideoDeliveries.findIndex(d => d.id === delivery.id);
+        if (idx !== -1) this.data.clientVideoDeliveries[idx] = saved;
+      }
+    }
+    this.saveDatabase();
+    return delivery;
+  }
+
+  public async updateClientVideoDelivery(id: string, updates: Partial<ClientVideoDelivery>): Promise<ClientVideoDelivery | null> {
+    if (!this.data.clientVideoDeliveries) return null;
+    const idx = this.data.clientVideoDeliveries.findIndex(d => d.id === id);
+    if (idx === -1) return null;
+    const updated = { ...this.data.clientVideoDeliveries[idx], ...updates, updatedAt: new Date().toISOString() };
+    this.data.clientVideoDeliveries[idx] = updated;
+    if (isSupabaseEnabled()) {
+      await upsertClientVideoDelivery(updated);
+    }
+    this.saveDatabase();
+    return updated;
+  }
+
+  public async removeClientVideoDelivery(id: string): Promise<boolean> {
+    if (!this.data.clientVideoDeliveries) return false;
+    const idx = this.data.clientVideoDeliveries.findIndex(d => d.id === id);
+    if (idx === -1) return false;
+    this.data.clientVideoDeliveries.splice(idx, 1);
+    if (isSupabaseEnabled()) {
+      await deleteClientVideoDelivery(id);
+    }
+    this.saveDatabase();
+    return true;
+  }
+
+  public async syncClientVideoDeliveriesFromSupabase(): Promise<void> {
+    if (!isSupabaseEnabled()) return;
+    const deliveries = await fetchClientVideoDeliveries();
+    if (deliveries.length > 0) {
+      this.data.clientVideoDeliveries = deliveries;
+      this.saveDatabase();
+    }
+  }
 
   public addAuditLog(entry: Omit<AuditLog, 'id' | 'timestamp'>) {
     const log: AuditLog = {
@@ -788,3 +937,4 @@ class DatabaseManager {
 }
 
 export const db = new DatabaseManager();
+export type { ClientVideoDelivery };

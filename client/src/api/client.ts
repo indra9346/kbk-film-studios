@@ -395,4 +395,61 @@ export const api = {
   async getAuditLogs(): Promise<AuditLog[]> {
     return safeRequest(`${API_BASE}/owner/audit-logs`, { headers: getAuthHeaders('owner') }, () => []);
   },
+
+  // Client Video Deliveries (Owner Management)
+  async getClientVideoDeliveries(): Promise<any[]> {
+    return safeRequest(`${API_BASE}/owner/client-video-deliveries`, { headers: getAuthHeaders('owner') }, () => []);
+  },
+
+  async getClientVideoDeliveriesByBooking(bookingRef: string): Promise<any[]> {
+    return safeRequest(`${API_BASE}/owner/client-video-deliveries/booking/${bookingRef}`, { headers: getAuthHeaders('owner') }, () => []);
+  },
+
+  async addClientVideoDelivery(data: {
+    bookingRef: string;
+    clientId?: string;
+    clientName?: string;
+    projectId?: string;
+    title: string;
+    description?: string;
+    videoUrl: string;
+    videoSourceType?: string;
+    thumbnailUrl?: string;
+    fileName?: string;
+    fileSizeBytes?: number;
+    fileSizeFormatted?: string;
+    fileCategory?: string;
+    expiryDays?: number;
+    maxDownloads?: number;
+    ownerNotes?: string;
+  }): Promise<any> {
+    return safeRequest(`${API_BASE}/owner/client-video-deliveries`, {
+      method: 'POST',
+      headers: getAuthHeaders('owner'),
+      body: JSON.stringify(data),
+    }, () => ({ success: true, delivery: { id: `cvd-local-${Date.now()}`, ...data } }));
+  },
+
+  async updateClientVideoDelivery(id: string, data: any): Promise<any> {
+    return safeRequest(`${API_BASE}/owner/client-video-deliveries/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders('owner'),
+      body: JSON.stringify(data),
+    }, () => ({ success: true }));
+  },
+
+  async deleteClientVideoDelivery(id: string): Promise<any> {
+    return safeRequest(`${API_BASE}/owner/client-video-deliveries/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders('owner'),
+    }, () => ({ success: true }));
+  },
+
+  // Client Video Deliveries (Public Access by booking ref)
+  async getMyVideoDeliveries(bookingRef: string, token?: string): Promise<any[]> {
+    const url = `${API_BASE}/client/video-deliveries?bookingRef=${encodeURIComponent(bookingRef)}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
+    const res = await fetch(url, { headers: getAuthHeaders('client') });
+    if (!res.ok) return [];
+    return res.json();
+  },
 };
