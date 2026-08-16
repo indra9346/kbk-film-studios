@@ -65,10 +65,10 @@ export const Testimonials: React.FC = () => {
                   <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-gold/20">
                     {media && media.type === 'youtube' && media.id ? (
                       <iframe
-                        src={isOpen ? `https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=1&rel=0` : `https://www.youtube.com/embed/${media.id}?autoplay=0&mute=1&loop=1&playlist=${media.id}&controls=1&rel=0`}
+                        src={isOpen ? `https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=1&rel=0&playsinline=1` : `https://www.youtube.com/embed/${media.id}?autoplay=0&mute=1&loop=1&playlist=${media.id}&controls=1&rel=0&playsinline=1`}
                         title={`Customer Video Review - ${t.clientName}`}
                         className="w-full h-full object-cover border-0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; muted"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; muted; playsinline"
                         allowFullScreen
                       />
                     ) : (
@@ -82,6 +82,7 @@ export const Testimonials: React.FC = () => {
                             muted
                             loop
                             playsInline
+                            preload="auto"
                             className="w-full h-full object-cover"
                           />
                         ) : (

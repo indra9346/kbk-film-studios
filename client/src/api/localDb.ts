@@ -177,40 +177,7 @@ const DEFAULT_DB: LocalDBData = {
       sortOrder: 6
     }
   ],
-  works: [
-    {
-      id: "work-1",
-      title: "RECEPTION VIDEO",
-      category: "Wedding Highlights",
-      eventLocation: "Hindupur, AP",
-      eventYear: "2026",
-      thumbnailUrl: "/assets/kbk-logo.jpg",
-      videoUrl: "/assets/client-work-1.mp4",
-      videoSourceType: "direct_mp4",
-      description: "A cinematic reception video capturing the joy, elegance, and memorable moments of the celebration with smooth transitions, warm tones, and balanced audio.",
-      softwareUsed: ["Premiere Pro", "DaVinci Resolve"],
-      isFeatured: true,
-      isPublished: true,
-      sortOrder: 1,
-      createdAt: "2026-08-12T17:12:03.187Z"
-    },
-    {
-      id: "work-2",
-      title: "MUHURTHAM VIDEO",
-      category: "Wedding Highlights",
-      eventLocation: "Hindupur, AP",
-      eventYear: "2026",
-      thumbnailUrl: "/assets/kbk-logo.jpg",
-      videoUrl: "/assets/client-work-2.mp4",
-      videoSourceType: "direct_mp4",
-      description: "Sacred Mangalashtak and Muhurtham ceremony film with traditional mantra audio clean-up and gold silk color grading.",
-      softwareUsed: ["Premiere Pro", "DaVinci Resolve"],
-      isFeatured: true,
-      isPublished: true,
-      sortOrder: 2,
-      createdAt: "2026-08-12T17:12:03.187Z"
-    }
-  ],
+  works: [],
   testimonials: [
     {
       id: "test-1",

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Maximize2 } from 'lucide-react';
 import { PublicWork } from '../../types';
 
@@ -6,6 +6,50 @@ interface VideoCardProps {
   work: PublicWork;
   onSelect: (work: PublicWork) => void;
 }
+
+const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> = ({ src, poster, title }) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    el.muted = true;
+    el.playsInline = true;
+    el.setAttribute('playsinline', 'true');
+    el.loop = true;
+    el.autoplay = true;
+    el.preload = 'auto';
+
+    const tryPlay = () => {
+      if (el.paused) {
+        el.play().catch(() => {
+          // Autoplay is intentionally restricted by browser policy until the user interacts.
+        });
+      }
+    };
+
+    tryPlay();
+    el.addEventListener('loadeddata', tryPlay);
+    return () => el.removeEventListener('loadeddata', tryPlay);
+  }, [src]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      poster={poster}
+      controls={false}
+      muted
+      autoPlay
+      loop
+      playsInline
+      preload="auto"
+      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+      title={title}
+    />
+  );
+};
 
 export const getVideoType = (url: string) => {
   if (!url) return { type: 'unknown', id: '' };
@@ -56,16 +100,10 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
             frameBorder="0"
           />
         ) : (
-          <video
+          <AutoplayVideo
             src={videoSrc}
             poster={media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (work.thumbnailUrl || undefined)}
-            preload="auto"
-            controls={false}
-            playsInline
-            muted
-            autoPlay
-            loop
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            title={work.title}
           />
         )}
 
