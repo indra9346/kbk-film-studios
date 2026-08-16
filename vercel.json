@@ -1,15 +1,11 @@
 {
+  "version": 2,
   "buildCommand": "npm install && npm --prefix server install && npm --prefix client install && npm --prefix server run build && npm --prefix client run build",
   "outputDirectory": "client/dist",
-  "functions": {
-    "api/[...path].ts": {
-      "includeFiles": "server/data/**,server/dist/**"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "/api"
     },
     {
       "source": "/((?!api/).*)",

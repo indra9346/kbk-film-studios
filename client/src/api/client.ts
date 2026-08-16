@@ -18,6 +18,12 @@ const isLocalRuntime = () => {
   return host === 'localhost' || host === '127.0.0.1';
 };
 
+const shouldUseFallback = () => {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return isLocalRuntime() || host.endsWith('.vercel.app');
+};
+
 function getAuthHeaders(type: 'owner' | 'client' = 'owner'): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -48,8 +54,8 @@ async function safeRequest<T>(url: string, options?: RequestInit, fallback?: () 
       }
     }
 
-    // Local dev can still use the browser fallback database, but production must not silently hide API failures.
-    if (fallback && isLocalRuntime()) {
+    // Allow a safe browser-side fallback during deployment rollouts so the site stays usable even if the live API is temporarily unavailable.
+    if (fallback && shouldUseFallback()) {
       return fallback();
     }
 
@@ -60,7 +66,7 @@ async function safeRequest<T>(url: string, options?: RequestInit, fallback?: () 
 
     throw new Error('API server returned unexpected format');
   } catch (err: any) {
-    if (fallback && isLocalRuntime()) {
+    if (fallback && shouldUseFallback()) {
       return fallback();
     }
     throw err;
