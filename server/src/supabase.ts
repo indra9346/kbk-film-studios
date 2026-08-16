@@ -1,5 +1,13 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Owner, PublicWork, StudioCMSData, Testimonial, BookingRequest, ServiceProject, Client } from './types.js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type {
+  Owner,
+  PublicWork,
+  Testimonial,
+  StudioCMSData,
+  BookingRequest,
+  ServiceProject,
+  Client,
+} from './types.js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -160,6 +168,8 @@ export const mapSupabaseBookings = (rows: any[] = []): BookingRequest[] =>
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
   }));
 
+  
+
 // Map Supabase service_projects rows
 export const mapSupabaseProjects = (rows: any[] = []): ServiceProject[] =>
   rows.map((row) => ({
@@ -266,6 +276,8 @@ export async function hydrateSupabaseData() {
 // Fetch client video deliveries (owner endpoint - all)
 export async function fetchClientVideoDeliveries(): Promise<ClientVideoDelivery[]> {
   if (!supabase) return [];
+
+  
   const { data, error } = await supabase
     .from('client_video_deliveries')
     .select('*')
