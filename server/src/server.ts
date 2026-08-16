@@ -53,6 +53,43 @@ interface AuthRequest extends Request {
   };
 }
 
+const normalizePhoneDigits = (value: string) => {
+  const digits = (value || '').replace(/\D/g, '');
+  return digits.startsWith('91') ? digits.slice(2) : digits;
+};
+
+const matchesPhoneIdentifier = (candidate: string, target: string) => {
+  const cand = normalizePhoneDigits(candidate);
+  const targ = normalizePhoneDigits(target);
+  if (!cand || !targ) return false;
+  return cand === targ || cand.endsWith(targ) || targ.endsWith(cand);
+};
+
+const findDeliveryByToken = (token: string) => {
+  const privateDelivery = db.getPrivateDeliveries().find(d => d.downloadToken === token);
+  if (privateDelivery) return privateDelivery;
+
+  const clientDelivery = db.getClientVideoDeliveries().find(d => d.downloadToken === token && d.isActive !== false);
+  if (!clientDelivery) return null;
+
+  return {
+    ...clientDelivery,
+    projectId: clientDelivery.projectId || clientDelivery.bookingRef,
+    title: clientDelivery.title || `${clientDelivery.bookingRef} Private Delivery`,
+    fileName: clientDelivery.fileName || `${clientDelivery.bookingRef}_private_video.mp4`,
+    fileSizeBytes: clientDelivery.fileSizeBytes || 0,
+    fileSizeFormatted: clientDelivery.fileSizeFormatted || 'Unknown size',
+    mimeType: clientDelivery.mimeType || 'video/mp4',
+    fileCategory: clientDelivery.fileCategory || 'master_video',
+    expiryDate: clientDelivery.expiryDate || new Date(Date.now() + 90 * 86400000).toISOString(),
+    downloadCount: clientDelivery.downloadCount || 0,
+    maxDownloads: clientDelivery.maxDownloads || 50,
+    isStreamable: clientDelivery.isStreamable !== false,
+    streamUrl: clientDelivery.streamUrl || `/api/client/stream-delivery/${token}`,
+    createdAt: clientDelivery.createdAt || new Date().toISOString(),
+  } as any;
+};
+
 const requireOwnerAuth = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -587,8 +624,10 @@ app.post('/api/auth/client-request-otp', (req: Request, res: Response) => {
 
   // Verify that the identifier matches this booking
   const matches =
-    booking.clientPhone === cleanId ||
-    booking.clientEmail.toLowerCase() === cleanId;
+    booking.clientPhone.toLowerCase() === cleanId ||
+    booking.clientEmail.toLowerCase() === cleanId ||
+    matchesPhoneIdentifier(booking.clientPhone, cleanId) ||
+    matchesPhoneIdentifier(cleanId, booking.clientPhone);
 
   if (!matches) {
     res.status(403).json({
@@ -633,6 +672,13 @@ app.post('/api/auth/client-verify-otp', (req: Request, res: Response) => {
   const booking = db.getBookingRequests().find(b => b.bookingRef === cleanRef);
   if (!booking) {
     res.status(404).json({ error: 'Booking not found' });
+    return;
+  }
+
+  const phoneMatches = matchesPhoneIdentifier(booking.clientPhone, cleanId) || matchesPhoneIdentifier(cleanId, booking.clientPhone);
+  const emailMatches = booking.clientEmail.toLowerCase() === cleanId;
+  if (!phoneMatches && !emailMatches) {
+    res.status(403).json({ error: 'The provided phone/email does not match the registered client on this booking.' });
     return;
   }
 
@@ -774,9 +820,34 @@ app.get('/api/client/track', (req: Request, res: Response) => {
       return;
     }
 
-    // Find linked project or create view
-    let project = db.getServiceProjects().find(p => p.bookingRef === decoded.bookingRef);
-    const deliveries = db.getPrivateDeliveries().filter(d => d.bookingRef === decoded.bookingRef);
+    const project = db.getServiceProjects().find(p => p.bookingRef === decoded.bookingRef);
+    const secureDeliveries = db.getPrivateDeliveries().filter(d => d.bookingRef === decoded.bookingRef);
+    const ownerDeliveries = db.getClientVideoDeliveries()
+      .filter(d => d.bookingRef === decoded.bookingRef && d.isActive !== false)
+      .map(d => ({
+        id: d.id,
+        projectId: d.projectId || d.bookingRef,
+        bookingRef: d.bookingRef,
+        title: d.title || `${d.bookingRef} Private Delivery`,
+        fileName: d.fileName || `${d.bookingRef}_private_video.mp4`,
+        fileSizeBytes: d.fileSizeBytes || 0,
+        fileSizeFormatted: d.fileSizeFormatted || 'Unknown size',
+        mimeType: d.mimeType || 'video/mp4',
+        fileCategory: d.fileCategory || 'master_video',
+        storagePath: d.storagePath || `private_deliveries/${d.bookingRef}`,
+        downloadToken: d.downloadToken,
+        expiryDate: d.expiryDate || new Date(Date.now() + 90 * 86400000).toISOString(),
+        downloadCount: d.downloadCount || 0,
+        maxDownloads: d.maxDownloads || 50,
+        isStreamable: d.isStreamable !== false,
+        streamUrl: d.streamUrl || `/api/client/stream-delivery/${d.downloadToken}`,
+        createdAt: d.createdAt || new Date().toISOString(),
+      }));
+
+    const deliveries = [...secureDeliveries, ...ownerDeliveries].filter((d, index, arr) => {
+      const key = `${d.bookingRef}-${d.downloadToken || d.id}`;
+      return arr.findIndex(item => `${item.bookingRef}-${item.downloadToken || item.id}` === key) === index;
+    });
 
     res.json({
       booking,
@@ -791,7 +862,7 @@ app.get('/api/client/track', (req: Request, res: Response) => {
 // Securely stream client video file (Verifies token)
 app.get('/api/client/stream/:token', (req: Request, res: Response) => {
   const { token } = req.params;
-  const delivery = db.getPrivateDeliveries().find(d => d.downloadToken === token);
+  const delivery = findDeliveryByToken(token);
 
   if (!delivery) {
     res.status(404).json({ error: 'Secure media file not found or invalid token' });
@@ -803,8 +874,7 @@ app.get('/api/client/stream/:token', (req: Request, res: Response) => {
     return;
   }
 
-  // Check if actual file exists in storage, otherwise fallback to sample video
-  const actualFilePath = path.resolve(process.cwd(), 'storage', 'private_deliveries', delivery.projectId, delivery.fileName);
+  const actualFilePath = path.resolve(process.cwd(), 'storage', 'private_deliveries', String(delivery.projectId || 'unknown'), delivery.fileName);
   const sampleVideoPath = path.resolve(process.cwd(), '..', 'client', 'public', 'assets', 'hero-reel.mp4');
   const fileToStream = fs.existsSync(actualFilePath) ? actualFilePath : sampleVideoPath;
 
@@ -843,7 +913,7 @@ app.get('/api/client/stream/:token', (req: Request, res: Response) => {
 // Securely download client file
 app.get('/api/client/download/:token', (req: Request, res: Response) => {
   const { token } = req.params;
-  const delivery = db.getPrivateDeliveries().find(d => d.downloadToken === token);
+  const delivery = findDeliveryByToken(token);
 
   if (!delivery) {
     res.status(404).json({ error: 'Download token is invalid' });
@@ -862,6 +932,16 @@ app.get('/api/client/download/:token', (req: Request, res: Response) => {
 
   // Increment download count
   delivery.downloadCount += 1;
+  if (delivery.projectId) {
+    const privateDelivery = db.getPrivateDeliveries().find(d => d.downloadToken === token);
+    if (privateDelivery) {
+      privateDelivery.downloadCount = delivery.downloadCount;
+    }
+    const clientDelivery = db.getClientVideoDeliveries().find(d => d.downloadToken === token);
+    if (clientDelivery) {
+      clientDelivery.downloadCount = delivery.downloadCount;
+    }
+  }
   db.saveDatabase();
 
   db.addAuditLog({
@@ -872,7 +952,7 @@ app.get('/api/client/download/:token', (req: Request, res: Response) => {
     details: `Downloaded ${delivery.fileName} (${delivery.fileSizeFormatted}). Total downloads: ${delivery.downloadCount}/${delivery.maxDownloads}.`
   });
 
-  const actualFilePath = path.resolve(process.cwd(), 'storage', 'private_deliveries', delivery.projectId, delivery.fileName);
+  const actualFilePath = path.resolve(process.cwd(), 'storage', 'private_deliveries', String(delivery.projectId || 'unknown'), delivery.fileName);
   const sampleVideoPath = path.resolve(process.cwd(), '..', 'client', 'public', 'assets', 'hero-reel.mp4');
   const fileToDownload = fs.existsSync(actualFilePath) ? actualFilePath : sampleVideoPath;
 

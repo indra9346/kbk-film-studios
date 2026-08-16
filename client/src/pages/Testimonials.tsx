@@ -65,10 +65,10 @@ export const Testimonials: React.FC = () => {
                   <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-gold/20">
                     {media && media.type === 'youtube' && media.id ? (
                       <iframe
-                        src={isOpen ? `https://www.youtube.com/embed/${media.id}?autoplay=1&controls=1&rel=0` : `https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1&rel=0`}
+                        src={isOpen ? `https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=1&rel=0` : `https://www.youtube.com/embed/${media.id}?autoplay=0&mute=1&loop=1&playlist=${media.id}&controls=1&rel=0`}
                         title={`Customer Video Review - ${t.clientName}`}
                         className="w-full h-full object-cover border-0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; muted"
                         allowFullScreen
                       />
                     ) : (
@@ -79,6 +79,8 @@ export const Testimonials: React.FC = () => {
                             poster={media && media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (t.thumbnailUrl || '/assets/kbk-logo.jpg')}
                             controls
                             autoPlay
+                            muted
+                            loop
                             playsInline
                             className="w-full h-full object-cover"
                           />

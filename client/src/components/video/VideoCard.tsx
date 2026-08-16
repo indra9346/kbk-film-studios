@@ -49,10 +49,10 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
       <div className="relative aspect-video w-full overflow-hidden bg-black group/preview">
         {media.type === 'youtube' && media.id ? (
           <iframe
-            src={`https://www.youtube.com/embed/${media.id}?autoplay=0&mute=0&controls=1&modestbranding=1&rel=0&playsinline=1`}
+            src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0&modestbranding=1&rel=0&playsinline=1`}
             title={work.title}
             className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; muted"
             frameBorder="0"
           />
         ) : (

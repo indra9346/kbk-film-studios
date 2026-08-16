@@ -221,6 +221,8 @@ export interface ClientVideoDelivery {
   isStreamable: boolean;
   isActive: boolean;
   ownerNotes: string;
+  storagePath?: string;
+  streamUrl?: string;
   createdAt: string;
   updatedAt: string;
 }

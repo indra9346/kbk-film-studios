@@ -10,12 +10,14 @@ interface VideoModalProps {
 
 export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = React.useState(true);
 
   useEffect(() => {
     if (work && videoRef.current) {
+      videoRef.current.muted = isMuted;
       videoRef.current.play().catch(() => {});
     }
-  }, [work]);
+  }, [work, isMuted]);
 
   if (!work) return null;
 
@@ -32,12 +34,21 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
               {work.title}
             </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMuted((prev) => !prev)}
+              className="px-3 py-1.5 rounded-lg bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 text-[10px] font-bold uppercase tracking-wider transition-colors"
+            >
+              {isMuted ? 'Unmute' : 'Mute'}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Video Player Section */}
@@ -47,10 +58,10 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
             if (media.type === 'youtube' && media.id) {
               return (
                 <iframe
-                  src={`https://www.youtube.com/embed/${media.id}?autoplay=1&rel=0`}
+                  src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${media.id}&controls=1&rel=0&playsinline=1`}
                   title={work.title}
                   className="w-full h-full object-contain border-0"
-                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allow="autoplay; encrypted-media; picture-in-picture; muted"
                   allowFullScreen
                   frameBorder="0"
                 />
@@ -62,7 +73,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
                 src={getCleanVideoUrl(work.videoUrl)}
                 controls
                 autoPlay
+                muted={isMuted}
                 playsInline
+                loop
                 className="w-full h-full object-contain"
               />
             );
