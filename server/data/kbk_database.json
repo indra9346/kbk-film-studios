@@ -653,7 +653,17 @@
       "timestamp": "2026-08-16T10:04:39.658Z"
     }
   ],
-  "otpVerifications": [],
+  "otpVerifications": [
+    {
+      "id": "otp-1786880125791",
+      "identifier": "9346476951",
+      "otpCode": "123456",
+      "purpose": "owner_login",
+      "expiresAt": 1786880725791,
+      "verified": false,
+      "createdAt": "2026-08-16T11:35:25.791Z"
+    }
+  ],
   "clientVideoDeliveries": [
     {
       "id": "cvd-amulya-haldi-2026",
