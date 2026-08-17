@@ -142,6 +142,45 @@ const deliveryStorage = multer.diskStorage({
 });
 const uploadDelivery = multer({ storage: deliveryStorage });
 
+// Multer Storage for Showcase Videos & Photos
+const showcaseMediaStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.resolve(process.cwd(), 'storage', 'showcase_media');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const sanitized = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    cb(null, `${Date.now()}_${sanitized}`);
+  }
+});
+const uploadMedia = multer({
+  storage: showcaseMediaStorage,
+  limits: { fileSize: 300 * 1024 * 1024 } // 300MB
+});
+
+app.post('/api/owner/media/upload', uploadMedia.single('file'), (req: Request, res: Response) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'No media file uploaded' });
+    return;
+  }
+  const isImage = req.file.mimetype.startsWith('image/');
+  const isVideo = req.file.mimetype.startsWith('video/');
+  const fileUrl = `/storage/showcase_media/${req.file.filename}`;
+  res.json({
+    success: true,
+    url: fileUrl,
+    fileName: req.file.filename,
+    originalName: req.file.originalname,
+    fileSizeBytes: req.file.size,
+    mimeType: req.file.mimetype,
+    isImage,
+    isVideo
+  });
+});
+
 app.post('/api/owner/projects/:id/upload', requireOwnerAuth, uploadDelivery.single('file'), (req: AuthRequest, res: Response) => {
   if (!req.file) {
     res.status(400).json({ error: 'No file uploaded' });

@@ -968,6 +968,66 @@ export const api = {
   },
 
   // ----------------------------------------------------
+  // SHOWCASE MEDIA UPLOADER (Local Videos & Pics)
+  // ----------------------------------------------------
+  async uploadMedia(file: File): Promise<{ success: boolean; url: string; fileName: string; isImage: boolean; isVideo: boolean }> {
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    // 1. Try server backend endpoint first
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`${API_BASE}/owner/media/upload`, {
+        method: 'POST',
+        headers: {
+          ...(localStorage.getItem('kbk_owner_token') ? { 'Authorization': `Bearer ${localStorage.getItem('kbk_owner_token')}` } : {})
+        },
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          return {
+            success: true,
+            url: data.url,
+            fileName: data.fileName || file.name,
+            isImage,
+            isVideo
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('[API Server] uploadMedia server note:', e);
+    }
+
+    // 2. Fallback: Convert to persistent Data URL (FileReader)
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve({
+          success: true,
+          url: reader.result as string,
+          fileName: file.name,
+          isImage,
+          isVideo
+        });
+      };
+      reader.onerror = () => {
+        // Last resort: temporary blob URL
+        resolve({
+          success: true,
+          url: URL.createObjectURL(file),
+          fileName: file.name,
+          isImage,
+          isVideo
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+
+  // ----------------------------------------------------
   // SHOWCASE WORKS CRUD (Direct Supabase Sync)
   // ----------------------------------------------------
   async saveWork(work: Partial<PublicWork>): Promise<any> {

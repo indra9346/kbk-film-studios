@@ -32,13 +32,21 @@ import {
   Activity,
   ArrowUpRight,
   ShieldAlert,
-  PlayCircle
+  PlayCircle,
+  Pause,
+  Volume2,
+  VolumeX,
+  Image as ImageIcon,
+  Camera,
+  FolderUp,
+  Maximize2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStudio } from '../context/StudioContext';
 import { api } from '../api/client';
 import { generateUUID } from '../api/supabaseClient';
-import { getVideoType, getCleanVideoUrl, extractDriveFileId } from '../components/video/VideoCard';
+import { getVideoType, getCleanVideoUrl, extractDriveFileId, isImageMedia } from '../components/video/VideoCard';
+import { VideoModal } from '../components/video/VideoModal';
 import {
   BookingRequest,
   ServiceProject,
@@ -119,7 +127,22 @@ export const OwnerSpace: React.FC = () => {
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [deletingWorkId, setDeletingWorkId] = useState<string | null>(null);
+  const [previewModalWork, setPreviewModalWork] = useState<PublicWork | null>(null);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const workVideoInputRef = useRef<HTMLInputElement | null>(null);
+  const workPhotoInputRef = useRef<HTMLInputElement | null>(null);
+  const workCoverInputRef = useRef<HTMLInputElement | null>(null);
+  const quickFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Quick Ingestor States
+  const [quickIngestUrl, setQuickIngestUrl] = useState('');
+  const [quickIngestTitle, setQuickIngestTitle] = useState('');
+  const [quickIngestCategory, setQuickIngestCategory] = useState('Wedding Highlights');
+  const [isPublishingQuickWork, setIsPublishingQuickWork] = useState(false);
+
+  // Active playing states for showcase preview cards
+  const [playingCardIds, setPlayingCardIds] = useState<Record<string, boolean>>({});
+  const [mutedCardIds, setMutedCardIds] = useState<Record<string, boolean>>({});
 
   // Testimonial Edit / Create Modal
   const [editingTestimonial, setEditingTestimonial] = useState<Partial<Testimonial> | null>(null);
@@ -519,19 +542,97 @@ export const OwnerSpace: React.FC = () => {
     }
   };
 
-  const handleLocalVideoSelect = (event: React.ChangeEvent<HTMLInputElement>, type: 'work' | 'testimonial') => {
+  const handleLocalMediaSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    type: 'work_media' | 'work_cover' | 'testimonial' | 'quick_ingest'
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const localUrl = URL.createObjectURL(file);
+    try {
+      setIsUploadingMedia(true);
+      const res = await api.uploadMedia(file);
+      if (!res.success || !res.url) {
+        alert('Could not upload media file.');
+        return;
+      }
 
-    if (type === 'work') {
-      setEditingWork((prev) => prev ? { ...prev, videoUrl: localUrl } : prev);
-    } else {
-      setEditingTestimonial((prev) => prev ? { ...prev, videoUrl: localUrl } : prev);
+      if (type === 'work_media') {
+        setEditingWork((prev) => {
+          const autoTitle = prev?.title || file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+          return {
+            ...prev,
+            videoUrl: res.url,
+            thumbnailUrl: res.isImage ? (prev?.thumbnailUrl || res.url) : (prev?.thumbnailUrl || '/assets/kbk-logo.jpg'),
+            title: autoTitle
+          };
+        });
+      } else if (type === 'work_cover') {
+        setEditingWork((prev) => ({
+          ...prev,
+          thumbnailUrl: res.url
+        }));
+      } else if (type === 'testimonial') {
+        setEditingTestimonial((prev) => ({
+          ...prev,
+          videoUrl: res.url
+        }));
+      } else if (type === 'quick_ingest') {
+        setQuickIngestUrl(res.url);
+        if (!quickIngestTitle) {
+          setQuickIngestTitle(file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
+        }
+      }
+    } catch (err: any) {
+      alert(`Media upload error: ${err.message}`);
+    } finally {
+      setIsUploadingMedia(false);
+      event.target.value = '';
+    }
+  };
+
+  const handlePublishQuickWork = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const url = quickIngestUrl.trim();
+    const title = quickIngestTitle.trim() || 'Client Showcase Work';
+    if (!url) {
+      alert('Please enter a video/photo URL or browse a local file from your machine!');
+      return;
     }
 
-    event.target.value = '';
+    try {
+      setIsPublishingQuickWork(true);
+      const isImg = isImageMedia(url);
+      const payload: PublicWork = {
+        id: generateUUID(),
+        title,
+        category: quickIngestCategory || (isImg ? 'Wedding Photo Gallery' : 'Wedding Highlights'),
+        eventLocation: 'Hindupur, AP',
+        eventYear: '2026',
+        thumbnailUrl: isImg ? url : '/assets/kbk-logo.jpg',
+        videoUrl: url,
+        videoSourceType: isImg ? ('image' as any) : (url.includes('drive.google.com') ? 'google_drive' : url.includes('youtube') ? 'youtube' : 'direct_mp4'),
+        description: isImg
+          ? 'Master high-resolution color corrected and toned luxury stills collection.'
+          : 'Master color graded and cinematic pace edited luxury wedding film.',
+        softwareUsed: isImg ? ['Adobe Lightroom', 'Photoshop'] : ['Premiere Pro', 'DaVinci Resolve Studio'],
+        isFeatured: true,
+        isPublished: true,
+        sortOrder: works.length + 1,
+        createdAt: new Date().toISOString()
+      };
+
+      await api.saveWork(payload);
+      setQuickIngestUrl('');
+      setQuickIngestTitle('');
+      await loadOwnerData();
+      await refreshData();
+      alert(`🎉 Successfully published "${title}" directly to Supabase & Portfolio! Broadcasted to all devices live.`);
+    } catch (err: any) {
+      alert(`Error publishing work: ${err.message}`);
+    } finally {
+      setIsPublishingQuickWork(false);
+    }
   };
 
   const handleDeleteTestimonial = async (id: string) => {
@@ -1982,188 +2083,327 @@ export const OwnerSpace: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Automated 1-Click Link Ingestor (n8n + Supabase) */}
-                <div className="p-5 rounded-2xl glass-panel border border-gold/40 bg-surface-100/80 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-gold animate-pulse" />
-                    <h4 className="font-serif font-bold text-sm text-ivory-100 uppercase tracking-wider">
-                      Automated Instant Video Ingestor (Google Drive / YouTube / MP4)
-                    </h4>
+                {/* Automated 1-Click Link & Local File Ingestor (n8n + Supabase + Local Machine) */}
+                <div className="p-5 sm:p-6 rounded-2xl glass-panel border border-gold/40 bg-surface-100/90 space-y-4 shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-gold animate-pulse" />
+                      <h4 className="font-serif font-bold text-sm text-ivory-100 uppercase tracking-wider">
+                        Automated Instant Media Ingestor (Videos, Photos & Local Files)
+                      </h4>
+                    </div>
+                    <span className="text-[11px] font-mono text-gold/90 bg-gold/10 px-2.5 py-0.5 rounded-full border border-gold/20 flex items-center gap-1 w-fit">
+                      <Sparkles className="w-3 h-3 text-gold" /> Auto-Synced to Supabase
+                    </span>
                   </div>
-                  <p className="text-xs text-ivory-300">
-                    Paste any client video link below to automatically publish directly to Supabase <code className="text-gold">public.public_works</code> and broadcast to all devices in real-time.
-                  </p>
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <input
-                      type="url"
-                      id="quick-video-link-input"
-                      placeholder="Paste Google Drive / YouTube URL (e.g. https://drive.google.com/file/d/...)"
-                      className="flex-1 px-4 py-2.5 rounded-xl bg-surface-200 border border-gold/30 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold"
-                    />
-                    <input
-                      type="text"
-                      id="quick-video-title-input"
-                      placeholder="Film Title (e.g. AMULYA HALDI CEREMONY)"
-                      className="sm:w-64 px-4 py-2.5 rounded-xl bg-surface-200 border border-gold/30 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold"
-                    />
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const linkEl = document.getElementById('quick-video-link-input') as HTMLInputElement;
-                        const titleEl = document.getElementById('quick-video-title-input') as HTMLInputElement;
-                        const url = linkEl?.value?.trim();
-                        const title = titleEl?.value?.trim() || 'Client Showcase Film';
-                        if (!url) {
-                          alert('Please enter a video URL first!');
-                          return;
-                        }
-                        try {
-                          const payload = {
-                            id: generateUUID(),
-                            title,
-                            category: title.toLowerCase().includes('haldi') ? 'Haldi & Sangeet Edits' : 'Wedding Highlights',
-                            eventLocation: 'Hindupur, AP',
-                            eventYear: '2026',
-                            thumbnailUrl: '/assets/kbk-logo.jpg',
-                            videoUrl: url,
-                            description: 'Master color graded and cinematic pace edited luxury wedding film.',
-                            softwareUsed: ['Premiere Pro', 'DaVinci Resolve Studio'],
-                            isFeatured: true,
-                            isPublished: true,
-                            sortOrder: works.length + 1
-                          };
-                          await api.saveWork(payload);
-                          if (linkEl) linkEl.value = '';
-                          if (titleEl) titleEl.value = '';
-                          await loadOwnerData();
-                          await refreshData();
-                          alert(`🎉 Successfully published "${title}" directly to Supabase! It is now live on all devices.`);
-                        } catch (err: any) {
-                          alert(`Error publishing: ${err.message}`);
-                        }
-                      }}
-                      className="px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-gold-sm transition-all shrink-0"
-                    >
-                      <Zap className="w-3.5 h-3.5 fill-black" />
-                      <span>Publish Live</span>
-                    </button>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {works.map((work) => (
-                    <div
-                      key={work.id}
-                      className="p-5 rounded-2xl glass-panel border border-gold/20 flex flex-col justify-between space-y-4 hover:border-gold/40 transition-colors overflow-hidden"
-                    >
-                      {/* Live Video Preview in Muted Autoplay Loop */}
-                      <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20">
-                        {(() => {
-                          const media = getVideoType(work.videoUrl);
-                          const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(work.videoUrl);
-                          if (media.type === 'youtube' && media.id) {
-                            return (
-                              <iframe
-                                src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0`}
-                                title={work.title}
-                                className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-                                allow="autoplay; encrypted-media"
-                                frameBorder="0"
-                              />
-                            );
-                          }
-                          if (driveId || media.type === 'google-drive' || work.videoUrl?.includes('drive.google.com') || work.videoSourceType === 'google_drive') {
-                            const validId = driveId || extractDriveFileId(work.videoUrl);
-                            return (
-                              <iframe
-                                src={`https://drive.google.com/file/d/${validId}/preview`}
-                                title={work.title}
-                                className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-                                allow="autoplay; encrypted-media"
-                              />
-                            );
-                          }
-                          return (
-                            <video
-                              src={getCleanVideoUrl(work.videoUrl)}
-                              poster={work.thumbnailUrl || undefined}
-                              autoPlay
-                              muted
-                              loop
-                              playsInline
+                  <p className="text-xs text-ivory-300">
+                    Paste any public video / photo link (Google Drive, YouTube, direct MP4/JPG) or <span className="text-gold font-semibold">browse accurately from your local machine</span> to publish directly to portfolio.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <div className="md:col-span-6 flex gap-2">
+                      <input
+                        type="text"
+                        value={quickIngestUrl}
+                        onChange={(e) => setQuickIngestUrl(e.target.value)}
+                        placeholder="Paste Video / Picture URL (Drive, YouTube, direct link...)"
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-surface-200 border border-gold/30 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold placeholder:text-ivory-400/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => quickFileInputRef.current?.click()}
+                        disabled={isUploadingMedia}
+                        className="px-3.5 py-2.5 rounded-xl bg-surface-200 hover:bg-gold/20 text-gold border border-gold/40 text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0"
+                        title="Browse video or photo from local machine"
+                      >
+                        <FolderUp className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Browse File</span>
+                      </button>
+                      <input
+                        ref={quickFileInputRef}
+                        type="file"
+                        accept="video/*,image/*"
+                        className="hidden"
+                        onChange={(e) => handleLocalMediaSelect(e, 'quick_ingest')}
+                      />
+                    </div>
+
+                    <div className="md:col-span-3">
+                      <input
+                        type="text"
+                        value={quickIngestTitle}
+                        onChange={(e) => setQuickIngestTitle(e.target.value)}
+                        placeholder="Film / Photo Title (e.g. HALDI HIGHLIGHTS)"
+                        className="w-full px-4 py-2.5 rounded-xl bg-surface-200 border border-gold/30 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold placeholder:text-ivory-400/50"
+                      />
+                    </div>
+
+                    <div className="md:col-span-3 flex gap-2">
+                      <select
+                        value={quickIngestCategory}
+                        onChange={(e) => setQuickIngestCategory(e.target.value)}
+                        className="flex-1 px-3 py-2.5 rounded-xl bg-surface-200 border border-gold/30 text-ivory-100 text-xs focus:outline-none focus:border-gold"
+                      >
+                        <option value="Wedding Highlights">Wedding Highlights</option>
+                        <option value="Pre-Wedding Video Editing">Pre-Wedding Video</option>
+                        <option value="Wedding Photo Gallery">Wedding Photo Gallery</option>
+                        <option value="Haldi & Sangeeth Ceremonies">Haldi & Sangeeth</option>
+                        <option value="Maternity Shoot Videos">Maternity Shoot</option>
+                        <option value="House Warming Ceremonies">House Warming</option>
+                        <option value="Spot Editing Available">Spot Editing</option>
+                        <option value="Cinematic Teasers/Reels (9:16)">Teaser / Reels (9:16)</option>
+                        <option value="YouTube Videos & Commercials">Commercials</option>
+                      </select>
+
+                      <button
+                        type="button"
+                        onClick={handlePublishQuickWork}
+                        disabled={isPublishingQuickWork || isUploadingMedia || !quickIngestUrl.trim()}
+                        className="px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-50 text-black font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-gold-sm transition-all shrink-0"
+                      >
+                        {isPublishingQuickWork ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Zap className="w-3.5 h-3.5 fill-black" />
+                        )}
+                        <span>{isPublishingQuickWork ? 'Publishing...' : 'Publish Live'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Live Visual Preview Chip in Ingestor (See Pics / Video Immediately) */}
+                  {quickIngestUrl.trim() && (
+                    <div className="p-3 rounded-xl bg-surface-200/90 border border-gold/30 flex items-center justify-between gap-4 animate-fadeIn">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-16 h-12 rounded-lg bg-black overflow-hidden border border-gold/30 shrink-0 flex items-center justify-center">
+                          {isImageMedia(quickIngestUrl) ? (
+                            <img
+                              src={quickIngestUrl}
+                              alt="Quick preview"
                               className="w-full h-full object-cover"
                             />
-                          );
-                        })()}
-                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10">
-                          {work.category}
+                          ) : (
+                            <div className="w-full h-full bg-surface-300 flex items-center justify-center text-gold">
+                              <Film className="w-5 h-5" />
+                            </div>
+                          )}
                         </div>
-                        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 text-[9px] font-mono border border-emerald-500/30 z-10">
-                          Live Preview
+                        <div className="overflow-hidden">
+                          <p className="text-xs font-semibold text-ivory-100 truncate">
+                            {quickIngestTitle || 'Untitled Showcase Work'}
+                          </p>
+                          <p className="text-[10px] text-ivory-400 truncate flex items-center gap-1 font-mono">
+                            {isImageMedia(quickIngestUrl) ? (
+                              <span className="text-emerald-400 font-bold">● High-Res Photo Still</span>
+                            ) : (
+                              <span className="text-gold font-bold">● Streamable Video</span>
+                            )}
+                            • {quickIngestCategory}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <h4 className="font-serif text-base font-bold text-white">
-                          {work.title}
-                        </h4>
-                        <p className="text-xs text-ivory-400 line-clamp-2">
-                          {work.description}
-                        </p>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuickIngestUrl('');
+                          setQuickIngestTitle('');
+                        }}
+                        className="text-xs text-ivory-400 hover:text-accent-crimson px-2 py-1 rounded transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                      <div className="pt-3 border-t border-surface-50 flex items-center justify-between">
-                        <button
-                          onClick={() => {
-                            setEditingWork(work);
-                            const isPreset = [
-                              'Wedding Highlights',
-                              'Pre-Wedding Video Editing',
-                              'Haldi & Sangeeth Ceremonies',
-                              'Maternity Shoot Videos',
-                              'House Warming Ceremonies',
-                              'Spot Editing Available',
-                              'AI-Assisted Video Creation & 3D Animation',
-                              'Cinematic Teasers/Reels (9:16)',
-                              'YouTube Videos & Commercials'
-                            ].includes(work.category);
-                            setIsCustomCategory(!isPreset);
-                            setCustomCategoryName(!isPreset ? work.category : '');
-                          }}
-                          className="text-xs text-gold hover:underline font-semibold flex items-center gap-1"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          <span>Edit Film</span>
-                        </button>
+                {/* Showcase Works Grid with Simple Controls & Fullscreen Cinema */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {works.map((work) => {
+                    const isPic = isImageMedia(work.videoUrl) || (!work.videoUrl && Boolean(work.thumbnailUrl));
+                    const isCardPlaying = playingCardIds[work.id] ?? true;
+                    const isCardMuted = mutedCardIds[work.id] ?? true;
 
-                        {deletingWorkId === work.id ? (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] text-accent-crimson font-bold animate-pulse">Confirm?</span>
+                    return (
+                      <div
+                        key={work.id}
+                        className="p-5 rounded-2xl glass-panel border border-gold/20 flex flex-col justify-between space-y-4 hover:border-gold/50 transition-all overflow-hidden group shadow-lg"
+                      >
+                        {/* Media Preview Container with Simple Controls */}
+                        <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20 group/media">
+                          {isPic ? (
+                            <img
+                              src={work.videoUrl || work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                              alt={work.title}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover/media:scale-105"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
+                              }}
+                            />
+                          ) : (() => {
+                            const media = getVideoType(work.videoUrl);
+                            const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(work.videoUrl);
+                            if (media.type === 'youtube' && media.id) {
+                              return (
+                                <iframe
+                                  src={`https://www.youtube.com/embed/${media.id}?autoplay=${isCardPlaying ? 1 : 0}&mute=${isCardMuted ? 1 : 0}&loop=1&playlist=${media.id}&controls=0`}
+                                  title={work.title}
+                                  className="w-full h-full object-cover border-0 pointer-events-none scale-105"
+                                  allow="autoplay; encrypted-media"
+                                  frameBorder="0"
+                                />
+                              );
+                            }
+                            if (driveId || media.type === 'google-drive' || work.videoUrl?.includes('drive.google.com') || work.videoSourceType === 'google_drive') {
+                              const validId = driveId || extractDriveFileId(work.videoUrl);
+                              return (
+                                <iframe
+                                  src={`https://drive.google.com/file/d/${validId}/preview`}
+                                  title={work.title}
+                                  className="w-full h-full object-cover border-0 pointer-events-none scale-105"
+                                  allow="autoplay; encrypted-media"
+                                />
+                              );
+                            }
+                            return (
+                              <video
+                                id={`owner-video-${work.id}`}
+                                src={getCleanVideoUrl(work.videoUrl)}
+                                poster={work.thumbnailUrl || undefined}
+                                autoPlay
+                                muted={isCardMuted}
+                                loop
+                                playsInline
+                                className="w-full h-full object-cover"
+                              />
+                            );
+                          })()}
+
+                          {/* Top Badges */}
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10">
+                            {work.category}
+                          </div>
+                          <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-300 text-[9px] font-mono border border-emerald-500/30 z-10 flex items-center gap-1">
+                            {isPic ? <ImageIcon className="w-2.5 h-2.5" /> : <Film className="w-2.5 h-2.5" />}
+                            <span>{isPic ? 'Photo Still' : 'Live Preview'}</span>
+                          </div>
+
+                          {/* Bottom Simple Controls Overlay */}
+                          <div className="absolute inset-x-2 bottom-2 flex items-center justify-between z-20">
+                            <div className="flex items-center gap-1">
+                              {!isPic && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const vid = document.getElementById(`owner-video-${work.id}`) as HTMLVideoElement;
+                                      const next = !isCardPlaying;
+                                      setPlayingCardIds(prev => ({ ...prev, [work.id]: next }));
+                                      if (vid) {
+                                        if (next) vid.play();
+                                        else vid.pause();
+                                      }
+                                    }}
+                                    className="p-1.5 rounded-lg bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 backdrop-blur-md transition-colors"
+                                    title={isCardPlaying ? 'Pause video' : 'Play video'}
+                                  >
+                                    {isCardPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const vid = document.getElementById(`owner-video-${work.id}`) as HTMLVideoElement;
+                                      const next = !isCardMuted;
+                                      setMutedCardIds(prev => ({ ...prev, [work.id]: next }));
+                                      if (vid) vid.muted = next;
+                                    }}
+                                    className="p-1.5 rounded-lg bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 backdrop-blur-md transition-colors"
+                                    title={isCardMuted ? 'Unmute audio' : 'Mute audio'}
+                                  >
+                                    {isCardMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+
                             <button
-                              onClick={() => handleDeleteWork(work.id)}
-                              className="px-2.5 py-1 rounded bg-accent-crimson hover:bg-accent-crimson/80 text-white text-[11px] font-bold shadow-sm transition-all"
+                              type="button"
+                              onClick={() => setPreviewModalWork(work)}
+                              className="p-1.5 rounded-lg bg-gold/90 hover:bg-gold text-black shadow-gold font-bold transition-transform hover:scale-110 flex items-center gap-1 text-[10px]"
+                              title={isPic ? 'View Full Image' : 'Cinema Player View'}
                             >
-                              Yes, Delete
-                            </button>
-                            <button
-                              onClick={() => setDeletingWorkId(null)}
-                              className="px-2 py-1 rounded bg-surface-100 text-ivory-300 text-[11px] hover:text-white"
-                            >
-                              Cancel
+                              <Maximize2 className="w-3 h-3" />
+                              <span className="hidden sm:inline">Cinema View</span>
                             </button>
                           </div>
-                        ) : (
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <h4 className="font-serif text-base font-bold text-white">
+                            {work.title}
+                          </h4>
+                          <p className="text-xs text-ivory-400 line-clamp-2">
+                            {work.description || 'Master edited wedding showcase.'}
+                          </p>
+                        </div>
+
+                        <div className="pt-3 border-t border-surface-50 flex items-center justify-between">
                           <button
-                            onClick={() => setDeletingWorkId(work.id)}
-                            className="text-xs text-accent-crimson hover:bg-accent-crimson/15 px-2 py-1 rounded transition-all flex items-center gap-1"
+                            onClick={() => {
+                              setEditingWork(work);
+                              const isPreset = [
+                                'Wedding Highlights',
+                                'Pre-Wedding Video Editing',
+                                'Wedding Photo Gallery',
+                                'Haldi & Sangeeth Ceremonies',
+                                'Maternity Shoot Videos',
+                                'House Warming Ceremonies',
+                                'Spot Editing Available',
+                                'AI-Assisted Video Creation & 3D Animation',
+                                'Cinematic Teasers/Reels (9:16)',
+                                'YouTube Videos & Commercials'
+                              ].includes(work.category);
+                              setIsCustomCategory(!isPreset);
+                              setCustomCategoryName(!isPreset ? work.category : '');
+                            }}
+                            className="text-xs text-gold hover:underline font-semibold flex items-center gap-1"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Delete</span>
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Edit Work</span>
                           </button>
-                        )}
+
+                          {deletingWorkId === work.id ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] text-accent-crimson font-bold animate-pulse">Confirm?</span>
+                              <button
+                                onClick={() => handleDeleteWork(work.id)}
+                                className="px-2.5 py-1 rounded bg-accent-crimson hover:bg-accent-crimson/80 text-white text-[11px] font-bold shadow-sm transition-all"
+                              >
+                                Yes, Delete
+                              </button>
+                              <button
+                                onClick={() => setDeletingWorkId(null)}
+                                className="px-2 py-1 rounded bg-surface-100 text-ivory-300 text-[11px] hover:text-white"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeletingWorkId(work.id)}
+                              className="text-xs text-accent-crimson hover:bg-accent-crimson/15 px-2 py-1 rounded transition-all flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Delete</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -2917,24 +3157,43 @@ export const OwnerSpace: React.FC = () => {
         </div>
       )}
 
-      {/* Work Edit Modal */}
+      {/* Work Edit / Create Modal */}
       {editingWork && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
           <form onSubmit={handleSaveWork} className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-surface-200 border border-gold/40 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5">
-            <h3 className="font-serif text-xl font-bold text-ivory-100">
-              {editingWork.id ? 'Edit Showcase Film' : 'Add New Showcase Film'}
-            </h3>
+            <div className="flex items-center justify-between border-b border-gold/20 pb-3">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-ivory-100 flex items-center gap-2">
+                  {isImageMedia(editingWork.videoUrl) ? (
+                    <ImageIcon className="w-5 h-5 text-gold" />
+                  ) : (
+                    <Film className="w-5 h-5 text-gold" />
+                  )}
+                  {editingWork.id ? 'Edit Showcase Work' : 'Add New Showcase Work (Videos & Photos)'}
+                </h3>
+                <p className="text-[11px] text-ivory-400">
+                  Broadcasts automatically to public portfolio in 4K resolution.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingWork(null)}
+                className="p-1.5 rounded-lg bg-surface-100 hover:bg-gold hover:text-black text-ivory-300 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
 
             <div className="space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="font-semibold text-ivory-300">Film Title</label>
+                <label className="font-semibold text-ivory-300">Film / Photo Title *</label>
                 <input
                   type="text"
                   value={editingWork.title || ''}
                   onChange={(e) => setEditingWork({ ...editingWork, title: e.target.value })}
-                  placeholder="e.g. Grand Traditional Muhurtham Film"
+                  placeholder="e.g. Grand Traditional Muhurtham Film or Haldi Candid Portraits"
                   required
-                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 placeholder:text-ivory-400/50"
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 placeholder:text-ivory-400/50 focus:border-gold"
                 />
               </div>
 
@@ -2965,7 +3224,7 @@ export const OwnerSpace: React.FC = () => {
                         setCustomCategoryName(e.target.value);
                         setEditingWork({ ...editingWork, category: e.target.value });
                       }}
-                      placeholder="e.g. YouTube Videos, Corporate Commercials, Drone Films..."
+                      placeholder="e.g. YouTube Videos, Corporate Commercials, Wedding Photo Gallery..."
                       required
                       autoFocus
                       className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold text-gold font-bold text-xs sm:text-sm placeholder:text-ivory-400/50"
@@ -2989,6 +3248,7 @@ export const OwnerSpace: React.FC = () => {
                   >
                     <option value="Wedding Highlights">Wedding Highlights</option>
                     <option value="Pre-Wedding Video Editing">Pre-Wedding Video Editing</option>
+                    <option value="Wedding Photo Gallery">Wedding Photo Gallery (Pictures / Stills)</option>
                     <option value="Haldi & Sangeeth Ceremonies">Haldi & Sangeeth Ceremonies</option>
                     <option value="Maternity Shoot Videos">Maternity Shoot Videos</option>
                     <option value="House Warming Ceremonies">House Warming Ceremonies</option>
@@ -3001,43 +3261,172 @@ export const OwnerSpace: React.FC = () => {
                 )}
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-semibold text-ivory-300 flex items-center justify-between">
-                  <span>Video Stream URL (Google Drive / YouTube / MP4 Link)</span>
-                  <span className="text-[10px] text-gold font-normal">Auto-streams without buffer</span>
-                </label>
+              {/* Media Stream URL & Local Machine Browsing */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-surface-100/70 border border-gold/30">
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-ivory-200 flex items-center gap-1.5">
+                    {isImageMedia(editingWork.videoUrl) ? (
+                      <ImageIcon className="w-3.5 h-3.5 text-gold" />
+                    ) : (
+                      <Film className="w-3.5 h-3.5 text-gold" />
+                    )}
+                    <span>Media URL (Video Link or Picture / Photo)</span>
+                  </label>
+                  <span className="text-[10px] text-gold font-normal">
+                    {isUploadingMedia ? 'Uploading...' : 'Local machine & cloud supported'}
+                  </span>
+                </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     value={editingWork.videoUrl || ''}
                     onChange={(e) => setEditingWork({ ...editingWork, videoUrl: e.target.value })}
-                    placeholder="e.g. https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view"
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono placeholder:text-ivory-400/50"
+                    placeholder="Paste Video URL, Image URL, or browse local machine..."
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-surface-200 border border-gold/20 text-ivory-100 font-mono text-xs placeholder:text-ivory-400/50 focus:border-gold"
                   />
-                  <button
-                    type="button"
-                    onClick={() => workVideoInputRef.current?.click()}
-                    className="px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/30 text-gold text-[11px] font-semibold hover:bg-gold/10 transition-colors"
-                  >
-                    Browse Video
-                  </button>
+                  <div className="flex gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => workVideoInputRef.current?.click()}
+                      disabled={isUploadingMedia}
+                      className="px-3 py-2.5 rounded-xl bg-surface-200 hover:bg-gold/20 border border-gold/40 text-gold text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                      title="Browse video file from local machine (.mp4, .mov, .webm)"
+                    >
+                      <Film className="w-3.5 h-3.5" />
+                      <span>Browse Video</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => workPhotoInputRef.current?.click()}
+                      disabled={isUploadingMedia}
+                      className="px-3 py-2.5 rounded-xl bg-surface-200 hover:bg-gold/20 border border-gold/40 text-gold text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                      title="Browse picture/photo from local machine (.jpg, .png, .webp)"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <span>Browse Pic</span>
+                    </button>
+                  </div>
                 </div>
 
+                {/* Hidden File Inputs for Video and Photo */}
                 <input
                   ref={workVideoInputRef}
                   type="file"
                   accept="video/*"
                   className="hidden"
-                  onChange={(e) => handleLocalVideoSelect(e, 'work')}
+                  onChange={(e) => handleLocalMediaSelect(e, 'work_media')}
+                />
+                <input
+                  ref={workPhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleLocalMediaSelect(e, 'work_media')}
                 />
 
-                <p className="text-[11px] text-ivory-400 font-light">
-                  Paste any public Google Drive file link, YouTube link, or direct MP4. You can also browse a local video file to place it here instantly.
-                </p>
+                {/* LIVE VISUAL PREVIEW BOX ("see pics at place of adding video urls") */}
+                {editingWork.videoUrl && (
+                  <div className="mt-3 p-3 rounded-xl bg-black/90 border border-gold/40 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-gold flex items-center gap-1">
+                        {isImageMedia(editingWork.videoUrl) ? (
+                          <>
+                            <ImageIcon className="w-3.5 h-3.5" />
+                            Live Picture / Photo Preview:
+                          </>
+                        ) : (
+                          <>
+                            <Film className="w-3.5 h-3.5" />
+                            Live Video Stream Preview:
+                          </>
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingWork({ ...editingWork, videoUrl: '' })}
+                        className="text-ivory-400 hover:text-accent-crimson transition-colors"
+                      >
+                        Remove Media
+                      </button>
+                    </div>
+
+                    <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-black flex items-center justify-center border border-white/10">
+                      {isImageMedia(editingWork.videoUrl) ? (
+                        <img
+                          src={editingWork.videoUrl}
+                          alt="Live picture preview"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
+                          }}
+                        />
+                      ) : (() => {
+                        const media = getVideoType(editingWork.videoUrl || '');
+                        const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(editingWork.videoUrl || '');
+                        if (media.type === 'youtube' && media.id) {
+                          return (
+                            <iframe
+                              src={`https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1`}
+                              title="Preview"
+                              className="w-full h-full object-cover border-0"
+                            />
+                          );
+                        }
+                        if (driveId || media.type === 'google-drive' || editingWork.videoUrl?.includes('drive.google.com')) {
+                          return (
+                            <iframe
+                              src={`https://drive.google.com/file/d/${driveId || extractDriveFileId(editingWork.videoUrl || '')}/preview`}
+                              title="Preview"
+                              className="w-full h-full object-cover border-0"
+                            />
+                          );
+                        }
+                        return (
+                          <video
+                            src={getCleanVideoUrl(editingWork.videoUrl || '')}
+                            controls
+                            className="w-full h-full object-contain"
+                          />
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
               </div>
 
-
+              {/* Cover Picture / Thumbnail Field */}
+              <div className="space-y-1.5">
+                <label className="font-semibold text-ivory-300 flex items-center justify-between">
+                  <span>Cover Picture / Poster Thumbnail</span>
+                  <span className="text-[10px] text-ivory-400 font-normal">Optional custom cover</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editingWork.thumbnailUrl || ''}
+                    onChange={(e) => setEditingWork({ ...editingWork, thumbnailUrl: e.target.value })}
+                    placeholder="Cover Image URL (e.g. /assets/kbk-logo.jpg or web image)"
+                    className="flex-1 px-4 py-2 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => workCoverInputRef.current?.click()}
+                    disabled={isUploadingMedia}
+                    className="px-3 py-2 rounded-xl bg-surface-100 border border-gold/30 text-gold text-[11px] font-semibold hover:bg-gold/10 transition-colors flex items-center gap-1 shrink-0"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Browse Pic</span>
+                  </button>
+                  <input
+                    ref={workCoverInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleLocalMediaSelect(e, 'work_cover')}
+                  />
+                </div>
+              </div>
 
               <div className="space-y-1.5">
                 <label className="font-semibold text-ivory-300">Description & Grading Breakdown</label>
@@ -3045,25 +3434,27 @@ export const OwnerSpace: React.FC = () => {
                   rows={3}
                   value={editingWork.description || ''}
                   onChange={(e) => setEditingWork({ ...editingWork, description: e.target.value })}
-                  placeholder="Details on color grading LUTs, sound restoration, and visual pacing..."
+                  placeholder="Details on color grading LUTs, sound restoration, visual pacing, and equipment..."
                   className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 pt-2 border-t border-surface-50">
               <button
                 type="button"
                 onClick={() => setEditingWork(null)}
-                className="px-4 py-2 rounded-xl bg-surface-100 text-ivory-300 text-xs"
+                className="px-4 py-2 rounded-xl bg-surface-100 text-ivory-300 text-xs font-semibold"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-gold text-black font-bold text-xs uppercase tracking-wider"
+                disabled={isUploadingMedia}
+                className="px-6 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm transition-all flex items-center gap-1.5"
               >
-                Save Showcase Work
+                {isUploadingMedia ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
+                <span>Save Showcase Work</span>
               </button>
             </div>
           </form>
@@ -3174,7 +3565,7 @@ export const OwnerSpace: React.FC = () => {
                   type="file"
                   accept="video/*"
                   className="hidden"
-                  onChange={(e) => handleLocalVideoSelect(e, 'testimonial')}
+                  onChange={(e) => handleLocalMediaSelect(e, 'testimonial')}
                 />
 
                 <p className="text-[11px] text-ivory-400 font-light">
@@ -3225,6 +3616,14 @@ export const OwnerSpace: React.FC = () => {
             </div>
           </form>
         </div>
+      )}
+
+      {/* Full Cinema / Photo Modal Viewer for Showcase Items */}
+      {previewModalWork && (
+        <VideoModal
+          work={previewModalWork}
+          onClose={() => setPreviewModalWork(null)}
+        />
       )}
     </div>
   );
