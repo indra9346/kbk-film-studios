@@ -227,21 +227,27 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             />
           )}
         </div>
-      ) : isGoogleDrive && isModal ? (
-        /* CASE 3: GOOGLE DRIVE MODAL (Full 4K Stream in Cinema Modal) */
+      ) : isGoogleDrive ? (
+        /* CASE 3: GOOGLE DRIVE (Direct Specific Client Video Stream on all Cards) */
         <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
-          <iframe
-            src={
-              trimmedUrl.includes('folders')
-                ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
-                : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1`
-            }
-            title={title}
-            loading="lazy"
-            className="w-full h-full object-contain border-0"
-            allow="autoplay; fullscreen"
-            allowFullScreen
-          />
+          {isInViewport || isModal ? (
+            <iframe
+              src={
+                trimmedUrl.includes('folders')
+                  ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
+                  : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1`
+              }
+              title={title}
+              loading="lazy"
+              className={`w-full ${isModal ? 'h-full object-contain' : 'h-[calc(100%+54px)] -mt-[54px] object-cover scale-[1.03]'} border-0`}
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <div className="w-full h-full bg-surface-200/80 animate-pulse flex items-center justify-center text-ivory-400 text-xs font-mono">
+              Loading Film...
+            </div>
+          )}
         </div>
       ) : (
         /* CASE 4: DIRECT HTML5 VIDEO & FAST SHOWCASE CARDS (100% Guaranteed Muted + Autoplay + Loop) */
