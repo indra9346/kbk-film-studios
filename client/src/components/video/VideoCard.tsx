@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Maximize2, Play, Volume2, VolumeX } from 'lucide-react';
+import { Maximize2, Play } from 'lucide-react';
 import { PublicWork } from '../../types';
 
 interface VideoCardProps {
@@ -54,9 +54,26 @@ export const getCleanVideoUrl = (url: string): string => {
   return url || '/assets/hero-reel.mp4';
 };
 
-const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> = ({ src, poster, title }) => {
+export const getDirectStreamUrl = (url: string): string => {
+  if (!url) return '/assets/hero-reel.mp4';
+  const media = getVideoType(url);
+  if (media.type === 'google-drive' && media.id) {
+    return `https://drive.google.com/uc?export=download&id=${media.id}`;
+  }
+  if (media.type === 'direct' && url.startsWith('http')) {
+    return url;
+  }
+  return url || '/assets/hero-reel.mp4';
+};
+
+const AutoplayVideo: React.FC<{ src: string; fallbackIframe?: string; poster?: string; title?: string }> = ({
+  src,
+  fallbackIframe,
+  poster,
+  title,
+}) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasVideoError, setHasVideoError] = useState(false);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -68,9 +85,7 @@ const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> 
     const playSafe = () => {
       const p = el.play();
       if (p !== undefined) {
-        p.then(() => setIsPlaying(true)).catch(() => {
-          setIsPlaying(false);
-        });
+        p.catch(() => {});
       }
     };
 
@@ -81,7 +96,6 @@ const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> 
             playSafe();
           } else {
             el.pause();
-            setIsPlaying(false);
           }
         });
       },
@@ -90,18 +104,21 @@ const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> 
 
     observer.observe(el);
 
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-
-    el.addEventListener('play', onPlay);
-    el.addEventListener('pause', onPause);
-
     return () => {
       observer.disconnect();
-      el.removeEventListener('play', onPlay);
-      el.removeEventListener('pause', onPause);
     };
   }, [src]);
+
+  if (hasVideoError && fallbackIframe) {
+    return (
+      <iframe
+        src={fallbackIframe}
+        title={title}
+        className="w-full h-full object-cover border-0 pointer-events-none scale-105"
+        allow="autoplay; encrypted-media"
+      />
+    );
+  }
 
   return (
     <video
@@ -114,6 +131,7 @@ const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> 
       loop
       playsInline
       preload="auto"
+      onError={() => setHasVideoError(true)}
       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
       title={title}
     />
@@ -141,14 +159,12 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
             frameBorder="0"
           />
         ) : isGoogleDrive && driveId ? (
-          <div className="relative w-full h-full">
-            <iframe
-              src={`https://drive.google.com/file/d/${driveId}/preview`}
-              title={work.title}
-              className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-              allow="autoplay; encrypted-media"
-            />
-          </div>
+          <AutoplayVideo
+            src={getDirectStreamUrl(work.videoUrl)}
+            fallbackIframe={`https://drive.google.com/file/d/${driveId}/preview`}
+            poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+            title={work.title}
+          />
         ) : (
           <AutoplayVideo
             src={getCleanVideoUrl(work.videoUrl)}
