@@ -46,7 +46,7 @@ export const getCleanVideoUrl = (url: string): string => {
   if (!url) return '/assets/hero-reel.mp4';
   const media = getVideoType(url);
   if (media.type === 'google-drive' && media.id) {
-    return `https://drive.google.com/file/d/${media.id}/preview`;
+    return `/api/public/stream-drive/${media.id}`;
   }
   if (media.type === 'direct' && url.startsWith('http')) {
     return url;
@@ -58,7 +58,7 @@ export const getDirectStreamUrl = (url: string): string => {
   if (!url) return '/assets/hero-reel.mp4';
   const media = getVideoType(url);
   if (media.type === 'google-drive' && media.id) {
-    return `https://drive.google.com/uc?export=download&id=${media.id}`;
+    return `/api/public/stream-drive/${media.id}`;
   }
   if (media.type === 'direct' && url.startsWith('http')) {
     return url;
@@ -131,7 +131,9 @@ const AutoplayVideo: React.FC<{ src: string; fallbackIframe?: string; poster?: s
       loop
       playsInline
       preload="auto"
-      onError={() => setHasVideoError(true)}
+      onError={() => {
+        if (fallbackIframe) setHasVideoError(true);
+      }}
       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
       title={title}
     />
@@ -160,7 +162,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
           />
         ) : isGoogleDrive && driveId ? (
           <AutoplayVideo
-            src={getDirectStreamUrl(work.videoUrl)}
+            src={`/api/public/stream-drive/${driveId}`}
             fallbackIframe={`https://drive.google.com/file/d/${driveId}/preview`}
             poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
             title={work.title}
