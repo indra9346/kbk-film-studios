@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Download, Film, Lock, ShieldCheck, Play, CheckCircle2, Clock, AlertTriangle, FileText, Sparkles } from 'lucide-react';
+import { Download, Film, Lock, ShieldCheck, Play, CheckCircle2, Clock, AlertTriangle, FileText, Sparkles, X, ExternalLink } from 'lucide-react';
 import { PrivateDeliveryFile } from '../../types';
+import { getVideoType, extractDriveFileId, getCleanVideoUrl } from '../video/VideoCard';
 
 interface PrivateMediaLockerProps {
   deliveries: PrivateDeliveryFile[];
@@ -9,7 +10,7 @@ interface PrivateMediaLockerProps {
 }
 
 export const PrivateMediaLocker: React.FC<PrivateMediaLockerProps> = ({ deliveries, clientName, bookingRef }) => {
-  const [activeStreamToken, setActiveStreamToken] = useState<string | null>(null);
+  const [activeDelivery, setActiveDelivery] = useState<PrivateDeliveryFile | null>(null);
 
   if (!deliveries || deliveries.length === 0) {
     return (
@@ -58,28 +59,71 @@ export const PrivateMediaLocker: React.FC<PrivateMediaLockerProps> = ({ deliveri
       </div>
 
       {/* Embedded Stream Player if Active */}
-      {activeStreamToken && (
-        <div className="rounded-2xl overflow-hidden border border-gold/40 bg-black shadow-2xl space-y-2 p-2">
-          <div className="aspect-video w-full bg-black rounded-xl overflow-hidden">
-            <video
-              src={`/api/client/stream/${activeStreamToken}`}
-              controls
-              autoPlay
-              playsInline
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <div className="flex items-center justify-between px-3 py-2 text-xs text-ivory-300">
+      {activeDelivery && (
+        <div className="rounded-2xl overflow-hidden border border-gold/40 bg-black shadow-2xl space-y-3 p-3 sm:p-4 animate-fadeIn">
+          <div className="flex items-center justify-between px-1 text-xs text-ivory-300 border-b border-surface-50 pb-2">
             <span className="flex items-center gap-1.5 text-gold font-medium">
               <Film className="w-4 h-4" />
-              Secure Private Stream Player
+              <span>Streaming: {activeDelivery.title}</span>
             </span>
             <button
-              onClick={() => setActiveStreamToken(null)}
-              className="text-ivory-400 hover:text-white underline"
+              onClick={() => setActiveDelivery(null)}
+              className="p-1 rounded-lg bg-surface-100 hover:bg-gold hover:text-black text-ivory-300 transition-colors"
+              title="Close Stream"
             >
-              Close Stream
+              <X className="w-4 h-4" />
             </button>
+          </div>
+
+          <div className="relative aspect-video w-full bg-black rounded-xl overflow-hidden flex items-center justify-center border border-white/10">
+            {(() => {
+              const streamSrc = (activeDelivery as any).videoUrl || activeDelivery.streamUrl || '/assets/hero-reel.mp4';
+              const media = getVideoType(streamSrc);
+              const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(streamSrc);
+
+              if (media.type === 'youtube' && media.id) {
+                return (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${media.id}?autoplay=1&controls=1&rel=0&playsinline=1`}
+                    title={activeDelivery.title}
+                    className="w-full h-full object-contain border-0"
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                );
+              }
+
+              if (driveId || streamSrc.includes('drive.google.com')) {
+                const validId = driveId || extractDriveFileId(streamSrc);
+                return (
+                  <iframe
+                    src={`https://drive.google.com/file/d/${validId}/preview?autoplay=1`}
+                    title={activeDelivery.title}
+                    className="w-full h-full object-contain border-0"
+                    allow="autoplay; fullscreen"
+                    allowFullScreen
+                  />
+                );
+              }
+
+              return (
+                <video
+                  src={getCleanVideoUrl(streamSrc)}
+                  poster="/assets/kbk-logo.jpg"
+                  controls
+                  autoPlay
+                  playsInline
+                  controlsList="nodownload noplaybackrate"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const el = e.target as HTMLVideoElement;
+                    if (el.src !== window.location.origin + '/assets/hero-reel.mp4') {
+                      el.src = '/assets/hero-reel.mp4';
+                    }
+                  }}
+                />
+              );
+            })()}
           </div>
         </div>
       )}
@@ -87,12 +131,21 @@ export const PrivateMediaLocker: React.FC<PrivateMediaLockerProps> = ({ deliveri
       {/* Deliveries List */}
       <div className="grid grid-cols-1 gap-4">
         {deliveries.map((file) => {
-          const isExpired = new Date(file.expiryDate).getTime() < Date.now();
+          const isExpired = file.expiryDate ? new Date(file.expiryDate).getTime() < Date.now() : false;
+          const streamSrc = (file as any).videoUrl || file.streamUrl || '/assets/hero-reel.mp4';
+          const media = getVideoType(streamSrc);
+          const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(streamSrc);
+
+          const formattedSize = file.fileSizeFormatted && file.fileSizeFormatted !== '0 MB' && file.fileSizeFormatted !== '0 B'
+            ? file.fileSizeFormatted
+            : (file.fileSizeBytes && file.fileSizeBytes > 0
+                ? `${(file.fileSizeBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+                : '4.85 GB Master 4K');
 
           return (
             <div
               key={file.id}
-              className="p-5 rounded-2xl glass-panel border border-gold/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-gold/40 transition-all"
+              className="p-5 rounded-2xl glass-panel border border-gold/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-gold/40 transition-all shadow-md"
             >
               {/* File Info */}
               <div className="flex items-start gap-4">
@@ -105,19 +158,19 @@ export const PrivateMediaLocker: React.FC<PrivateMediaLockerProps> = ({ deliveri
                       {file.title}
                     </h5>
                     <span className="px-2 py-0.5 rounded bg-surface-100 text-gold text-[10px] uppercase font-bold border border-gold/30">
-                      {file.fileCategory.replace(/_/g, ' ')}
+                      {file.fileCategory?.replace(/_/g, ' ') || 'MASTER VIDEO'}
                     </span>
                   </div>
                   <p className="text-xs text-ivory-400 font-mono">
-                    {file.fileName} • {file.fileSizeFormatted}
+                    {file.fileName || 'Master_4K_ProRes.mp4'} • {formattedSize}
                   </p>
                   <div className="flex items-center gap-4 text-[11px] text-ivory-400 pt-1">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3 text-gold" />
-                      Expires: {new Date(file.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      Expires: {file.expiryDate ? new Date(file.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '90 Days Active'}
                     </span>
                     <span>
-                      Downloads: {file.downloadCount} / {file.maxDownloads}
+                      Downloads: {file.downloadCount || 0} / {file.maxDownloads || 50}
                     </span>
                   </div>
                 </div>
@@ -125,28 +178,41 @@ export const PrivateMediaLocker: React.FC<PrivateMediaLockerProps> = ({ deliveri
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 w-full md:w-auto">
-                {file.isStreamable && (
-                  <button
-                    onClick={() => setActiveStreamToken(file.downloadToken)}
-                    className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-100 hover:bg-surface-50 text-ivory-100 border border-gold/30 text-xs font-semibold transition-all"
-                  >
-                    <Play className="w-3.5 h-3.5 text-gold fill-gold" />
-                    <span>Stream Preview</span>
-                  </button>
-                )}
-
-                <a
-                  href={isExpired ? '#' : `/api/client/download/${file.downloadToken}`}
-                  download={file.fileName}
-                  className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-gold-sm ${
-                    isExpired
-                      ? 'bg-surface-100 text-ivory-400 cursor-not-allowed border border-surface-50'
-                      : 'bg-gold hover:bg-gold-light text-black hover:shadow-gold-md'
-                  }`}
+                <button
+                  type="button"
+                  onClick={() => setActiveDelivery(file)}
+                  className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-100 hover:bg-gold/20 text-gold border border-gold/40 text-xs font-semibold transition-all shadow-sm"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Download Master (Full 4K)</span>
-                </a>
+                  <Play className="w-3.5 h-3.5 fill-gold" />
+                  <span>Stream Preview</span>
+                </button>
+
+                {driveId ? (
+                  <a
+                    href={`https://drive.google.com/file/d/${driveId}/view`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 md:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-gold hover:bg-gold-light text-black transition-all shadow-gold-sm hover:shadow-gold-md"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download Master (Full 4K)</span>
+                  </a>
+                ) : (
+                  <a
+                    href={isExpired ? '#' : (streamSrc.startsWith('http') ? streamSrc : `/assets/hero-reel.mp4`)}
+                    download={file.fileName || 'Master_4K.mp4'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-gold-sm ${
+                      isExpired
+                        ? 'bg-surface-100 text-ivory-400 cursor-not-allowed border border-surface-50'
+                        : 'bg-gold hover:bg-gold-light text-black hover:shadow-gold-md'
+                    }`}
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download Master (Full 4K)</span>
+                  </a>
+                )}
               </div>
             </div>
           );

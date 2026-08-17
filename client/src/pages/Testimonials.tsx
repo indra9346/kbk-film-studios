@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Star, MessageSquare, Volume2, VolumeX, ShieldCheck, Film, Sparkles, Play } from 'lucide-react';
 import { useStudio } from '../context/StudioContext';
 import { Testimonial } from '../types';
-import { getVideoType, getCleanVideoUrl } from '../components/video/VideoCard';
+import { getVideoType, getCleanVideoUrl, extractDriveFileId } from '../components/video/VideoCard';
 
 export const Testimonials: React.FC = () => {
   const { testimonials } = useStudio();
@@ -65,32 +65,57 @@ export const Testimonials: React.FC = () => {
                   <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-gold/20">
                     {media && media.type === 'youtube' && media.id ? (
                       <iframe
-                        src={isOpen ? `https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=1&rel=0&playsinline=1` : `https://www.youtube.com/embed/${media.id}?autoplay=0&mute=1&loop=1&playlist=${media.id}&controls=1&rel=0&playsinline=1`}
+                        src={isOpen ? `https://www.youtube.com/embed/${media.id}?autoplay=1&controls=1&rel=0&playsinline=1` : `https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1&rel=0&playsinline=1`}
                         title={`Customer Video Review - ${t.clientName}`}
-                        className="w-full h-full object-cover border-0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; muted; playsinline"
+                        className="w-full h-full object-contain border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
+                    ) : media && (media.type === 'google-drive' || t.videoUrl?.includes('drive.google.com')) ? (
+                      isOpen ? (
+                        <iframe
+                          src={`https://drive.google.com/file/d/${media.id || extractDriveFileId(t.videoUrl)}/preview?autoplay=1`}
+                          title={`Customer Video Review - ${t.clientName}`}
+                          className="w-full h-full object-contain border-0"
+                          allow="autoplay; fullscreen"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <img
+                          src={media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (t.thumbnailUrl || '/assets/kbk-logo.jpg')}
+                          alt={`${t.clientName} testimonial`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
+                          }}
+                        />
+                      )
                     ) : (
                       <>
                         {isOpen ? (
                           <video
                             src={getCleanVideoUrl(t.videoUrl)}
-                            poster={media && media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (t.thumbnailUrl || '/assets/kbk-logo.jpg')}
+                            poster={t.thumbnailUrl || '/assets/kbk-logo.jpg'}
                             controls
                             controlsList="nodownload noplaybackrate"
                             autoPlay
-                            muted
-                            loop
                             playsInline
-                            preload="auto"
-                            className="w-full h-full object-cover cinematic-native-video"
+                            className="w-full h-full object-contain cinematic-native-video"
+                            onError={(e) => {
+                              const el = e.target as HTMLVideoElement;
+                              if (el.src !== window.location.origin + '/assets/hero-reel.mp4') {
+                                el.src = '/assets/hero-reel.mp4';
+                              }
+                            }}
                           />
                         ) : (
                           <img
                             src={t.thumbnailUrl || '/assets/kbk-logo.jpg'}
                             alt={`${t.clientName} testimonial`}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
+                            }}
                           />
                         )}
                       </>

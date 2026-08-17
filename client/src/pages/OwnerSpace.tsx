@@ -2062,6 +2062,7 @@ export const OwnerSpace: React.FC = () => {
                     </button>
                     <button
                       onClick={() => {
+                        setIsUploadingMedia(false);
                         setEditingWork({
                           title: '',
                           category: 'Wedding Highlights',
@@ -3272,9 +3273,15 @@ export const OwnerSpace: React.FC = () => {
                     )}
                     <span>Media URL (Video Link or Picture / Photo)</span>
                   </label>
-                  <span className="text-[10px] text-gold font-normal">
-                    {isUploadingMedia ? 'Uploading...' : 'Local machine & cloud supported'}
-                  </span>
+                  {isUploadingMedia ? (
+                    <span className="text-[10px] text-gold font-bold flex items-center gap-1 animate-pulse">
+                      <RefreshCw className="w-3 h-3 animate-spin" /> Ingesting Media...
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-ivory-400 font-normal">
+                      Local machine & cloud supported
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -3539,37 +3546,107 @@ export const OwnerSpace: React.FC = () => {
 
               <div className="space-y-1.5">
                 <label className="font-semibold text-ivory-300 flex items-center justify-between">
-                  <span>Customer Video Feedback Stream URL (Optional)</span>
-                  <span className="text-[10px] text-gold font-normal">Google Drive / YouTube / MP4</span>
+                  <span>Customer Video Feedback or Photo (Optional)</span>
+                  <span className="text-[10px] text-gold font-normal">
+                    {isUploadingMedia ? 'Uploading...' : 'Local machine, Drive, YouTube & Photos'}
+                  </span>
                 </label>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     value={editingTestimonial.videoUrl || ''}
                     onChange={(e) => setEditingTestimonial({ ...editingTestimonial, videoUrl: e.target.value })}
-                    placeholder="e.g. https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link"
+                    placeholder="e.g. https://drive.google.com/file/d/... or browse local file"
                     className="flex-1 px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono placeholder:text-ivory-400/50 text-xs"
                   />
-                  <button
-                    type="button"
-                    onClick={() => testimonialVideoInputRef.current?.click()}
-                    className="px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/30 text-gold text-[11px] font-semibold hover:bg-gold/10 transition-colors"
-                  >
-                    Browse Video
-                  </button>
+                  <div className="flex gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => testimonialVideoInputRef.current?.click()}
+                      disabled={isUploadingMedia}
+                      className="px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/30 text-gold text-[11px] font-semibold hover:bg-gold/10 transition-colors flex items-center gap-1"
+                    >
+                      <Film className="w-3.5 h-3.5" />
+                      <span>Browse Video</span>
+                    </button>
+                  </div>
                 </div>
 
                 <input
                   ref={testimonialVideoInputRef}
                   type="file"
-                  accept="video/*"
+                  accept="video/*,image/*"
                   className="hidden"
                   onChange={(e) => handleLocalMediaSelect(e, 'testimonial')}
                 />
 
+                {/* Live Visual Preview Box in Testimonial Modal */}
+                {editingTestimonial.videoUrl && (
+                  <div className="mt-2 p-3 rounded-xl bg-black/90 border border-gold/40 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] text-ivory-300">
+                      <span className="font-bold text-gold flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-gold" />
+                        <span>Live Media Preview</span>
+                      </span>
+                      <span className="text-[10px] text-emerald-400 font-mono">
+                        {isImageMedia(editingTestimonial.videoUrl) ? 'Photo Review' : 'Video Feedback'}
+                      </span>
+                    </div>
+
+                    <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-black flex items-center justify-center border border-surface-50">
+                      {isImageMedia(editingTestimonial.videoUrl) ? (
+                        <img
+                          src={editingTestimonial.videoUrl}
+                          alt="Customer feedback preview"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
+                          }}
+                        />
+                      ) : (() => {
+                        const media = getVideoType(editingTestimonial.videoUrl);
+                        if (media.type === 'youtube' && media.id) {
+                          return (
+                            <iframe
+                              src={`https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1`}
+                              title="Testimonial video"
+                              className="w-full h-full border-0"
+                              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                            />
+                          );
+                        }
+                        if (media.type === 'google-drive' && media.id) {
+                          return (
+                            <iframe
+                              src={`https://drive.google.com/file/d/${media.id}/preview`}
+                              title="Testimonial drive video"
+                              className="w-full h-full border-0"
+                              allow="autoplay"
+                            />
+                          );
+                        }
+                        return (
+                          <video
+                            src={getCleanVideoUrl(editingTestimonial.videoUrl)}
+                            poster={editingTestimonial.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                            controls
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              const el = e.target as HTMLVideoElement;
+                              if (el.src !== window.location.origin + '/assets/hero-reel.mp4') {
+                                el.src = '/assets/hero-reel.mp4';
+                              }
+                            }}
+                          />
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-[11px] text-ivory-400 font-light">
-                  Paste any Google Drive share link, YouTube link, or direct MP4 link of the customer's recorded video review. You can also browse a local video file here.
+                  Paste any Google Drive share link, YouTube link, or browse a video/photo review file directly from your local machine.
                 </p>
               </div>
 
