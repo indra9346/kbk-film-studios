@@ -17,7 +17,7 @@ export interface CinematicVideoPlayerProps {
 
 export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
   url = '',
-  poster = '/assets/kbk-logo.jpg',
+  poster,
   title = 'KBK Cinematic Film',
   category,
   aspectRatio = '16/9',
@@ -48,7 +48,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
   const isYouTube = mediaInfo.type === 'youtube' && Boolean(mediaInfo.id);
   const isDirectVideo = !isPic && !isGoogleDrive && !isYouTube;
 
-  const activePoster = poster || (driveId ? `https://lh3.googleusercontent.com/d/${driveId}=w1280` : '/assets/kbk-logo.jpg');
+  const activePoster = poster || undefined;
 
   // Viewport Observer for High-Speed Lazy Streaming (Prevents lagging 8 concurrent heavy iframes)
   useEffect(() => {

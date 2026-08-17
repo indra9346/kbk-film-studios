@@ -63,7 +63,7 @@ export const Testimonials: React.FC = () => {
                   <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-gold/20">
                     <CinematicVideoPlayer
                       url={t.videoUrl}
-                      poster={t.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                      poster={t.thumbnailUrl || undefined}
                       title={`Client Review - ${t.clientName}`}
                       category="Video Review"
                       aspectRatio="16/9"

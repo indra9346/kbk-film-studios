@@ -79,7 +79,6 @@ export const PrivateMediaLocker: React.FC<PrivateMediaLockerProps> = ({ deliveri
           <div className="relative aspect-video w-full bg-black rounded-xl overflow-hidden flex items-center justify-center border border-white/10">
             <CinematicVideoPlayer
               url={(activeDelivery as any).videoUrl || activeDelivery.streamUrl || '/assets/hero-reel.mp4'}
-              poster="/assets/kbk-logo.jpg"
               title={activeDelivery.title}
               aspectRatio="16/9"
               autoPlayOnScroll={false}

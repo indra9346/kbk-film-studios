@@ -2236,7 +2236,7 @@ export const OwnerSpace: React.FC = () => {
                         <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20">
                           <CinematicVideoPlayer
                             url={work.videoUrl}
-                            poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                            poster={work.thumbnailUrl || undefined}
                             title={work.title}
                             category={work.category}
                             aspectRatio="16/9"
@@ -2364,7 +2364,7 @@ export const OwnerSpace: React.FC = () => {
                         <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20">
                           <CinematicVideoPlayer
                             url={test.videoUrl}
-                            poster={test.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                            poster={test.thumbnailUrl || undefined}
                             title={`Feedback - ${test.clientName}`}
                             category="Video Review"
                             aspectRatio="16/9"
@@ -3245,7 +3245,7 @@ export const OwnerSpace: React.FC = () => {
                     <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-black flex items-center justify-center border border-white/10">
                       <CinematicVideoPlayer
                         url={editingWork.videoUrl}
-                        poster={editingWork.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                        poster={editingWork.thumbnailUrl || undefined}
                         title={editingWork.title || 'Showcase Preview'}
                         aspectRatio="16/9"
                         autoPlayOnScroll={false}
@@ -3452,7 +3452,7 @@ export const OwnerSpace: React.FC = () => {
                     <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-black flex items-center justify-center border border-surface-50">
                       <CinematicVideoPlayer
                         url={editingTestimonial.videoUrl}
-                        poster={editingTestimonial.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                        poster={editingTestimonial.thumbnailUrl || undefined}
                         title={editingTestimonial.clientName || 'Testimonial Feedback'}
                         aspectRatio="16/9"
                         autoPlayOnScroll={false}

@@ -15,7 +15,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
   const isPic = isImageMedia(work.videoUrl) || (!work.videoUrl && Boolean(work.thumbnailUrl));
   const driveId = extractDriveFileId(work.videoUrl);
   const isGoogleDrive = Boolean(driveId || work.videoSourceType === 'google_drive' || work.videoUrl?.includes('drive.google.com'));
-  const activeMediaUrl = work.videoUrl || work.thumbnailUrl || '/assets/kbk-logo.jpg';
+  const activeMediaUrl = work.videoUrl || work.thumbnailUrl || '';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/95 backdrop-blur-2xl animate-fadeIn">
@@ -58,7 +58,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
         <div className="relative aspect-video max-h-[55vh] sm:max-h-[70vh] w-full bg-black flex items-center justify-center overflow-hidden">
           <CinematicVideoPlayer
             url={work.videoUrl}
-            poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+            poster={work.thumbnailUrl || undefined}
             title={work.title}
             category={work.category}
             aspectRatio="16/9"

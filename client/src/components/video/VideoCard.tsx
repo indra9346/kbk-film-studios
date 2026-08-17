@@ -89,7 +89,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
       <div className="relative aspect-video w-full overflow-hidden bg-black">
         <CinematicVideoPlayer
           url={work.videoUrl}
-          poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+          poster={work.thumbnailUrl || undefined}
           title={work.title}
           category={work.category}
           aspectRatio="16/9"
