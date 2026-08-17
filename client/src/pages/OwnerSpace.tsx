@@ -1913,30 +1913,55 @@ export const OwnerSpace: React.FC = () => {
             {/* TAB 6: WORKS SHOWCASE CMS */}
             {activeTab === 'works' && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-serif text-xl font-bold text-ivory-100">
-                    Public Works Showcase Portfolio CMS
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setEditingWork({
-                        title: '',
-                        category: 'Wedding Highlights',
-                        eventLocation: 'Hindupur, AP',
-                        eventYear: '2026',
-                        videoUrl: '',
-                        isFeatured: true,
-                        isPublished: true,
-                        softwareUsed: ['Premiere Pro', 'DaVinci Resolve']
-                      });
-                      setIsCustomCategory(false);
-                      setCustomCategoryName('');
-                    }}
-                    className="px-4 py-2 rounded-xl bg-gold text-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-gold-sm hover:bg-gold-light transition-all"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add New Showcase Film</span>
-                  </button>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-ivory-100">
+                      Public Works Showcase Portfolio CMS
+                    </h3>
+                    <p className="text-xs text-ivory-400">
+                      Managed in Supabase table <code className="text-gold font-mono">public.public_works</code> • Broadcasts to all devices live.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          for (const w of works) {
+                            await api.saveWork(w);
+                          }
+                          await loadOwnerData();
+                          await refreshData();
+                          alert('✅ All showcase films successfully synced and stored in Supabase public_works table!');
+                        } catch (err: any) {
+                          alert(`Sync status: ${err.message}`);
+                        }
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-surface-100 hover:bg-gold/20 text-gold border border-gold/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Sync to Supabase</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingWork({
+                          title: '',
+                          category: 'Wedding Highlights',
+                          eventLocation: 'Hindupur, AP',
+                          eventYear: '2026',
+                          videoUrl: '',
+                          isFeatured: true,
+                          isPublished: true,
+                          softwareUsed: ['Premiere Pro', 'DaVinci Resolve']
+                        });
+                        setIsCustomCategory(false);
+                        setCustomCategoryName('');
+                      }}
+                      className="px-4 py-2 rounded-xl bg-gold text-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-gold-sm hover:bg-gold-light transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add New Showcase Film</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
