@@ -13,8 +13,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
   if (!work) return null;
 
   const isPic = isImageMedia(work.videoUrl) || (!work.videoUrl && Boolean(work.thumbnailUrl));
-  const driveId = extractDriveFileId(work.videoUrl);
-  const isGoogleDrive = Boolean(driveId || work.videoSourceType === 'google_drive' || work.videoUrl?.includes('drive.google.com'));
+  const driveId = extractDriveFileId(work.videoUrl || work.externalDestUrl || '');
+  const externalUrl = work.externalDestUrl || (driveId ? `https://drive.google.com/file/d/${driveId}/view` : '');
+  const hasDriveLink = Boolean(externalUrl && (externalUrl.includes('drive.google.com') || externalUrl.includes('docs.google.com')));
   const activeMediaUrl = work.videoUrl || work.thumbnailUrl || '';
 
   return (
@@ -32,9 +33,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
             </h3>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {isGoogleDrive && driveId && (
+            {hasDriveLink && (
               <a
-                href={`https://drive.google.com/file/d/${driveId}/view`}
+                href={externalUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 text-[11px] font-semibold transition-colors"

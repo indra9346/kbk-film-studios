@@ -185,9 +185,9 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: 'Hindupur, AP',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view',
-      videoSourceType: 'google_drive',
-      externalDestUrl: '',
+      videoUrl: '/assets/works/hanumantha-reception.mp4',
+      videoSourceType: 'direct_mp4',
+      externalDestUrl: 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view',
       description: 'Grand luxury reception film featuring multi-camera speech capture, cinematic slow-motion highlights, and rich HDR color grading.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro', 'After Effects'],
       isFeatured: true,
@@ -202,9 +202,9 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: 'Bengaluru, KA',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link',
-      videoSourceType: 'google_drive',
-      externalDestUrl: '',
+      videoUrl: '/assets/works/reception-master.mp4',
+      videoSourceType: 'direct_mp4',
+      externalDestUrl: 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link',
       description: 'A master graded wedding reception highlight film woven into a seamless, emotionally moving cinematic narrative.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
@@ -219,9 +219,9 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: 'Hindupur, AP',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link',
-      videoSourceType: 'google_drive',
-      externalDestUrl: '',
+      videoUrl: '/assets/works/muhurtham-sacred.mp4',
+      videoSourceType: 'direct_mp4',
+      externalDestUrl: 'https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link',
       description: 'Sacred Vedic mantras sound restoration and multi-camera synchronized traditional wedding ritual film.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
@@ -236,9 +236,9 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: 'Hindupur, AP',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
-      videoSourceType: 'google_drive',
-      externalDestUrl: '',
+      videoUrl: '/assets/works/amulya-haldi.mp4',
+      videoSourceType: 'direct_mp4',
+      externalDestUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
       description: 'Vibrant yellow splash color isolation, beat-matched family dances, and warm festive energy captured in 4K.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
@@ -253,9 +253,9 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: 'Bengaluru, KA',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
-      videoSourceType: 'google_drive',
-      externalDestUrl: '',
+      videoUrl: '/assets/works/sangeeth-celebration.mp4',
+      videoSourceType: 'direct_mp4',
+      externalDestUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
       description: 'High-energy musical dance power of Sangeeth night with punchy color vibrance and live performance multicam pacing.',
       softwareUsed: ['DaVinci Resolve Studio', 'After Effects'],
       isFeatured: true,
@@ -270,9 +270,9 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: 'Hindupur, AP',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
-      videoSourceType: 'google_drive',
-      externalDestUrl: '',
+      videoUrl: '/assets/works/pavan-anjali-reception.mp4',
+      videoSourceType: 'direct_mp4',
+      externalDestUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
       description: 'Cinematic wedding reception storytelling featuring elegant couple portraits, stage entrances, and guest celebration sequences.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
@@ -287,9 +287,9 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: 'Hindupur, AP',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
-      videoSourceType: 'google_drive',
-      externalDestUrl: '',
+      videoUrl: '/assets/works/pavan-anjali-muhurtham.mp4',
+      videoSourceType: 'direct_mp4',
+      externalDestUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
       description: 'Sacred Mangalashtak and Muhurtham rituals crafted into an emotional and timeless family keepsake.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
@@ -304,9 +304,9 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: 'Hindupur, AP',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
-      videoSourceType: 'google_drive',
-      externalDestUrl: '',
+      videoUrl: '/assets/works/pavan-anjali-teaser.mp4',
+      videoSourceType: 'direct_mp4',
+      externalDestUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
       description: 'Fast-paced vertical teaser cut engineered with dynamic bass drops and instant visual hooks.',
       softwareUsed: ['DaVinci Resolve Studio', 'After Effects'],
       isFeatured: true,
@@ -323,7 +323,7 @@ const DEFAULT_DB: LocalDBData = {
       location: "Hindupur, Andhra Pradesh",
       rating: 5,
       reviewText: "The Haldi video editing is absolutely stunning! Bharath Kumar captured every splash, every smile, and every dance move with incredible cinematic precision. The yellow color grading was breathtaking — we cried watching it!",
-      videoUrl: "https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view",
+      videoUrl: "/assets/works/amulya-haldi.mp4",
       thumbnailUrl: "",
       eventDate: "August 2026",
       isVerified: true,
@@ -338,7 +338,7 @@ const DEFAULT_DB: LocalDBData = {
       location: "Hindupur, Andhra Pradesh",
       rating: 5,
       reviewText: "Kurudi Bharath Kumar transformed our wedding footage into a pure movie! The color grading on our silk sarees and the emotional flow during the reception made all our family members amazed.",
-      videoUrl: "https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view",
+      videoUrl: "/assets/works/hanumantha-reception.mp4",
       thumbnailUrl: "",
       eventDate: "July 2026",
       isVerified: true,
@@ -353,7 +353,7 @@ const DEFAULT_DB: LocalDBData = {
       location: "Hindupur, Andhra Pradesh",
       rating: 5,
       reviewText: "The video pacing and color grading on DaVinci Resolve exceeded all our expectations. The same-day reception teaser was screened on the LED wall and received loud applause from all guests!",
-      videoUrl: "https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10",
+      videoUrl: "/assets/works/pavan-anjali-reception.mp4",
       thumbnailUrl: "",
       eventDate: "June 2026",
       isVerified: true,
@@ -400,7 +400,7 @@ const DEFAULT_DB: LocalDBData = {
   auditLogs: []
 };
 
-const STORAGE_KEY = 'kbk_local_database_v3';
+const STORAGE_KEY = 'kbk_local_database_v6';
 
 function getDB(): LocalDBData {
   try {
@@ -410,8 +410,9 @@ function getDB(): LocalDBData {
       return DEFAULT_DB;
     }
     const parsed = JSON.parse(raw) as LocalDBData;
-    if (!parsed.works || parsed.works.length === 0) {
+    if (!parsed.works || parsed.works.length === 0 || parsed.works.some(w => w.videoUrl?.includes('drive.google.com'))) {
       parsed.works = DEFAULT_DB.works;
+      parsed.testimonials = DEFAULT_DB.testimonials;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
     }
     return parsed;

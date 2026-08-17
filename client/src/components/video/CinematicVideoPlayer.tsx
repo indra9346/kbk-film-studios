@@ -85,6 +85,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
+    video.defaultMuted = true;
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
@@ -99,7 +100,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             setPlayRejected(false);
           })
           .catch((err) => {
-            console.warn('[KBK Video] Muted autoplay prevented:', err.message);
+            console.warn('[KBK Video] Autoplay note:', err.message);
             setIsPlaying(false);
             setPlayRejected(true);
           });
@@ -174,7 +175,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             style={isModal ? { transform: `scale(${zoomLevel})` } : undefined}
             className="w-full h-full object-cover transition-transform duration-300"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
+              (e.target as HTMLImageElement).src = '/assets/founder.jpg';
             }}
           />
           {isModal && (
@@ -261,15 +262,16 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             loop
             playsInline
             disablePictureInPicture
-            preload={isInViewport || isModal ? "auto" : "metadata"}
-            onTimeUpdate={handleTimeUpdate}
-            className="w-full h-full object-cover transform-gpu will-change-transform"
-            onError={(e) => {
-              const el = e.target as HTMLVideoElement;
-              if (el.src !== window.location.origin + '/assets/hero-reel.mp4') {
-                el.src = '/assets/hero-reel.mp4';
+            preload="auto"
+            onLoadedData={() => {
+              setIsMediaLoaded(true);
+              if (videoRef.current && (isInViewport || isModal)) {
+                videoRef.current.muted = true;
+                videoRef.current.play().catch(() => {});
               }
             }}
+            onTimeUpdate={handleTimeUpdate}
+            className="w-full h-full object-cover transform-gpu will-change-transform"
           />
 
           {/* Fallback Play button if browser rejected initial autoplay */}

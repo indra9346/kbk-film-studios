@@ -65,16 +65,14 @@ export const getVideoType = (url: string) => {
   return { type: 'direct', id: trimmed };
 };
 
-export const getCleanVideoUrl = (url: string): string => {
-  if (!url) return '/assets/hero-reel.mp4';
-  const media = getVideoType(url);
+export const getCleanVideoUrl = (url?: string): string => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  const media = getVideoType(trimmed);
   if (media.type === 'google-drive' && media.id) {
     return `https://drive.google.com/file/d/${media.id}/preview`;
   }
-  if (media.type === 'direct' && url.startsWith('http')) {
-    return url;
-  }
-  return url || '/assets/hero-reel.mp4';
+  return trimmed;
 };
 
 export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
