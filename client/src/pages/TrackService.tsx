@@ -373,9 +373,9 @@ export const TrackService: React.FC = () => {
                         type="text"
                         value={bookingRefInput}
                         onChange={(e) => setBookingRefInput(e.target.value.toUpperCase())}
-                        placeholder="e.g. KBK-2026-8941"
+                        placeholder="Enter Booking Ref (e.g. KBK-2026-XXXX)"
                         required
-                        className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm font-mono focus:outline-none focus:border-gold uppercase"
+                        className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm font-mono focus:outline-none focus:border-gold uppercase placeholder:text-ivory-400/60"
                       />
                     </div>
 
@@ -387,9 +387,9 @@ export const TrackService: React.FC = () => {
                         type="text"
                         value={identifierInput}
                         onChange={(e) => setIdentifierInput(e.target.value)}
-                        placeholder="e.g. 9440187654 or email"
+                        placeholder="Enter registered mobile or email"
                         required
-                        className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold"
+                        className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold placeholder:text-ivory-400/60"
                       />
                     </div>
 

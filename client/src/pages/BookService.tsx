@@ -259,9 +259,9 @@ export const BookService: React.FC = () => {
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Suresh & Meghana"
+                      placeholder="Enter your name or couple name"
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold transition-colors"
+                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-ivory-400/60"
                     />
                   </div>
 
@@ -273,9 +273,9 @@ export const BookService: React.FC = () => {
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="e.g. 9440187654"
+                      placeholder="Enter 10-digit mobile / WhatsApp number"
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold transition-colors"
+                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-ivory-400/60"
                     />
                   </div>
 
@@ -287,9 +287,9 @@ export const BookService: React.FC = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="e.g. suresh.meghana@gmail.com"
+                      placeholder="name@example.com"
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold transition-colors"
+                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-ivory-400/60"
                     />
                   </div>
 
@@ -301,8 +301,8 @@ export const BookService: React.FC = () => {
                       type="text"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      placeholder="e.g. Hindupur, Andhra Pradesh"
-                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold transition-colors"
+                      placeholder="Enter your city & state (e.g. Bangalore, Hyderabad)"
+                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-ivory-400/60"
                     />
                   </div>
                 </div>
@@ -476,8 +476,8 @@ export const BookService: React.FC = () => {
                       rows={3}
                       value={footageDetails}
                       onChange={(e) => setFootageDetails(e.target.value)}
-                      placeholder="e.g. Sony A7IV + FX3 multi-camera (approx 250GB 4K S-Log3 files on hard drive or Google Drive)"
-                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold placeholder:text-ivory-400"
+                      placeholder="Specify camera models (Sony/Canon/RED/Panasonic), approximate total storage in GB, or cloud drive links"
+                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold placeholder:text-ivory-400/60"
                     />
                   </div>
 
@@ -489,8 +489,8 @@ export const BookService: React.FC = () => {
                       type="url"
                       value={referenceLinks}
                       onChange={(e) => setReferenceLinks(e.target.value)}
-                      placeholder="e.g. YouTube or Instagram reference reel link"
-                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold placeholder:text-ivory-400"
+                      placeholder="Paste YouTube, Vimeo, Drive, or Instagram reference video link"
+                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold placeholder:text-ivory-400/60"
                     />
                   </div>
 
@@ -502,8 +502,8 @@ export const BookService: React.FC = () => {
                       rows={3}
                       value={customNotes}
                       onChange={(e) => setCustomNotes(e.target.value)}
-                      placeholder="e.g. Focus on emotional parents speech, traditional mantra sync, and fast-paced Instagram teaser."
-                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold placeholder:text-ivory-400"
+                      placeholder="Highlight important moments, audio sync preferences, color tone mood, or teaser requirements..."
+                      className="w-full px-4 py-3 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold placeholder:text-ivory-400/60"
                     />
                   </div>
                 </div>
