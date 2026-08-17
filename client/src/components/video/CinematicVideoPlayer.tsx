@@ -254,9 +254,10 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             muted
             loop
             playsInline
-            preload="auto"
+            disablePictureInPicture
+            preload={isInViewport || isModal ? "auto" : "metadata"}
             onTimeUpdate={handleTimeUpdate}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transform-gpu will-change-transform"
             onError={(e) => {
               const el = e.target as HTMLVideoElement;
               if (el.src !== window.location.origin + '/assets/hero-reel.mp4') {
