@@ -3,6 +3,7 @@ import { Star, MessageSquare, Volume2, VolumeX, ShieldCheck, Film, Sparkles, Pla
 import { useStudio } from '../context/StudioContext';
 import { Testimonial } from '../types';
 import { getVideoType, getCleanVideoUrl, extractDriveFileId } from '../components/video/VideoCard';
+import { CinematicVideoPlayer } from '../components/video/CinematicVideoPlayer';
 
 export const Testimonials: React.FC = () => {
   const { testimonials } = useStudio();
@@ -52,9 +53,6 @@ export const Testimonials: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredTestimonials.map((t) => {
-            const media = t.videoUrl ? getVideoType(t.videoUrl) : null;
-            const isOpen = openVideoId === t.id;
-
             return (
               <div
                 key={t.id}
@@ -63,88 +61,19 @@ export const Testimonials: React.FC = () => {
                 {/* If Customer Video Feedback Attached */}
                 {t.videoUrl && (
                   <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-gold/20">
-                    {media && media.type === 'youtube' && media.id ? (
-                      <iframe
-                        src={isOpen ? `https://www.youtube.com/embed/${media.id}?autoplay=1&controls=1&rel=0&playsinline=1` : `https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1&rel=0&playsinline=1`}
-                        title={`Customer Video Review - ${t.clientName}`}
-                        className="w-full h-full object-contain border-0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : media && (media.type === 'google-drive' || t.videoUrl?.includes('drive.google.com')) ? (
-                      isOpen ? (
-                        <iframe
-                          src={`https://drive.google.com/file/d/${media.id || extractDriveFileId(t.videoUrl)}/preview?autoplay=1`}
-                          title={`Customer Video Review - ${t.clientName}`}
-                          className="w-full h-full object-contain border-0"
-                          allow="autoplay; fullscreen"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <img
-                          src={media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (t.thumbnailUrl || '/assets/kbk-logo.jpg')}
-                          alt={`${t.clientName} testimonial`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
-                          }}
-                        />
-                      )
-                    ) : (
-                      <>
-                        {isOpen ? (
-                          <video
-                            src={getCleanVideoUrl(t.videoUrl)}
-                            poster={t.thumbnailUrl || '/assets/kbk-logo.jpg'}
-                            controls
-                            controlsList="nodownload noplaybackrate"
-                            autoPlay
-                            playsInline
-                            className="w-full h-full object-contain cinematic-native-video"
-                            onError={(e) => {
-                              const el = e.target as HTMLVideoElement;
-                              if (el.src !== window.location.origin + '/assets/hero-reel.mp4') {
-                                el.src = '/assets/hero-reel.mp4';
-                              }
-                            }}
-                          />
-                        ) : (
-                          <img
-                            src={t.thumbnailUrl || '/assets/kbk-logo.jpg'}
-                            alt={`${t.clientName} testimonial`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
-                            }}
-                          />
-                        )}
-                      </>
-                    )}
-                    <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 flex items-center gap-1 z-10">
+                    <CinematicVideoPlayer
+                      url={t.videoUrl}
+                      poster={t.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                      title={`Client Review - ${t.clientName}`}
+                      category="Video Review"
+                      aspectRatio="16/9"
+                      autoPlayOnScroll={true}
+                      showControls={true}
+                    />
+                    <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 flex items-center gap-1 z-10 pointer-events-none">
                       <Film className="w-2.5 h-2.5" />
                       <span>Video Review</span>
                     </div>
-                    {!isOpen && (
-                      <button
-                        onClick={() => setOpenVideoId(t.id)}
-                        className="absolute inset-0 flex items-center justify-center text-gold z-10"
-                        title="Play client review"
-                        type="button"
-                      >
-                        <span className="w-12 h-12 rounded-full bg-black/80 border border-gold/50 flex items-center justify-center">
-                          <Play className="w-5 h-5 fill-current ml-0.5" />
-                        </span>
-                      </button>
-                    )}
-                    {isOpen && (
-                      <button
-                        onClick={() => setOpenVideoId(null)}
-                        className="absolute top-3 right-3 z-20 px-2 py-1 rounded-full bg-black/80 border border-gold/30 text-[10px] text-ivory-100"
-                        type="button"
-                      >
-                        Close
-                      </button>
-                    )}
                   </div>
                 )}
 

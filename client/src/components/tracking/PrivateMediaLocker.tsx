@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Download, Film, Lock, ShieldCheck, Play, CheckCircle2, Clock, AlertTriangle, FileText, Sparkles, X, ExternalLink } from 'lucide-react';
 import { PrivateDeliveryFile } from '../../types';
 import { getVideoType, extractDriveFileId, getCleanVideoUrl } from '../video/VideoCard';
+import { CinematicVideoPlayer } from '../video/CinematicVideoPlayer';
 
 interface PrivateMediaLockerProps {
   deliveries: PrivateDeliveryFile[];
@@ -76,54 +77,15 @@ export const PrivateMediaLocker: React.FC<PrivateMediaLockerProps> = ({ deliveri
           </div>
 
           <div className="relative aspect-video w-full bg-black rounded-xl overflow-hidden flex items-center justify-center border border-white/10">
-            {(() => {
-              const streamSrc = (activeDelivery as any).videoUrl || activeDelivery.streamUrl || '/assets/hero-reel.mp4';
-              const media = getVideoType(streamSrc);
-              const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(streamSrc);
-
-              if (media.type === 'youtube' && media.id) {
-                return (
-                  <iframe
-                    src={`https://www.youtube.com/embed/${media.id}?autoplay=1&controls=1&rel=0&playsinline=1`}
-                    title={activeDelivery.title}
-                    className="w-full h-full object-contain border-0"
-                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                );
-              }
-
-              if (driveId || streamSrc.includes('drive.google.com')) {
-                const validId = driveId || extractDriveFileId(streamSrc);
-                return (
-                  <iframe
-                    src={`https://drive.google.com/file/d/${validId}/preview?autoplay=1`}
-                    title={activeDelivery.title}
-                    className="w-full h-full object-contain border-0"
-                    allow="autoplay; fullscreen"
-                    allowFullScreen
-                  />
-                );
-              }
-
-              return (
-                <video
-                  src={getCleanVideoUrl(streamSrc)}
-                  poster="/assets/kbk-logo.jpg"
-                  controls
-                  autoPlay
-                  playsInline
-                  controlsList="nodownload noplaybackrate"
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    const el = e.target as HTMLVideoElement;
-                    if (el.src !== window.location.origin + '/assets/hero-reel.mp4') {
-                      el.src = '/assets/hero-reel.mp4';
-                    }
-                  }}
-                />
-              );
-            })()}
+            <CinematicVideoPlayer
+              url={(activeDelivery as any).videoUrl || activeDelivery.streamUrl || '/assets/hero-reel.mp4'}
+              poster="/assets/kbk-logo.jpg"
+              title={activeDelivery.title}
+              aspectRatio="16/9"
+              autoPlayOnScroll={false}
+              isModal={true}
+              showControls={true}
+            />
           </div>
         </div>
       )}

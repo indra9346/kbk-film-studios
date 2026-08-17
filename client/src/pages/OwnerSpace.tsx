@@ -47,6 +47,7 @@ import { api } from '../api/client';
 import { generateUUID } from '../api/supabaseClient';
 import { getVideoType, getCleanVideoUrl, extractDriveFileId, isImageMedia } from '../components/video/VideoCard';
 import { VideoModal } from '../components/video/VideoModal';
+import { CinematicVideoPlayer } from '../components/video/CinematicVideoPlayer';
 import {
   BookingRequest,
   ServiceProject,
@@ -2231,114 +2232,26 @@ export const OwnerSpace: React.FC = () => {
                         key={work.id}
                         className="p-5 rounded-2xl glass-panel border border-gold/20 flex flex-col justify-between space-y-4 hover:border-gold/50 transition-all overflow-hidden group shadow-lg"
                       >
-                        {/* Media Preview Container with Simple Controls */}
-                        <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20 group/media">
-                          {isPic ? (
-                            <img
-                              src={work.videoUrl || work.thumbnailUrl || '/assets/kbk-logo.jpg'}
-                              alt={work.title}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover/media:scale-105"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
-                              }}
-                            />
-                          ) : (() => {
-                            const media = getVideoType(work.videoUrl);
-                            const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(work.videoUrl);
-                            if (media.type === 'youtube' && media.id) {
-                              return (
-                                <iframe
-                                  src={`https://www.youtube.com/embed/${media.id}?autoplay=${isCardPlaying ? 1 : 0}&mute=${isCardMuted ? 1 : 0}&loop=1&playlist=${media.id}&controls=0`}
-                                  title={work.title}
-                                  className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-                                  allow="autoplay; encrypted-media"
-                                  frameBorder="0"
-                                />
-                              );
-                            }
-                            if (driveId || media.type === 'google-drive' || work.videoUrl?.includes('drive.google.com') || work.videoSourceType === 'google_drive') {
-                              const validId = driveId || extractDriveFileId(work.videoUrl);
-                              return (
-                                <iframe
-                                  src={`https://drive.google.com/file/d/${validId}/preview`}
-                                  title={work.title}
-                                  className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-                                  allow="autoplay; encrypted-media"
-                                />
-                              );
-                            }
-                            return (
-                              <video
-                                id={`owner-video-${work.id}`}
-                                src={getCleanVideoUrl(work.videoUrl)}
-                                poster={work.thumbnailUrl || undefined}
-                                autoPlay
-                                muted={isCardMuted}
-                                loop
-                                playsInline
-                                className="w-full h-full object-cover"
-                              />
-                            );
-                          })()}
+                        {/* Reusable Cinematic Media Preview Container */}
+                        <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20">
+                          <CinematicVideoPlayer
+                            url={work.videoUrl}
+                            poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                            title={work.title}
+                            category={work.category}
+                            aspectRatio="16/9"
+                            autoPlayOnScroll={true}
+                            showControls={true}
+                            onExpand={() => setPreviewModalWork(work)}
+                          />
 
                           {/* Top Badges */}
-                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10">
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10 pointer-events-none">
                             {work.category}
                           </div>
-                          <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-300 text-[9px] font-mono border border-emerald-500/30 z-10 flex items-center gap-1">
+                          <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-300 text-[9px] font-mono border border-emerald-500/30 z-10 flex items-center gap-1 pointer-events-none">
                             {isPic ? <ImageIcon className="w-2.5 h-2.5" /> : <Film className="w-2.5 h-2.5" />}
                             <span>{isPic ? 'Photo Still' : 'Live Preview'}</span>
-                          </div>
-
-                          {/* Bottom Simple Controls Overlay */}
-                          <div className="absolute inset-x-2 bottom-2 flex items-center justify-between z-20">
-                            <div className="flex items-center gap-1">
-                              {!isPic && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const vid = document.getElementById(`owner-video-${work.id}`) as HTMLVideoElement;
-                                      const next = !isCardPlaying;
-                                      setPlayingCardIds(prev => ({ ...prev, [work.id]: next }));
-                                      if (vid) {
-                                        if (next) vid.play();
-                                        else vid.pause();
-                                      }
-                                    }}
-                                    className="p-1.5 rounded-lg bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 backdrop-blur-md transition-colors"
-                                    title={isCardPlaying ? 'Pause video' : 'Play video'}
-                                  >
-                                    {isCardPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const vid = document.getElementById(`owner-video-${work.id}`) as HTMLVideoElement;
-                                      const next = !isCardMuted;
-                                      setMutedCardIds(prev => ({ ...prev, [work.id]: next }));
-                                      if (vid) vid.muted = next;
-                                    }}
-                                    className="p-1.5 rounded-lg bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 backdrop-blur-md transition-colors"
-                                    title={isCardMuted ? 'Unmute audio' : 'Mute audio'}
-                                  >
-                                    {isCardMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
-                                  </button>
-                                </>
-                              )}
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => setPreviewModalWork(work)}
-                              className="p-1.5 rounded-lg bg-gold/90 hover:bg-gold text-black shadow-gold font-bold transition-transform hover:scale-110 flex items-center gap-1 text-[10px]"
-                              title={isPic ? 'View Full Image' : 'Cinema Player View'}
-                            >
-                              <Maximize2 className="w-3 h-3" />
-                              <span className="hidden sm:inline">Cinema View</span>
-                            </button>
                           </div>
                         </div>
 
@@ -2449,47 +2362,18 @@ export const OwnerSpace: React.FC = () => {
                       {/* If Video Attached -> Live Video Preview */}
                       {test.videoUrl ? (
                         <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20">
-                          {(() => {
-                            const media = getVideoType(test.videoUrl);
-                            if (media.type === 'youtube' && media.id) {
-                              return (
-                                <iframe
-                                  src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0`}
-                                  title={test.clientName}
-                                  className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-                                  allow="autoplay; encrypted-media"
-                                  frameBorder="0"
-                                />
-                              );
-                            }
-                            if (media.type === 'google-drive' && media.id) {
-                              return (
-                                <iframe
-                                  src={`https://drive.google.com/file/d/${media.id}/preview`}
-                                  title={test.clientName}
-                                  className="w-full h-full object-cover border-0"
-                                  allow="autoplay"
-                                />
-                              );
-                            }
-                            return (
-                              <video
-                                src={getCleanVideoUrl(test.videoUrl)}
-                                poster={test.thumbnailUrl || '/assets/kbk-logo.jpg'}
-                                autoPlay
-                                muted
-                                loop
-                                playsInline
-                                className="w-full h-full object-cover"
-                              />
-                            );
-                          })()}
-                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10 flex items-center gap-1">
+                          <CinematicVideoPlayer
+                            url={test.videoUrl}
+                            poster={test.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                            title={`Feedback - ${test.clientName}`}
+                            category="Video Review"
+                            aspectRatio="16/9"
+                            autoPlayOnScroll={true}
+                            showControls={true}
+                          />
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10 flex items-center gap-1 pointer-events-none">
                             <Film className="w-2.5 h-2.5" />
                             <span>Video Feedback</span>
-                          </div>
-                          <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 text-[9px] font-mono border border-emerald-500/30 z-10">
-                            Live Preview
                           </div>
                         </div>
                       ) : (
@@ -3359,44 +3243,15 @@ export const OwnerSpace: React.FC = () => {
                     </div>
 
                     <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-black flex items-center justify-center border border-white/10">
-                      {isImageMedia(editingWork.videoUrl) ? (
-                        <img
-                          src={editingWork.videoUrl}
-                          alt="Live picture preview"
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
-                          }}
-                        />
-                      ) : (() => {
-                        const media = getVideoType(editingWork.videoUrl || '');
-                        const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(editingWork.videoUrl || '');
-                        if (media.type === 'youtube' && media.id) {
-                          return (
-                            <iframe
-                              src={`https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1`}
-                              title="Preview"
-                              className="w-full h-full object-cover border-0"
-                            />
-                          );
-                        }
-                        if (driveId || media.type === 'google-drive' || editingWork.videoUrl?.includes('drive.google.com')) {
-                          return (
-                            <iframe
-                              src={`https://drive.google.com/file/d/${driveId || extractDriveFileId(editingWork.videoUrl || '')}/preview`}
-                              title="Preview"
-                              className="w-full h-full object-cover border-0"
-                            />
-                          );
-                        }
-                        return (
-                          <video
-                            src={getCleanVideoUrl(editingWork.videoUrl || '')}
-                            controls
-                            className="w-full h-full object-contain"
-                          />
-                        );
-                      })()}
+                      <CinematicVideoPlayer
+                        url={editingWork.videoUrl}
+                        poster={editingWork.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                        title={editingWork.title || 'Showcase Preview'}
+                        aspectRatio="16/9"
+                        autoPlayOnScroll={false}
+                        isModal={true}
+                        showControls={true}
+                      />
                     </div>
                   </div>
                 )}
@@ -3595,52 +3450,15 @@ export const OwnerSpace: React.FC = () => {
                     </div>
 
                     <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-black flex items-center justify-center border border-surface-50">
-                      {isImageMedia(editingTestimonial.videoUrl) ? (
-                        <img
-                          src={editingTestimonial.videoUrl}
-                          alt="Customer feedback preview"
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
-                          }}
-                        />
-                      ) : (() => {
-                        const media = getVideoType(editingTestimonial.videoUrl);
-                        if (media.type === 'youtube' && media.id) {
-                          return (
-                            <iframe
-                              src={`https://www.youtube.com/embed/${media.id}?autoplay=0&controls=1`}
-                              title="Testimonial video"
-                              className="w-full h-full border-0"
-                              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                            />
-                          );
-                        }
-                        if (media.type === 'google-drive' && media.id) {
-                          return (
-                            <iframe
-                              src={`https://drive.google.com/file/d/${media.id}/preview`}
-                              title="Testimonial drive video"
-                              className="w-full h-full border-0"
-                              allow="autoplay"
-                            />
-                          );
-                        }
-                        return (
-                          <video
-                            src={getCleanVideoUrl(editingTestimonial.videoUrl)}
-                            poster={editingTestimonial.thumbnailUrl || '/assets/kbk-logo.jpg'}
-                            controls
-                            className="w-full h-full object-contain"
-                            onError={(e) => {
-                              const el = e.target as HTMLVideoElement;
-                              if (el.src !== window.location.origin + '/assets/hero-reel.mp4') {
-                                el.src = '/assets/hero-reel.mp4';
-                              }
-                            }}
-                          />
-                        );
-                      })()}
+                      <CinematicVideoPlayer
+                        url={editingTestimonial.videoUrl}
+                        poster={editingTestimonial.thumbnailUrl || '/assets/kbk-logo.jpg'}
+                        title={editingTestimonial.clientName || 'Testimonial Feedback'}
+                        aspectRatio="16/9"
+                        autoPlayOnScroll={false}
+                        isModal={true}
+                        showControls={true}
+                      />
                     </div>
                   </div>
                 )}
