@@ -191,14 +191,58 @@ export const OwnerSpace: React.FC = () => {
       ]);
       setMetrics(m);
       setBookings(b);
-      setProjects(p);
+      // Synthesize active projects for accepted bookings if not yet in database
+      const combinedProjects = [...p];
+      b.filter((bk: any) => bk.status === 'accepted').forEach((bk: any) => {
+        if (!combinedProjects.some((pr: any) => pr.bookingRef === bk.bookingRef)) {
+          combinedProjects.push({
+            id: `proj-${bk.bookingRef}`,
+            bookingId: bk.id,
+            bookingRef: bk.bookingRef,
+            clientId: bk.clientId || 'client-1',
+            clientName: bk.clientName,
+            clientPhone: bk.clientPhone,
+            clientEmail: bk.clientEmail || '',
+            serviceId: bk.serviceId || 'srv-1',
+            serviceTitle: bk.serviceTitle || 'Specialized Video Editing',
+            trackingToken: `TK-${bk.bookingRef.replace('KBK-', '')}`,
+            currentStage: 'raw_footage_received' as const,
+            stageProgressPercent: 30,
+            startDate: new Date().toISOString().split('T')[0],
+            estimatedDeliveryDate: bk.preferredDeliveryDate || bk.eventDate || new Date().toISOString().split('T')[0],
+            statusHistory: [
+              {
+                id: `sh-1-${bk.bookingRef}`,
+                stage: 'booking_requested' as const,
+                stageLabel: 'Booking Requested',
+                message: 'Booking accepted by Kurudi Bharath Kumar.',
+                updatedBy: 'Kurudi Bharath Kumar',
+                timestamp: bk.createdAt
+              },
+              {
+                id: `sh-2-${bk.bookingRef}`,
+                stage: 'raw_footage_received' as const,
+                stageLabel: 'Raw Footage Ingested',
+                message: 'Footage ingested in 4K editing bay.',
+                updatedBy: 'Lead Filmmaker',
+                timestamp: new Date().toISOString()
+              }
+            ],
+            internalNotes: 'Active project in studio pipeline.',
+            clientMessages: [],
+            deliveries: [],
+            createdAt: bk.createdAt,
+            updatedAt: new Date().toISOString()
+          });
+        }
+      });
+      setProjects(combinedProjects);
       setServices(s);
       setWorks(w);
       setTestimonials(t);
       setOwnersList(o);
       setAuditLogs(a);
       setCmsData(c);
-      // Load workflows & client videos
       loadWorkflows();
       try {
         const cvd = await api.getClientVideoDeliveries();
@@ -668,8 +712,7 @@ export const OwnerSpace: React.FC = () => {
                 { id: 'bookings', label: `Bookings (${bookings.filter(b => b.status === 'pending').length} New)`, icon: FileText },
                 { id: 'pricing', label: 'Service Pricing CMS', icon: DollarSign },
                 { id: 'lifecycle', label: `Active Lifecycle (${projects.filter(p => p.currentStage !== 'testimonial_received').length})`, icon: Layers },
-                { id: 'deliveries', label: 'Client Delivery Locker', icon: Upload },
-                { id: 'client_videos', label: `Client Videos (${clientVideos.length})`, icon: Play },
+                { id: 'client_videos', label: `Client Deliveries Locker (${clientVideos.length})`, icon: Upload },
                 { id: 'works', label: 'Works Showcase', icon: Film },
                 { id: 'testimonials', label: 'Testimonials', icon: Sparkles },
                 { id: 'cms', label: 'Studio Profile & Bio', icon: Settings },
