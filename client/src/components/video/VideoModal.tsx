@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { X, ExternalLink, Calendar, MapPin, Layers, Film, Sparkles, CheckCircle2, Volume2, VolumeX } from 'lucide-react';
+import { X, Calendar, MapPin, Layers, Volume2, VolumeX } from 'lucide-react';
 import { PublicWork } from '../../types';
-import { getVideoType, getCleanVideoUrl } from './VideoCard';
+import { getVideoType, getCleanVideoUrl, extractDriveFileId } from './VideoCard';
 
 interface VideoModalProps {
   work: PublicWork | null;
@@ -22,6 +22,8 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
   if (!work) return null;
 
   const media = getVideoType(work.videoUrl);
+  const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(work.videoUrl);
+  const isGoogleDrive = Boolean(driveId || work.videoSourceType === 'google_drive' || work.videoUrl?.includes('drive.google.com'));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-xl animate-fadeIn">
@@ -37,7 +39,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            {media.type === 'direct' && (
+            {!isGoogleDrive && media.type !== 'youtube' && (
               <button
                 type="button"
                 onClick={() => setIsMuted((prev) => !prev)}
@@ -68,12 +70,12 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
               allowFullScreen
               frameBorder="0"
             />
-          ) : media.type === 'google-drive' && media.id ? (
+          ) : isGoogleDrive && driveId ? (
             <iframe
-              src={`https://drive.google.com/file/d/${media.id}/preview`}
+              src={`https://drive.google.com/file/d/${driveId}/preview`}
               title={work.title}
               className="w-full h-full object-contain border-0"
-              allow="autoplay"
+              allow="autoplay; encrypted-media; picture-in-picture"
               allowFullScreen
               frameBorder="0"
             />
@@ -97,11 +99,11 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
             <div className="flex items-center gap-4 text-ivory-300">
               <span className="flex items-center gap-1.5">
                 <MapPin className="w-4 h-4 text-gold" />
-                {work.eventLocation}
+                {work.eventLocation || 'Hindupur, AP'}
               </span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-gold" />
-                {work.eventYear}
+                {work.eventYear || '2026'}
               </span>
             </div>
           </div>
@@ -111,7 +113,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
               Film Narrative & Post-Production Treatment
             </h4>
             <p className="text-ivory-200 leading-relaxed font-light">
-              {work.description}
+              {work.description || 'Master color graded and cinematic pace edited wedding highlight film.'}
             </p>
           </div>
 
@@ -120,11 +122,17 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
             <span className="text-xs text-ivory-400 font-medium flex items-center gap-1">
               <Layers className="w-3.5 h-3.5 text-gold" /> Post-Production Stack:
             </span>
-            {work.softwareUsed?.map((item, idx) => (
-              <span key={idx} className="px-2.5 py-1 rounded-lg bg-surface-100 text-ivory-300 border border-gold/20 text-xs">
-                {item}
+            {work.softwareUsed && work.softwareUsed.length > 0 ? (
+              work.softwareUsed.map((item, idx) => (
+                <span key={idx} className="px-2.5 py-1 rounded-lg bg-surface-100 text-ivory-300 border border-gold/20 text-xs font-mono">
+                  {item}
+                </span>
+              ))
+            ) : (
+              <span className="px-2.5 py-1 rounded-lg bg-surface-100 text-gold/80 border border-gold/20 text-xs font-mono">
+                DaVinci Resolve Studio • Premiere Pro
               </span>
-            ))}
+            )}
           </div>
         </div>
       </div>

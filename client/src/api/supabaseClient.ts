@@ -3,6 +3,26 @@ import { PublicWork, Testimonial, ServiceItem, StudioCMSData } from '../types';
 
 export const SUPABASE_DEFAULT_URL = 'https://hhqadycmsxsedlvdfcnn.supabase.co';
 
+export const isValidUUID = (str: string): boolean => {
+  if (!str || typeof str !== 'string') return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+};
+
+export const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    try {
+      return crypto.randomUUID();
+    } catch {
+      // fallback below
+    }
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 export const getSupabaseUrl = (): string => {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('kbk_supabase_url');
@@ -63,7 +83,7 @@ export const mapWorkFromRow = (r: any): PublicWork => ({
   eventYear: r.event_year || r.eventYear || '2026',
   thumbnailUrl: r.thumbnail_url || r.thumbnailUrl || '/assets/kbk-logo.jpg',
   videoUrl: r.video_url || r.videoUrl || '/assets/hero-reel.mp4',
-  videoSourceType: r.video_source_type || r.videoSourceType || 'direct_mp4',
+  videoSourceType: r.video_source_type || r.videoSourceType || 'google_drive',
   externalDestUrl: r.external_dest_url || r.externalDestUrl || '',
   description: r.description || '',
   softwareUsed: Array.isArray(r.software_used) ? r.software_used : ['Premiere Pro', 'DaVinci Resolve'],
@@ -74,14 +94,14 @@ export const mapWorkFromRow = (r: any): PublicWork => ({
 });
 
 export const mapWorkToRow = (w: Partial<PublicWork>) => ({
-  id: w.id || `work-${Date.now()}`,
+  id: w.id && isValidUUID(w.id) ? w.id : generateUUID(),
   title: w.title || 'Untitled Film',
   category: w.category || 'Wedding Highlights',
   event_location: w.eventLocation || 'Hindupur, AP',
   event_year: w.eventYear || '2026',
   thumbnail_url: w.thumbnailUrl || '/assets/kbk-logo.jpg',
   video_url: w.videoUrl || '',
-  video_source_type: w.videoSourceType || 'direct_mp4',
+  video_source_type: w.videoSourceType || (w.videoUrl?.includes('drive.google.com') ? 'google_drive' : 'direct_mp4'),
   external_dest_url: w.externalDestUrl || '',
   description: w.description || '',
   software_used: w.softwareUsed || ['Premiere Pro', 'DaVinci Resolve'],
@@ -108,7 +128,7 @@ export const mapTestimonialFromRow = (r: any): Testimonial => ({
 });
 
 export const mapTestimonialToRow = (t: Partial<Testimonial>) => ({
-  id: t.id || `test-${Date.now()}`,
+  id: t.id && isValidUUID(t.id) ? t.id : generateUUID(),
   client_name: t.clientName || 'Happy Client',
   service_title: t.serviceTitle || 'Wedding Video Highlights',
   event_date: t.eventDate || '2026',

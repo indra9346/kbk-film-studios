@@ -7,6 +7,16 @@ interface VideoCardProps {
   onSelect: (work: PublicWork) => void;
 }
 
+export const extractDriveFileId = (url: string): string | null => {
+  if (!url) return null;
+  const match =
+    url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+    url.match(/\/file\/u\/\d+\/d\/([a-zA-Z0-9_-]+)/) ||
+    url.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
+    url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+};
+
 export const getVideoType = (url: string) => {
   if (!url) return { type: 'unknown', id: '' };
   const trimmed = url.trim();
@@ -25,12 +35,8 @@ export const getVideoType = (url: string) => {
 
   // Google Drive
   if (trimmed.includes('drive.google.com') || trimmed.includes('docs.google.com')) {
-    const match =
-      trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
-      trimmed.match(/\/file\/u\/\d+\/d\/([a-zA-Z0-9_-]+)/) ||
-      trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
-      trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    return { type: 'google-drive', id: (match && match[1]) || '' };
+    const driveId = extractDriveFileId(trimmed);
+    return { type: 'google-drive', id: driveId || '' };
   }
 
   return { type: 'direct', id: trimmed };
@@ -40,7 +46,7 @@ export const getCleanVideoUrl = (url: string): string => {
   if (!url) return '/assets/hero-reel.mp4';
   const media = getVideoType(url);
   if (media.type === 'google-drive' && media.id) {
-    return `/api/public/stream-drive/${media.id}`;
+    return `https://drive.google.com/file/d/${media.id}/preview`;
   }
   if (media.type === 'direct' && url.startsWith('http')) {
     return url;
@@ -58,34 +64,35 @@ const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> 
 
     el.muted = true;
     el.playsInline = true;
-    el.setAttribute('playsinline', 'true');
-    el.setAttribute('webkit-playsinline', 'true');
-    el.loop = true;
-    el.autoplay = true;
 
-    // Viewport IntersectionObserver to trigger play when scrolled into view
+    const playSafe = () => {
+      const p = el.play();
+      if (p !== undefined) {
+        p.then(() => setIsPlaying(true)).catch(() => {
+          setIsPlaying(false);
+        });
+      }
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            el.play()
-              .then(() => setIsPlaying(true))
-              .catch(() => {
-                // Autoplay may be restricted before user gesture; remains muted poster
-              });
+            playSafe();
           } else {
             el.pause();
             setIsPlaying(false);
           }
         });
       },
-      { threshold: 0.25 }
+      { threshold: 0.15 }
     );
 
     observer.observe(el);
 
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
+
     el.addEventListener('play', onPlay);
     el.addEventListener('pause', onPause);
 
@@ -115,7 +122,8 @@ const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> 
 
 export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
   const media = getVideoType(work.videoUrl);
-  const videoSrc = getCleanVideoUrl(work.videoUrl);
+  const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(work.videoUrl);
+  const isGoogleDrive = Boolean(driveId || work.videoSourceType === 'google_drive' || work.videoUrl?.includes('drive.google.com'));
 
   return (
     <div
@@ -132,18 +140,18 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             frameBorder="0"
           />
-        ) : media.type === 'google-drive' && media.id ? (
+        ) : isGoogleDrive && driveId ? (
           <div className="relative w-full h-full">
             <iframe
-              src={`https://drive.google.com/file/d/${media.id}/preview`}
+              src={`https://drive.google.com/file/d/${driveId}/preview`}
               title={work.title}
               className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-              allow="autoplay"
+              allow="autoplay; encrypted-media"
             />
           </div>
         ) : (
           <AutoplayVideo
-            src={videoSrc}
+            src={getCleanVideoUrl(work.videoUrl)}
             poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
             title={work.title}
           />
@@ -158,49 +166,52 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
             {work.category}
           </span>
           <span className="px-2 py-0.5 rounded bg-gold/90 text-black text-[10px] font-extrabold tracking-wider flex items-center gap-1 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
-            4K UHD
+            <Play className="w-2.5 h-2.5 fill-black" />
+            CINEMA
           </span>
         </div>
 
-        {/* Center Hover Cinema View Icon */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-          <div className="w-12 h-12 rounded-full bg-gold/90 text-black flex items-center justify-center shadow-gold-md scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300">
-            <Maximize2 className="w-5 h-5" />
+        {/* Center Hover Play Icon */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+          <div className="w-14 h-14 rounded-full bg-gold/90 text-black flex items-center justify-center shadow-gold transition-transform duration-300 group-hover:scale-110">
+            <Maximize2 className="w-6 h-6 ml-0.5" />
           </div>
         </div>
 
-        {/* Event Location & Year Pill (Bottom Right) */}
-        <div className="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full bg-surface-200/85 backdrop-blur-sm border border-surface-50 text-[10px] text-ivory-300 z-10">
-          {work.eventLocation} • {work.eventYear}
+        {/* Bottom Year and Location */}
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-ivory-300 z-10 pointer-events-none font-medium">
+          <span>{work.eventLocation || 'Hindupur, AP'}</span>
+          <span>{work.eventYear || '2026'}</span>
         </div>
       </div>
 
-      {/* Card Body */}
-      <div className="p-5 flex-1 flex flex-col justify-between space-y-3 bg-surface-200/40">
+      {/* Content Section */}
+      <div className="p-5 flex-1 flex flex-col justify-between space-y-3 bg-surface-200/50">
         <div>
-          <h3 className="font-serif text-base sm:text-lg font-bold text-ivory-100 group-hover:text-gold transition-colors line-clamp-1">
+          <h3 className="font-serif text-lg font-bold text-white group-hover:text-gold transition-colors duration-300 line-clamp-1">
             {work.title}
           </h3>
-          <p className="text-xs text-ivory-300 mt-1.5 line-clamp-2 leading-relaxed font-light">
-            {work.description}
+          <p className="text-xs text-ivory-300 font-light mt-1.5 line-clamp-2 leading-relaxed">
+            {work.description || 'Master color graded and cinematic pace edited wedding highlight film.'}
           </p>
         </div>
 
-        {/* Software Stack Tags & Watch Action */}
-        <div className="pt-3 border-t border-surface-50 flex items-center justify-between">
-          <div className="flex flex-wrap gap-1.5">
-            {work.softwareUsed?.slice(0, 2).map((soft, i) => (
-              <span key={i} className="text-[10px] px-2 py-0.5 rounded bg-surface-100 text-ivory-400 border border-surface-50">
-                {soft}
+        {/* Tools / Software Badges */}
+        <div className="pt-3 border-t border-surface-50 flex flex-wrap items-center gap-1.5">
+          {work.softwareUsed && work.softwareUsed.length > 0 ? (
+            work.softwareUsed.map((tool, idx) => (
+              <span
+                key={idx}
+                className="px-2 py-0.5 rounded-md bg-surface-100 text-[10px] text-ivory-400 border border-gold/15 font-mono"
+              >
+                {tool}
               </span>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-1 text-xs font-semibold text-gold group-hover:text-gold-light">
-            <span>Cinema View</span>
-            <Maximize2 className="w-3.5 h-3.5" />
-          </div>
+            ))
+          ) : (
+            <span className="px-2 py-0.5 rounded-md bg-surface-100 text-[10px] text-gold/80 border border-gold/15 font-mono">
+              DaVinci Resolve Studio
+            </span>
+          )}
         </div>
       </div>
     </div>

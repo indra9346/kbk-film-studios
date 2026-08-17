@@ -37,7 +37,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useStudio } from '../context/StudioContext';
 import { api } from '../api/client';
-import { getVideoType, getCleanVideoUrl } from '../components/video/VideoCard';
+import { getVideoType, getCleanVideoUrl, extractDriveFileId } from '../components/video/VideoCard';
 import {
   BookingRequest,
   ServiceProject,
@@ -1893,6 +1893,7 @@ export const OwnerSpace: React.FC = () => {
                       <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-gold/20">
                         {(() => {
                           const media = getVideoType(work.videoUrl);
+                          const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(work.videoUrl);
                           if (media.type === 'youtube' && media.id) {
                             return (
                               <iframe
@@ -1904,13 +1905,14 @@ export const OwnerSpace: React.FC = () => {
                               />
                             );
                           }
-                          if (media.type === 'google-drive' && media.id) {
+                          if (driveId || media.type === 'google-drive' || work.videoUrl?.includes('drive.google.com') || work.videoSourceType === 'google_drive') {
+                            const validId = driveId || extractDriveFileId(work.videoUrl);
                             return (
                               <iframe
-                                src={`https://drive.google.com/file/d/${media.id}/preview`}
+                                src={`https://drive.google.com/file/d/${validId}/preview`}
                                 title={work.title}
-                                className="w-full h-full object-cover border-0"
-                                allow="autoplay"
+                                className="w-full h-full object-cover border-0 pointer-events-none scale-105"
+                                allow="autoplay; encrypted-media"
                               />
                             );
                           }
