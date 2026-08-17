@@ -34,7 +34,6 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
   const [hasInteracted, setHasInteracted] = useState(false);
   const [playRejected, setPlayRejected] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [drivePreviewActive, setDrivePreviewActive] = useState(isModal);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -208,44 +207,15 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
           />
         </div>
       ) : isGoogleDrive ? (
-        /* CASE 3: GOOGLE DRIVE (Accepted Limitations + Clean Presentation) */
-        <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center">
-          {drivePreviewActive ? (
-            <iframe
-              src={`https://drive.google.com/file/d/${driveId}/preview`}
-              title={title}
-              className="w-full h-full object-contain border-0"
-              allow="autoplay; fullscreen"
-              allowFullScreen
-            />
-          ) : (
-            <div className="relative w-full h-full group/drive">
-              <img
-                src={activePoster}
-                alt={title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover/drive:scale-105"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40 flex flex-col items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDrivePreviewActive(true);
-                  }}
-                  className="w-12 h-12 rounded-full bg-gold/90 hover:bg-gold text-black flex items-center justify-center shadow-gold transition-transform hover:scale-110"
-                  title="Play Google Drive Video Preview"
-                >
-                  <Play className="w-5 h-5 fill-current ml-0.5" />
-                </button>
-                <span className="text-[11px] font-semibold text-gold tracking-wide px-3 py-1 rounded-full bg-black/80 border border-gold/30">
-                  Google Drive 4K Stream
-                </span>
-              </div>
-            </div>
-          )}
+        /* CASE 3: GOOGLE DRIVE (Direct Clean Stream Without Studio Banner or Double Click) */
+        <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
+          <iframe
+            src={`https://drive.google.com/file/d/${driveId}/preview`}
+            title={title}
+            className="w-full h-full object-contain border-0"
+            allow="autoplay; fullscreen"
+            allowFullScreen
+          />
         </div>
       ) : (
         /* CASE 4: DIRECT HTML5 VIDEO (.mp4, .webm, cdn, local) */
