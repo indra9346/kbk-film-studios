@@ -96,6 +96,32 @@ export const handleProjectOverdue = async (dbInstance: any, project: ServiceProj
     metadata: { bookingRef: updatedProject.bookingRef, projectId: updatedProject.id },
   });
 
+  if (updatedProject && (globalThis as any).fetch) {
+    try {
+      await fetch(process.env.N8N_WEBHOOK_URL || '', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-KBK-Event': 'PROJECT_OVERDUE' },
+        body: JSON.stringify({
+          event: 'PROJECT_OVERDUE',
+          timestamp: new Date().toISOString(),
+          studio: 'KBK Film Studios',
+          source: 'kbk-backend-automation',
+          data: {
+            bookingRef: updatedProject.bookingRef,
+            projectId: updatedProject.id,
+            clientId: updatedProject.clientId,
+            clientName: updatedProject.clientName,
+            serviceTitle: updatedProject.serviceTitle,
+            estimatedDeliveryDate: updatedProject.estimatedDeliveryDate,
+            workflowName: 'PROJECT_OVERDUE',
+          },
+        }),
+      });
+    } catch (error) {
+      console.warn('[Automation] PROJECT_OVERDUE n8n dispatch skipped:', error);
+    }
+  }
+
   return updatedProject;
 };
 

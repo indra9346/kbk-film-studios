@@ -20,6 +20,22 @@ export interface WorkflowExecution {
 export class AutomationEngine {
   private executions: WorkflowExecution[] = [];
 
+  private buildN8nEnvelope(event: string, payload: Record<string, any>) {
+    const basePayload = {
+      event,
+      timestamp: new Date().toISOString(),
+      studio: 'KBK Film Studios',
+      source: 'kbk-backend-automation',
+      data: {
+        ...payload,
+        event,
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    return basePayload;
+  }
+
   public async dispatchToN8n(event: string, payload: Record<string, any>): Promise<void> {
     const webhookUrl = process.env.N8N_WEBHOOK_URL;
     if (!webhookUrl) return;
@@ -28,7 +44,7 @@ export class AutomationEngine {
       await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-KBK-Event': event },
-        body: JSON.stringify({ event, timestamp: new Date().toISOString(), studio: 'KBK Film Studios', data: payload }),
+        body: JSON.stringify(this.buildN8nEnvelope(event, payload)),
       });
     } catch (err) {
       console.warn('[AutomationEngine] n8n dispatch failed:', err);
@@ -87,7 +103,19 @@ export class AutomationEngine {
         details: { bookingRef: booking.bookingRef, projectId: result.project.id, clientId: result.client.id },
         startedAt,
       });
-      void this.dispatchToN8n(AUTOMATION_EVENTS.BOOKING_CREATED, { bookingRef: booking.bookingRef, projectId: result.project.id, clientId: result.client.id });
+      void this.dispatchToN8n(AUTOMATION_EVENTS.BOOKING_CREATED, {
+        bookingRef: booking.bookingRef,
+        projectId: result.project.id,
+        clientId: result.client.id,
+        clientName: result.client.fullName,
+        phone: result.client.phone,
+        email: result.client.email,
+        serviceId: booking.serviceId,
+        serviceTitle: booking.serviceTitle,
+        eventDate: booking.eventDate,
+        status: 'created',
+        workflowName: 'BOOKING_CREATED',
+      });
       return result;
     } catch (error: any) {
       await this.recordExecution({
@@ -119,7 +147,18 @@ export class AutomationEngine {
         details: { bookingRef: project.bookingRef, previousStage: project.currentStage, nextStage: result.currentStage },
         startedAt,
       });
-      void this.dispatchToN8n(AUTOMATION_EVENTS.PROJECT_STATUS_CHANGED, { bookingRef: project.bookingRef, nextStage: result.currentStage, updatedBy });
+      void this.dispatchToN8n(AUTOMATION_EVENTS.PROJECT_STATUS_CHANGED, {
+        bookingRef: project.bookingRef,
+        projectId: project.id,
+        clientId: project.clientId,
+        clientName: project.clientName,
+        serviceTitle: project.serviceTitle,
+        previousStage: project.currentStage,
+        nextStage: result.currentStage,
+        updatedBy,
+        message: customMessage || `Project advanced by ${updatedBy}`,
+        workflowName: 'PROJECT_STATUS_CHANGED',
+      });
       return result;
     } catch (error: any) {
       await this.recordExecution({
@@ -151,7 +190,22 @@ export class AutomationEngine {
         details: { bookingRef: delivery.bookingRef, title: delivery.title, projectId: result.project.id },
         startedAt,
       });
-      void this.dispatchToN8n(AUTOMATION_EVENTS.VIDEO_DELIVERY_ADDED, { bookingRef: delivery.bookingRef, title: delivery.title, projectId: result.project.id });
+      void this.dispatchToN8n(AUTOMATION_EVENTS.VIDEO_DELIVERY_ADDED, {
+        bookingRef: delivery.bookingRef,
+        projectId: result.project.id,
+        clientId: result.project.clientId,
+        clientName: result.project.clientName,
+        serviceTitle: result.project.serviceTitle,
+        title: delivery.title,
+        fileName: delivery.fileName,
+        description: delivery.description,
+        videoUrl: delivery.videoUrl,
+        videoSourceType: delivery.videoSourceType,
+        fileCategory: delivery.fileCategory,
+        mimeType: delivery.mimeType,
+        downloadToken: delivery.downloadToken,
+        workflowName: 'VIDEO_DELIVERY_ADDED',
+      });
       return result;
     } catch (error: any) {
       await this.recordExecution({
@@ -182,6 +236,15 @@ export class AutomationEngine {
         actionTaken: `Created testimonial task ${result?.id || 'existing'}`,
         details: { bookingRef: project.bookingRef, testimonialId: result?.id },
         startedAt,
+      });
+      void this.dispatchToN8n(AUTOMATION_EVENTS.PROJECT_COMPLETED, {
+        bookingRef: project.bookingRef,
+        projectId: project.id,
+        clientId: project.clientId,
+        clientName: project.clientName,
+        serviceTitle: project.serviceTitle,
+        testimonialId: result?.id,
+        workflowName: 'PROJECT_COMPLETED',
       });
       return result;
     } catch (error: any) {
