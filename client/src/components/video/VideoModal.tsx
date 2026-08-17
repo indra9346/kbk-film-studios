@@ -63,13 +63,15 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
               allowFullScreen
             />
           ) : isGoogleDrive && driveId ? (
-            <iframe
-              src={`https://drive.google.com/file/d/${driveId}/preview?autoplay=1`}
-              title={work.title}
-              className="w-full h-full object-contain border-0"
-              allow="autoplay; fullscreen; encrypted-media"
-              allowFullScreen
-            />
+            <div className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center">
+              <iframe
+                src={`https://drive.google.com/file/d/${driveId}/preview?autoplay=1`}
+                title={work.title}
+                className="w-full h-[calc(100%+56px)] -mt-[56px] object-cover border-0"
+                allow="autoplay; fullscreen; encrypted-media"
+                allowFullScreen
+              />
+            </div>
           ) : (
             <video
               src={getCleanVideoUrl(work.videoUrl)}

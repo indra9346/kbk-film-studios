@@ -70,27 +70,38 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-          {[
-            { id: 'all', label: `All ${activeServices.length || 10} Services` },
-            { id: 'wedding', label: 'Weddings & Sangeeth' },
-            { id: 'ceremonies', label: 'Ceremonies & Maternity' },
-            { id: 'fast', label: 'Spot Editing & Fast Reels' },
-            { id: 'ai', label: 'Studio Next-Gen AI Labs' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setSelectedServiceFilter(tab.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider uppercase transition-all ${
-                selectedServiceFilter === tab.id
-                  ? 'bg-gold text-black shadow-gold-sm font-bold'
-                  : 'bg-surface-100 text-ivory-300 hover:bg-surface-50 border border-surface-50'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Top Action & Category Filters */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+          <Link
+            to="/services"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gold/15 hover:bg-gold text-gold hover:text-black border border-gold/40 text-xs font-bold uppercase tracking-wider transition-all shadow-gold-sm"
+          >
+            <span>Explore All 10 Services in Full Detail</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+
+          {/* Category Filters */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {[
+              { id: 'all', label: `All ${activeServices.length || 10} Services` },
+              { id: 'wedding', label: 'Weddings & Sangeeth' },
+              { id: 'ceremonies', label: 'Ceremonies & Maternity' },
+              { id: 'fast', label: 'Spot Editing & Fast Reels' },
+              { id: 'ai', label: 'Studio Next-Gen AI Labs' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setSelectedServiceFilter(tab.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider uppercase transition-all ${
+                  selectedServiceFilter === tab.id
+                    ? 'bg-gold text-black shadow-gold-sm font-bold'
+                    : 'bg-surface-100 text-ivory-300 hover:bg-surface-50 border border-surface-50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Services Grid */}
