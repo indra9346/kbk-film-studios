@@ -37,6 +37,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useStudio } from '../context/StudioContext';
 import { api } from '../api/client';
+import { generateUUID } from '../api/supabaseClient';
 import { getVideoType, getCleanVideoUrl, extractDriveFileId } from '../components/video/VideoCard';
 import {
   BookingRequest,
@@ -1960,6 +1961,74 @@ export const OwnerSpace: React.FC = () => {
                     >
                       <Plus className="w-4 h-4" />
                       <span>Add New Showcase Film</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Automated 1-Click Link Ingestor (n8n + Supabase) */}
+                <div className="p-5 rounded-2xl glass-panel border border-gold/40 bg-surface-100/80 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-gold animate-pulse" />
+                    <h4 className="font-serif font-bold text-sm text-ivory-100 uppercase tracking-wider">
+                      Automated Instant Video Ingestor (Google Drive / YouTube / MP4)
+                    </h4>
+                  </div>
+                  <p className="text-xs text-ivory-300">
+                    Paste any client video link below to automatically publish directly to Supabase <code className="text-gold">public.public_works</code> and broadcast to all devices in real-time.
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <input
+                      type="url"
+                      id="quick-video-link-input"
+                      placeholder="Paste Google Drive / YouTube URL (e.g. https://drive.google.com/file/d/...)"
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-surface-200 border border-gold/30 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold"
+                    />
+                    <input
+                      type="text"
+                      id="quick-video-title-input"
+                      placeholder="Film Title (e.g. AMULYA HALDI CEREMONY)"
+                      className="sm:w-64 px-4 py-2.5 rounded-xl bg-surface-200 border border-gold/30 text-ivory-100 text-xs sm:text-sm focus:outline-none focus:border-gold"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const linkEl = document.getElementById('quick-video-link-input') as HTMLInputElement;
+                        const titleEl = document.getElementById('quick-video-title-input') as HTMLInputElement;
+                        const url = linkEl?.value?.trim();
+                        const title = titleEl?.value?.trim() || 'Client Showcase Film';
+                        if (!url) {
+                          alert('Please enter a video URL first!');
+                          return;
+                        }
+                        try {
+                          const payload = {
+                            id: generateUUID(),
+                            title,
+                            category: title.toLowerCase().includes('haldi') ? 'Haldi & Sangeet Edits' : 'Wedding Highlights',
+                            eventLocation: 'Hindupur, AP',
+                            eventYear: '2026',
+                            thumbnailUrl: '/assets/kbk-logo.jpg',
+                            videoUrl: url,
+                            description: 'Master color graded and cinematic pace edited luxury wedding film.',
+                            softwareUsed: ['Premiere Pro', 'DaVinci Resolve Studio'],
+                            isFeatured: true,
+                            isPublished: true,
+                            sortOrder: works.length + 1
+                          };
+                          await api.saveWork(payload);
+                          if (linkEl) linkEl.value = '';
+                          if (titleEl) titleEl.value = '';
+                          await loadOwnerData();
+                          await refreshData();
+                          alert(`🎉 Successfully published "${title}" directly to Supabase! It is now live on all devices.`);
+                        } catch (err: any) {
+                          alert(`Error publishing: ${err.message}`);
+                        }
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-gold-sm transition-all shrink-0"
+                    >
+                      <Zap className="w-3.5 h-3.5 fill-black" />
+                      <span>Publish Live</span>
                     </button>
                   </div>
                 </div>
