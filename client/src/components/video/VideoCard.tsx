@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Maximize2, Play } from 'lucide-react';
 import { PublicWork } from '../../types';
 
@@ -46,98 +46,12 @@ export const getCleanVideoUrl = (url: string): string => {
   if (!url) return '/assets/hero-reel.mp4';
   const media = getVideoType(url);
   if (media.type === 'google-drive' && media.id) {
-    return `/api/public/stream-drive/${media.id}`;
+    return `https://drive.google.com/file/d/${media.id}/preview?autoplay=1`;
   }
   if (media.type === 'direct' && url.startsWith('http')) {
     return url;
   }
   return url || '/assets/hero-reel.mp4';
-};
-
-export const getDirectStreamUrl = (url: string): string => {
-  if (!url) return '/assets/hero-reel.mp4';
-  const media = getVideoType(url);
-  if (media.type === 'google-drive' && media.id) {
-    return `/api/public/stream-drive/${media.id}`;
-  }
-  if (media.type === 'direct' && url.startsWith('http')) {
-    return url;
-  }
-  return url || '/assets/hero-reel.mp4';
-};
-
-const AutoplayVideo: React.FC<{ src: string; fallbackIframe?: string; poster?: string; title?: string }> = ({
-  src,
-  fallbackIframe,
-  poster,
-  title,
-}) => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [hasVideoError, setHasVideoError] = useState(false);
-
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-
-    el.muted = true;
-    el.playsInline = true;
-
-    const playSafe = () => {
-      const p = el.play();
-      if (p !== undefined) {
-        p.catch(() => {});
-      }
-    };
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            playSafe();
-          } else {
-            el.pause();
-          }
-        });
-      },
-      { threshold: 0.15 }
-    );
-
-    observer.observe(el);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [src]);
-
-  if (hasVideoError && fallbackIframe) {
-    return (
-      <iframe
-        src={fallbackIframe}
-        title={title}
-        className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-        allow="autoplay; encrypted-media"
-      />
-    );
-  }
-
-  return (
-    <video
-      ref={videoRef}
-      src={src}
-      poster={poster}
-      controls={false}
-      muted
-      autoPlay
-      loop
-      playsInline
-      preload="auto"
-      onError={() => {
-        if (fallbackIframe) setHasVideoError(true);
-      }}
-      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-      title={title}
-    />
-  );
 };
 
 export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
@@ -154,23 +68,29 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
       <div className="relative aspect-video w-full overflow-hidden bg-black group/preview">
         {media.type === 'youtube' && media.id ? (
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`}
+            src={`https://www.youtube-nocookie.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0&modestbranding=1&rel=0&playsinline=1`}
             title={work.title}
             className="w-full h-full object-cover border-0 pointer-events-none scale-105"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             frameBorder="0"
           />
         ) : isGoogleDrive && driveId ? (
-          <AutoplayVideo
-            src={`/api/public/stream-drive/${driveId}`}
-            fallbackIframe={`https://drive.google.com/file/d/${driveId}/preview`}
-            poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+          <iframe
+            src={`https://drive.google.com/file/d/${driveId}/preview`}
             title={work.title}
+            className="w-full h-full object-cover border-0 pointer-events-none scale-105"
+            allow="autoplay; encrypted-media"
+            frameBorder="0"
           />
         ) : (
-          <AutoplayVideo
+          <video
             src={getCleanVideoUrl(work.videoUrl)}
             poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+            muted
+            autoPlay
+            loop
+            playsInline
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             title={work.title}
           />
         )}

@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { X, Calendar, MapPin, Layers, Volume2, VolumeX, Play, Pause, RotateCcw, RotateCw, Maximize, ExternalLink } from 'lucide-react';
+import React from 'react';
+import { X, Calendar, MapPin, Layers, ExternalLink } from 'lucide-react';
 import { PublicWork } from '../../types';
-import { getVideoType, getCleanVideoUrl, getDirectStreamUrl, extractDriveFileId } from './VideoCard';
+import { getVideoType, getCleanVideoUrl, extractDriveFileId } from './VideoCard';
 
 interface VideoModalProps {
   work: PublicWork | null;
@@ -9,95 +9,11 @@ interface VideoModalProps {
 }
 
 export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const playerContainerRef = useRef<HTMLDivElement>(null);
-
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [showControls, setShowControls] = useState(true);
-
-  useEffect(() => {
-    setIsPlaying(true);
-    setCurrentTime(0);
-    setDuration(0);
-    setShowControls(true);
-
-    if (work && videoRef.current) {
-      videoRef.current.currentTime = 0;
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            setIsMuted(true);
-            videoRef.current.play().catch(() => {});
-          }
-        });
-      }
-    }
-  }, [work]);
-
   if (!work) return null;
 
   const media = getVideoType(work.videoUrl);
   const driveId = media.type === 'google-drive' ? media.id : extractDriveFileId(work.videoUrl);
   const isGoogleDrive = Boolean(driveId || work.videoSourceType === 'google_drive' || work.videoUrl?.includes('drive.google.com'));
-
-  const togglePlay = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        videoRef.current.play().catch(() => {});
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  const toggleMute = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = Number(e.target.value);
-    if (videoRef.current) {
-      videoRef.current.currentTime = time;
-      setCurrentTime(time);
-    }
-  };
-
-  const skipTime = (seconds: number, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (videoRef.current) {
-      videoRef.current.currentTime = Math.max(0, Math.min(duration || 100, videoRef.current.currentTime + seconds));
-    }
-  };
-
-  const toggleFullscreen = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (playerContainerRef.current) {
-      if (!document.fullscreenElement) {
-        playerContainerRef.current.requestFullscreen().catch(() => {});
-      } else {
-        document.exitFullscreen().catch(() => {});
-      }
-    }
-  };
-
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return '0:00';
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/95 backdrop-blur-2xl animate-fadeIn">
@@ -120,7 +36,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
                 target="_blank"
                 rel="noreferrer"
                 className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 text-[11px] font-semibold transition-colors"
-                title="Open original Drive video"
+                title="Open in Google Drive"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Drive</span>
@@ -136,12 +52,8 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
           </div>
         </div>
 
-        {/* Real YouTube-Style Cinema Player with Clean Bottom Controls */}
-        <div
-          ref={playerContainerRef}
-          onClick={() => setShowControls(prev => !prev)}
-          className="relative aspect-video w-full bg-black flex items-center justify-center group overflow-hidden cursor-pointer select-none"
-        >
+        {/* 100% Reliable Cinema Video Stream Section */}
+        <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
           {media.type === 'youtube' && media.id ? (
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${media.id}?autoplay=1&mute=0&controls=1&rel=0&playsinline=1`}
@@ -150,118 +62,23 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
+          ) : isGoogleDrive && driveId ? (
+            <iframe
+              src={`https://drive.google.com/file/d/${driveId}/preview?autoplay=1`}
+              title={work.title}
+              className="w-full h-full object-contain border-0"
+              allow="autoplay; fullscreen; encrypted-media"
+              allowFullScreen
+            />
           ) : (
-            <>
-              <video
-                ref={videoRef}
-                src={isGoogleDrive ? getDirectStreamUrl(work.videoUrl) : getCleanVideoUrl(work.videoUrl)}
-                poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
-                autoPlay
-                playsInline
-                preload="auto"
-                onClick={togglePlay}
-                onTimeUpdate={() => {
-                  if (videoRef.current) setCurrentTime(videoRef.current.currentTime);
-                }}
-                onLoadedMetadata={() => {
-                  if (videoRef.current) {
-                    setDuration(videoRef.current.duration);
-                    videoRef.current.play().catch(() => {});
-                  }
-                }}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                className="w-full h-full object-contain"
-              />
-
-              {/* YouTube-Style Center Play/Pause Indicator (Only when paused) */}
-              {!isPlaying && (
-                <div
-                  onClick={togglePlay}
-                  className="absolute inset-0 flex items-center justify-center bg-black/40 z-10"
-                >
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gold/90 text-black flex items-center justify-center shadow-gold transition-transform hover:scale-110">
-                    <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-black ml-1" />
-                  </div>
-                </div>
-              )}
-
-              {/* Permanent YouTube-Style Bottom Control Bar */}
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-3 sm:p-4 space-y-2 z-20 transition-opacity duration-300 ${
-                  showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-                }`}
-              >
-                {/* Gold Bottom Progress Trackbar */}
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min={0}
-                    max={duration || 100}
-                    value={currentTime}
-                    onChange={handleSeek}
-                    className="w-full h-1.5 bg-surface-100 rounded-lg appearance-none cursor-pointer accent-gold focus:outline-none"
-                  />
-                </div>
-
-                {/* Bottom Controls Buttons */}
-                <div className="flex items-center justify-between text-white text-xs">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <button
-                      type="button"
-                      onClick={togglePlay}
-                      className="p-1 hover:text-gold transition-colors"
-                      title={isPlaying ? 'Pause' : 'Play'}
-                    >
-                      {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current" />}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => skipTime(-10, e)}
-                      className="p-1 hover:text-gold transition-colors hidden sm:block"
-                      title="Rewind 10s"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => skipTime(10, e)}
-                      className="p-1 hover:text-gold transition-colors hidden sm:block"
-                      title="Forward 10s"
-                    >
-                      <RotateCw className="w-4 h-4" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={toggleMute}
-                      className="p-1 hover:text-gold transition-colors"
-                      title={isMuted ? 'Unmute' : 'Mute'}
-                    >
-                      {isMuted ? <VolumeX className="w-5 h-5 text-accent-crimson" /> : <Volume2 className="w-5 h-5" />}
-                    </button>
-
-                    <span className="text-[11px] text-ivory-300 font-mono">
-                      {formatTime(currentTime)} / {formatTime(duration)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={toggleFullscreen}
-                      className="p-1 hover:text-gold transition-colors"
-                      title="Fullscreen"
-                    >
-                      <Maximize className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </>
+            <video
+              src={getCleanVideoUrl(work.videoUrl)}
+              poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
+              autoPlay
+              controls
+              playsInline
+              className="w-full h-full object-contain"
+            />
           )}
         </div>
 
