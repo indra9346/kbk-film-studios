@@ -257,55 +257,36 @@ ALTER TABLE public.client_video_deliveries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.workflow_executions ENABLE ROW LEVEL SECURITY;
 
--- Permissive public read for public catalog & CMS
-DROP POLICY IF EXISTS "Public read services" ON public.services;
-CREATE POLICY "Public read services" ON public.services FOR SELECT USING (true);
+-- Permissive read/write access for frontend client sync
+DROP POLICY IF EXISTS "Allow anon all public_works" ON public.public_works;
+CREATE POLICY "Allow anon all public_works" ON public.public_works FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Public read works" ON public.public_works;
-CREATE POLICY "Public read works" ON public.public_works FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow anon all testimonials" ON public.testimonials;
+CREATE POLICY "Allow anon all testimonials" ON public.testimonials FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Public read testimonials" ON public.testimonials;
-CREATE POLICY "Public read testimonials" ON public.testimonials FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow anon all services" ON public.services;
+CREATE POLICY "Allow anon all services" ON public.services FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Public read cms" ON public.studio_cms;
-CREATE POLICY "Public read cms" ON public.studio_cms FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow anon all studio_cms" ON public.studio_cms;
+CREATE POLICY "Allow anon all studio_cms" ON public.studio_cms FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Public insert bookings" ON public.booking_requests;
-CREATE POLICY "Public insert bookings" ON public.booking_requests FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow anon all booking_requests" ON public.booking_requests;
+CREATE POLICY "Allow anon all booking_requests" ON public.booking_requests FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
--- Allow all backend service role / authenticated access
-DROP POLICY IF EXISTS "Service role all services" ON public.services;
-CREATE POLICY "Service role all services" ON public.services FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow anon all service_projects" ON public.service_projects;
+CREATE POLICY "Allow anon all service_projects" ON public.service_projects FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Service role all works" ON public.public_works;
-CREATE POLICY "Service role all works" ON public.public_works FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow anon all client_video_deliveries" ON public.client_video_deliveries;
+CREATE POLICY "Allow anon all client_video_deliveries" ON public.client_video_deliveries FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Service role all testimonials" ON public.testimonials;
-CREATE POLICY "Service role all testimonials" ON public.testimonials FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow anon all owners" ON public.owners;
+CREATE POLICY "Allow anon all owners" ON public.owners FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Service role all cms" ON public.studio_cms;
-CREATE POLICY "Service role all cms" ON public.studio_cms FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow anon all audit_logs" ON public.audit_logs;
+CREATE POLICY "Allow anon all audit_logs" ON public.audit_logs FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Service role all owners" ON public.owners;
-CREATE POLICY "Service role all owners" ON public.owners FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Service role all clients" ON public.clients;
-CREATE POLICY "Service role all clients" ON public.clients FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Service role all bookings" ON public.booking_requests;
-CREATE POLICY "Service role all bookings" ON public.booking_requests FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Service role all projects" ON public.service_projects;
-CREATE POLICY "Service role all projects" ON public.service_projects FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Service role all deliveries" ON public.client_video_deliveries;
-CREATE POLICY "Service role all deliveries" ON public.client_video_deliveries FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Service role all audit_logs" ON public.audit_logs;
-CREATE POLICY "Service role all audit_logs" ON public.audit_logs FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Service role all workflows" ON public.workflow_executions;
-CREATE POLICY "Service role all workflows" ON public.workflow_executions FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow anon all workflows" ON public.workflow_executions;
+CREATE POLICY "Allow anon all workflows" ON public.workflow_executions FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 
 -- ========================================================================
 -- ENABLE SUPABASE REALTIME REPLICATION
