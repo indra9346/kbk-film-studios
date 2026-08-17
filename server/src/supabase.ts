@@ -304,11 +304,17 @@ export async function hydrateSupabaseData() {
   }
 }
 
+export const isValidUUID = (str: string): boolean => {
+  if (!str || typeof str !== 'string') return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+};
+
 // Atomic Supabase Write Operations
 export async function upsertWorkSupabase(work: PublicWork): Promise<void> {
   if (!supabase) return;
+  const validId = work.id && isValidUUID(work.id) ? work.id : crypto.randomUUID();
   await supabase.from('public_works').upsert({
-    id: work.id,
+    id: validId,
     title: work.title,
     category: work.category,
     event_location: work.eventLocation,
@@ -362,8 +368,9 @@ export async function deleteServiceSupabase(id: string): Promise<void> {
 
 export async function upsertTestimonialSupabase(item: Testimonial): Promise<void> {
   if (!supabase) return;
+  const validId = item.id && isValidUUID(item.id) ? item.id : crypto.randomUUID();
   await supabase.from('testimonials').upsert({
-    id: item.id,
+    id: validId,
     client_name: item.clientName,
     service_title: item.serviceTitle,
     event_date: item.eventDate,

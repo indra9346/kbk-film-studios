@@ -114,17 +114,6 @@ export const Header: React.FC = () => {
                 <MessageCircle className="w-4 h-4" />
                 <span>WhatsApp</span>
               </a>
-
-              {/* If Owner is already logged in, show quick Owner Space badge */}
-              {isOwnerAuthenticated && (
-                <button
-                  onClick={() => handleNavigate('/owner-space')}
-                  className="px-2.5 py-1.5 text-[11px] font-bold rounded-xl bg-gold/20 text-gold border border-gold/40 hover:bg-gold hover:text-black transition-all flex items-center gap-1"
-                >
-                  <UserCheck className="w-3.5 h-3.5" />
-                  <span>Owner Space</span>
-                </button>
-              )}
             </div>
 
             {/* Mobile Header Quick Actions & Menu Toggle Button */}
