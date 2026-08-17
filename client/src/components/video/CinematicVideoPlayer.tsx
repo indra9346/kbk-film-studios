@@ -34,6 +34,8 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
   const [hasInteracted, setHasInteracted] = useState(false);
   const [playRejected, setPlayRejected] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [isInViewport, setIsInViewport] = useState(isModal);
+  const [isMediaLoaded, setIsMediaLoaded] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -48,17 +50,45 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
 
   const activePoster = poster || (driveId ? `https://lh3.googleusercontent.com/d/${driveId}=w1280` : '/assets/kbk-logo.jpg');
 
-  // 1. DIRECT HTML5 VIDEO: Autoplay + Muted + Loop + IntersectionObserver
+  // Viewport Observer for High-Speed Lazy Streaming (Prevents lagging 8 concurrent heavy iframes)
+  useEffect(() => {
+    if (isModal || typeof IntersectionObserver === 'undefined') {
+      setIsInViewport(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.15) {
+            setIsInViewport(true);
+          } else {
+            setIsInViewport(false);
+          }
+        });
+      },
+      { rootMargin: '150px', threshold: [0, 0.15, 0.5] }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isModal]);
+
+  // 1. DIRECT HTML5 VIDEO: Guaranteed Muted + Autoplay + Loop
   useEffect(() => {
     if (!isDirectVideo) return;
     const video = videoRef.current;
     if (!video) return;
 
-    video.muted = isMuted;
+    video.muted = true;
     video.loop = true;
     video.playsInline = true;
 
-    // Explicit play attempt with Promise error handling
     const startPlayback = () => {
       video.muted = true;
       const playPromise = video.play();
@@ -69,39 +99,20 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             setPlayRejected(false);
           })
           .catch((err) => {
-            console.warn('[KBK Video] Muted autoplay was prevented by browser policy:', err.message);
+            console.warn('[KBK Video] Muted autoplay prevented:', err.message);
             setIsPlaying(false);
             setPlayRejected(true);
           });
       }
     };
 
-    if (autoPlayOnScroll && typeof IntersectionObserver !== 'undefined') {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
-              startPlayback();
-            } else {
-              video.pause();
-              setIsPlaying(false);
-            }
-          });
-        },
-        { threshold: [0, 0.35, 0.75] }
-      );
-
-      if (containerRef.current) {
-        observer.observe(containerRef.current);
-      }
-
-      return () => {
-        observer.disconnect();
-      };
-    } else {
+    if (isInViewport) {
       startPlayback();
+    } else {
+      video.pause();
+      setIsPlaying(false);
     }
-  }, [isDirectVideo, trimmedUrl, autoPlayOnScroll]);
+  }, [isDirectVideo, trimmedUrl, isInViewport]);
 
   // Track progress on direct HTML5 video
   const handleTimeUpdate = () => {
@@ -198,28 +209,52 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
       ) : isYouTube ? (
         /* CASE 2: YOUTUBE (Controlled Loop + Autoplay + Muted) */
         <div className="w-full h-full relative overflow-hidden bg-black pointer-events-auto">
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${mediaInfo.id}?autoplay=1&mute=1&loop=1&playlist=${mediaInfo.id}&controls=${isModal ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1`}
-            title={title}
-            className="w-full h-full object-cover border-0 scale-105"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          {isInViewport || isModal ? (
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${mediaInfo.id}?autoplay=1&mute=1&loop=1&playlist=${mediaInfo.id}&controls=${isModal ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1`}
+              title={title}
+              loading="lazy"
+              className="w-full h-full object-cover border-0 scale-105"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <img
+              src={`https://img.youtube.com/vi/${mediaInfo.id}/hqdefault.jpg`}
+              alt={title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          )}
         </div>
       ) : isGoogleDrive ? (
-        /* CASE 3: GOOGLE DRIVE (Seamless Edge-to-Edge Stream - Hides Drive's Top Header/White Line) */
+        /* CASE 3: GOOGLE DRIVE (High-Speed Viewport Stream - Seamless Edge-to-Edge) */
         <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
-          <iframe
-            src={
-              trimmedUrl.includes('folders')
-                ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
-                : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1`
-            }
-            title={title}
-            className="w-full h-[calc(100%+54px)] -mt-[54px] object-cover border-0 scale-[1.03]"
-            allow="autoplay; fullscreen"
-            allowFullScreen
-          />
+          {isInViewport || isModal ? (
+            <iframe
+              src={
+                trimmedUrl.includes('folders')
+                  ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
+                  : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1`
+              }
+              title={title}
+              loading="lazy"
+              onLoad={() => setIsMediaLoaded(true)}
+              className="w-full h-[calc(100%+54px)] -mt-[54px] object-cover border-0 scale-[1.03]"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <img
+              src={activePoster}
+              alt={title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
+              }}
+            />
+          )}
         </div>
       ) : (
         /* CASE 4: DIRECT HTML5 VIDEO (.mp4, .webm, cdn, local) */
