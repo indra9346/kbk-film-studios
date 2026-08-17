@@ -133,6 +133,7 @@ export const OwnerSpace: React.FC = () => {
   const [deliveryFileName, setDeliveryFileName] = useState('');
   const [deliveryCategory, setDeliveryCategory] = useState<any>('master_video');
   const [selectedDeliveryFile, setSelectedDeliveryFile] = useState<File | null>(null);
+  const [deliveryVideoUrl, setDeliveryVideoUrl] = useState('');
   const [isUploadingDeliveryFile, setIsUploadingDeliveryFile] = useState(false);
 
   // Co-Owner Invite Modal
@@ -371,17 +372,27 @@ export const OwnerSpace: React.FC = () => {
     }
   };
 
-  // Lifecycle Stage Update
+  // Lifecycle Stage Update with Instant UI Feedback
   const handleAdvanceStage = async (projectId: string, nextStage: ServiceProjectStage, label: string) => {
     try {
+      // Optimistic update so UI immediately updates the button and badge
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectId || p.bookingRef === projectId
+            ? { ...p, currentStage: nextStage }
+            : p
+        )
+      );
+
       await api.updateProjectStage(projectId, {
         stage: nextStage,
         stageLabel: label,
-        message: `Advanced to ${label} by ${ownerData?.name || 'Studio'}`
+        message: `Advanced to ${label} by ${ownerData?.name || 'Kurudi Bharath Kumar'}`
       });
       loadOwnerData();
     } catch (err: any) {
       alert(err.message || 'Failed to update lifecycle stage');
+      loadOwnerData();
     }
   };
 
@@ -410,6 +421,7 @@ export const OwnerSpace: React.FC = () => {
         fileName: finalFileName,
         fileCategory: deliveryCategory,
         fileSizeBytes: sizeBytes,
+        videoUrl: deliveryVideoUrl.trim() || 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view',
         expiryDays: 90,
         maxDownloads: 50
       });
@@ -417,9 +429,10 @@ export const OwnerSpace: React.FC = () => {
       setDeliveryProject(null);
       setDeliveryTitle('');
       setDeliveryFileName('');
+      setDeliveryVideoUrl('');
       setSelectedDeliveryFile(null);
       loadOwnerData();
-      alert('Deliverable uploaded and secure tracking link generated successfully!');
+      alert('Deliverable uploaded and client tracking locker updated successfully!');
     } catch (err: any) {
       alert(err.message || 'Failed to upload delivery');
     } finally {
@@ -2648,6 +2661,20 @@ export const OwnerSpace: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-ivory-300 flex items-center justify-between">
+                  <span>Google Drive / Stream Video Link</span>
+                  <span className="text-[10px] text-gold font-normal">Auto-links to client player</span>
+                </label>
+                <input
+                  type="text"
+                  value={deliveryVideoUrl}
+                  onChange={(e) => setDeliveryVideoUrl(e.target.value)}
+                  placeholder="https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view"
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-xs sm:text-sm font-mono"
+                />
+              </div>
+
+              <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-ivory-300">Deliverable Category</label>
                 <select
                   value={deliveryCategory}
@@ -2872,8 +2899,7 @@ export const OwnerSpace: React.FC = () => {
                   type="text"
                   value={editingWork.videoUrl || ''}
                   onChange={(e) => setEditingWork({ ...editingWork, videoUrl: e.target.value })}
-                  placeholder="e.g. https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link"
-                  required
+                  placeholder="e.g. https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view"
                   className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono placeholder:text-ivory-400/50"
                 />
                 <p className="text-[11px] text-ivory-400 font-light">

@@ -779,22 +779,78 @@ export const api = {
     const stageLabel = payload.stageLabel || stage;
     const message = payload.message || `Advanced to ${stageLabel}`;
     const progressPercent = payload.progressPercent || 50;
+    const bookingRef = id.startsWith('proj-') ? id.replace('proj-', '') : id;
 
     if (isSupabaseConfigured()) {
       try {
-        const { data: pData } = await supabase.from('service_projects').select('*').eq('id', id).limit(1);
-        const existingHistory = pData && pData[0]?.status_history ? (Array.isArray(pData[0].status_history) ? pData[0].status_history : []) : [];
-        const newHistory = [
-          ...existingHistory,
-          { stage, timestamp: new Date().toISOString(), message }
-        ];
+        let query = supabase.from('service_projects').select('*');
+        if (isValidUUID(id)) {
+          query = query.eq('id', id);
+        } else {
+          query = query.ilike('booking_ref', bookingRef);
+        }
 
-        await supabase.from('service_projects').update({
-          current_stage: stage,
-          stage_progress_percent: progressPercent,
-          status_history: newHistory,
-          updated_at: new Date().toISOString()
-        }).eq('id', id);
+        const { data: pData } = await query.limit(1);
+
+        if (pData && pData.length > 0) {
+          const p = pData[0];
+          const existingHistory = Array.isArray(p.status_history) ? p.status_history : [];
+          const newHistory = [
+            ...existingHistory,
+            {
+              id: generateUUID(),
+              stage,
+              stageLabel,
+              message,
+              updatedBy: 'Kurudi Bharath Kumar',
+              timestamp: new Date().toISOString()
+            }
+          ];
+
+          await supabase.from('service_projects').update({
+            current_stage: stage,
+            stage_progress_percent: progressPercent,
+            status_history: newHistory,
+            updated_at: new Date().toISOString()
+          }).eq('id', p.id);
+        } else {
+          // Record doesn't exist yet: find booking and create it in service_projects!
+          const { data: bList } = await supabase.from('booking_requests').select('*').ilike('booking_ref', bookingRef).limit(1);
+          const b = bList && bList[0];
+          const newProjectRow = {
+            id: generateUUID(),
+            booking_id: b?.id && isValidUUID(b.id) ? b.id : generateUUID(),
+            booking_ref: bookingRef,
+            client_id: b?.client_id && isValidUUID(b.client_id) ? b.client_id : generateUUID(),
+            client_name: b?.client_name || 'Client',
+            client_phone: b?.client_phone || '',
+            client_email: b?.client_email || '',
+            service_id: b?.service_id || 'srv-1',
+            service_title: b?.service_title || 'Specialized Video Editing',
+            tracking_token: `TK-${bookingRef.replace('KBK-', '')}`,
+            current_stage: stage,
+            stage_progress_percent: progressPercent,
+            start_date: new Date().toISOString().split('T')[0],
+            estimated_delivery_date: b?.preferred_delivery_date || b?.event_date || new Date().toISOString().split('T')[0],
+            status_history: [
+              {
+                id: generateUUID(),
+                stage,
+                stageLabel,
+                message,
+                updatedBy: 'Kurudi Bharath Kumar',
+                timestamp: new Date().toISOString()
+              }
+            ],
+            internal_notes: '',
+            client_messages: [],
+            deliveries: [],
+            is_overdue: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          await supabase.from('service_projects').insert(newProjectRow);
+        }
       } catch (e) {
         console.warn('[Supabase] updateProjectStage note:', e);
       }
@@ -813,40 +869,50 @@ export const api = {
   },
 
   async uploadClientDelivery(projectId: string, data: any): Promise<any> {
+    const bookingRef = projectId.startsWith('proj-') ? projectId.replace('proj-', '') : (data.bookingRef || projectId);
+
     if (isSupabaseConfigured()) {
       try {
-        const { data: pData } = await supabase.from('service_projects').select('*').eq('id', projectId).limit(1);
-        if (pData && pData[0]) {
-          const p = pData[0];
-          const token = `dl_${p.booking_ref.replace('KBK-', '')}_${Math.random().toString(36).substring(2, 8)}`;
-          const row = {
-            id: generateUUID(),
-            booking_ref: p.booking_ref,
-            client_id: p.client_id,
-            client_name: p.client_name,
-            project_id: p.id,
-            title: data.title || 'Client Master Video Delivery',
-            description: data.description || '',
-            video_url: data.videoUrl || 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view',
-            video_source_type: 'google_drive',
-            thumbnail_url: '/assets/kbk-logo.jpg',
-            file_name: data.fileName || `${p.booking_ref}_Master_4K.mp4`,
-            file_size_bytes: data.fileSizeBytes || 4886163,
-            file_size_formatted: '4.8 GB',
-            mime_type: 'video/mp4',
-            file_category: data.fileCategory || 'master_video',
-            download_token: token,
-            expiry_date: new Date(Date.now() + 90 * 86400000).toISOString(),
-            download_count: 0,
-            max_downloads: 50,
-            is_streamable: true,
-            is_active: true,
-            owner_notes: data.ownerNotes || '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          await supabase.from('client_video_deliveries').insert(row);
+        let p: any = null;
+        let query = supabase.from('service_projects').select('*');
+        if (isValidUUID(projectId)) {
+          query = query.eq('id', projectId);
+        } else {
+          query = query.ilike('booking_ref', bookingRef);
         }
+        const { data: pData } = await query.limit(1);
+        if (pData && pData.length > 0) {
+          p = pData[0];
+        }
+
+        const token = `dl_${bookingRef.replace('KBK-', '')}_${Math.random().toString(36).substring(2, 8)}`;
+        const row = {
+          id: generateUUID(),
+          booking_ref: bookingRef,
+          client_id: p?.client_id || generateUUID(),
+          client_name: p?.client_name || data.clientName || 'Client',
+          project_id: p?.id && isValidUUID(p.id) ? p.id : null,
+          title: data.title || 'Client Master Video Delivery',
+          description: data.description || '',
+          video_url: data.videoUrl || 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view',
+          video_source_type: 'google_drive',
+          thumbnail_url: '/assets/kbk-logo.jpg',
+          file_name: data.fileName || `${bookingRef}_Master_4K.mp4`,
+          file_size_bytes: data.fileSizeBytes || 4886163,
+          file_size_formatted: '4.8 GB',
+          mime_type: 'video/mp4',
+          file_category: data.fileCategory || 'master_video',
+          download_token: token,
+          expiry_date: new Date(Date.now() + 90 * 86400000).toISOString(),
+          download_count: 0,
+          max_downloads: 50,
+          is_streamable: true,
+          is_active: true,
+          owner_notes: data.ownerNotes || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        await supabase.from('client_video_deliveries').insert(row);
       } catch (e) {
         console.warn('[Supabase] uploadClientDelivery note:', e);
       }
