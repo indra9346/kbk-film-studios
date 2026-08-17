@@ -111,6 +111,7 @@ export const api = {
   },
 
   async getWorks(): Promise<PublicWork[]> {
+    const localWorks = localDb.getWorks();
     if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase
@@ -119,16 +120,35 @@ export const api = {
           .eq('is_published', true)
           .order('sort_order', { ascending: true });
         if (!error && data && data.length > 0) {
-          return data.map(mapWorkFromRow);
+          const supabaseWorks = data.map(mapWorkFromRow);
+          const hasCuratedDriveVideos = supabaseWorks.some(
+            (w) => w.videoUrl?.includes('drive.google.com') && (w.videoUrl?.includes('1lmZ0mHo4lRI') || w.videoUrl?.includes('1X-bWfeq'))
+          );
+          if (hasCuratedDriveVideos) {
+            return supabaseWorks;
+          }
+          // Sync all 8 curated Google Drive works to Supabase
+          for (const lw of localWorks) {
+            try {
+              await supabase.from('public_works').upsert(mapWorkToRow(lw));
+            } catch (_) {}
+          }
+        } else if (!error && (!data || data.length === 0)) {
+          for (const lw of localWorks) {
+            try {
+              await supabase.from('public_works').upsert(mapWorkToRow(lw));
+            } catch (_) {}
+          }
         }
       } catch (e) {
-        console.warn('[Supabase] getWorks error:', e);
+        console.warn('[Supabase] getWorks sync error:', e);
       }
     }
-    return safeRequest(`${API_BASE}/works`, undefined, () => localDb.getWorks());
+    return localWorks;
   },
 
   async getTestimonials(): Promise<Testimonial[]> {
+    const localTestimonials = localDb.getTestimonials();
     if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase
@@ -137,13 +157,28 @@ export const api = {
           .eq('is_published', true)
           .order('created_at', { ascending: false });
         if (!error && data && data.length > 0) {
-          return data.map(mapTestimonialFromRow);
+          const supabaseTestimonials = data.map(mapTestimonialFromRow);
+          const hasCuratedVideoReviews = supabaseTestimonials.some((t) => t.videoUrl?.includes('drive.google.com'));
+          if (hasCuratedVideoReviews) {
+            return supabaseTestimonials;
+          }
+          for (const lt of localTestimonials) {
+            try {
+              await supabase.from('testimonials').upsert(mapTestimonialToRow(lt));
+            } catch (_) {}
+          }
+        } else if (!error && (!data || data.length === 0)) {
+          for (const lt of localTestimonials) {
+            try {
+              await supabase.from('testimonials').upsert(mapTestimonialToRow(lt));
+            } catch (_) {}
+          }
         }
       } catch (e) {
-        console.warn('[Supabase] getTestimonials error:', e);
+        console.warn('[Supabase] getTestimonials sync error:', e);
       }
     }
-    return safeRequest(`${API_BASE}/testimonials`, undefined, () => localDb.getTestimonials());
+    return localTestimonials;
   },
 
   async submitBooking(data: any): Promise<{ success: boolean; bookingRef: string; message: string }> {
