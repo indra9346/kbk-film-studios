@@ -255,43 +255,43 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
         </div>
       )}
 
-      {/* MINIMAL KBK CONTROLS OVERLAY (Hover / Touch Responsive) */}
+      {/* MINIMAL KBK CONTROLS OVERLAY (Below Video on Mobile, Vibrant & Clear) */}
       {showControls && isDirectVideo && (
         <div
-          className={`absolute inset-x-0 bottom-0 p-2.5 sm:p-3 bg-gradient-to-t from-black/85 via-black/40 to-transparent transition-opacity duration-300 z-20 ${
-            isHovered || !isPlaying || hasInteracted ? 'opacity-100' : 'opacity-0 sm:opacity-0 group-hover:opacity-100'
+          className={`absolute inset-x-0 bottom-0 p-2 sm:p-3 sm:bg-gradient-to-t sm:from-black/85 sm:via-black/30 sm:to-transparent transition-opacity duration-300 z-20 ${
+            isHovered || !isPlaying || hasInteracted ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
           }`}
         >
-          {/* Mini Scrubber Progress Line */}
+          {/* Mini Gold Scrubber Progress Line (Clean below video, non-dimming) */}
           <div
             onClick={handleSeek}
-            className="w-full h-1 bg-white/20 hover:h-2 rounded-full cursor-pointer overflow-hidden transition-all mb-2"
+            className="w-full h-1 sm:h-1.5 bg-white/20 hover:h-2 rounded-full cursor-pointer overflow-hidden transition-all mb-1.5 sm:mb-2"
           >
             <div
-              className="h-full bg-gold transition-all duration-100"
+              className="h-full bg-gold transition-all duration-100 shadow-gold-sm"
               style={{ width: `${progress}%` }}
             />
           </div>
 
           {/* Simple Control Buttons */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               <button
                 type="button"
                 onClick={handleTogglePlay}
-                className="p-1.5 rounded-lg bg-black/70 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 transition-colors"
+                className="p-1 sm:p-1.5 rounded-lg bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 transition-colors shadow-sm"
                 title={isPlaying ? 'Pause' : 'Play'}
               >
-                {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                {isPlaying ? <Pause className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" />}
               </button>
 
               <button
                 type="button"
                 onClick={handleToggleMute}
-                className="p-1.5 rounded-lg bg-black/70 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 transition-colors"
+                className="p-1 sm:p-1.5 rounded-lg bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 transition-colors shadow-sm"
                 title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
               >
-                {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                {isMuted ? <VolumeX className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
               </button>
             </div>
 
@@ -302,10 +302,10 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
                   e.stopPropagation();
                   onExpand();
                 }}
-                className="p-1.5 rounded-lg bg-gold/90 hover:bg-gold text-black shadow-gold font-bold transition-transform hover:scale-105 flex items-center gap-1 text-[10px]"
+                className="p-1 sm:p-1.5 rounded-lg bg-gold/90 hover:bg-gold text-black shadow-gold font-bold transition-transform hover:scale-105 flex items-center gap-1 text-[9px] sm:text-[10px]"
                 title="Open Cinema View"
               >
-                <Maximize2 className="w-3.5 h-3.5" />
+                <Maximize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">Cinema</span>
               </button>
             )}
