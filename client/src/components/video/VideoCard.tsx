@@ -14,6 +14,8 @@ export const extractDriveFileId = (url: string): string | null => {
     url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
     url.match(/\/file\/u\/\d+\/d\/([a-zA-Z0-9_-]+)/) ||
     url.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
+    url.match(/\/drive\/folders\/([a-zA-Z0-9_-]+)/) ||
+    url.match(/\/folders\/([a-zA-Z0-9_-]+)/) ||
     url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   return match ? match[1] : null;
 };

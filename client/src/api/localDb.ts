@@ -177,31 +177,189 @@ const DEFAULT_DB: LocalDBData = {
       sortOrder: 6
     }
   ],
-  works: [],
-  testimonials: [
+  works: [
     {
-      id: "test-1",
-      clientName: "Ananya & Rajesh",
-      serviceTitle: "Wedding Highlights & Sangeeth",
-      location: "Bengaluru",
-      rating: 5,
-      reviewText: "Kurudi Bharath Kumar transformed our wedding footage into a pure movie! The color grading on our silk sarees and the emotional flow during the Muhurtham made our parents cry with joy. Delivered right on time via private locker.",
-      eventDate: "January 2026",
-      isVerified: true,
+      id: 'work-hanumantha-reception-2026',
+      title: 'Hanumantha Roy & Gayathri — Grand Reception Highlights',
+      category: 'Wedding Highlights',
+      eventLocation: 'Hindupur, AP',
+      eventYear: '2026',
+      thumbnailUrl: '/assets/kbk-logo.jpg',
+      videoUrl: 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view',
+      videoSourceType: 'google_drive',
+      externalDestUrl: '',
+      description: 'Grand luxury reception film featuring multi-camera speech capture, cinematic slow-motion highlights, and rich HDR color grading.',
+      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro', 'After Effects'],
+      isFeatured: true,
       isPublished: true,
-      createdAt: "2026-01-15T00:00:00.000Z"
+      sortOrder: 1,
+      createdAt: '2026-08-15T10:00:00Z'
     },
     {
-      id: "test-2",
-      clientName: "Vikram & Sneha",
-      serviceTitle: "Pre-Wedding & Same-Day Spot Edit",
-      location: "Hindupur",
+      id: 'work-reception-master-2026',
+      title: 'Luxury Wedding Reception — 4K Master Cut',
+      category: 'Wedding Highlights',
+      eventLocation: 'Bengaluru, KA',
+      eventYear: '2026',
+      thumbnailUrl: '/assets/kbk-logo.jpg',
+      videoUrl: 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link',
+      videoSourceType: 'google_drive',
+      externalDestUrl: '',
+      description: 'A master graded wedding reception highlight film woven into a seamless, emotionally moving cinematic narrative.',
+      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 2,
+      createdAt: '2026-08-14T10:00:00Z'
+    },
+    {
+      id: 'work-muhurtham-sacred-2026',
+      title: 'Traditional Wedding Muhurtham — Sacred Ritual Highlights',
+      category: 'Wedding Highlights',
+      eventLocation: 'Hindupur, AP',
+      eventYear: '2026',
+      thumbnailUrl: '/assets/kbk-logo.jpg',
+      videoUrl: 'https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link',
+      videoSourceType: 'google_drive',
+      externalDestUrl: '',
+      description: 'Sacred Vedic mantras sound restoration and multi-camera synchronized traditional wedding ritual film.',
+      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 3,
+      createdAt: '2026-08-13T10:00:00Z'
+    },
+    {
+      id: 'work-amulya-haldi-2026',
+      title: 'Amulya Haldi Ceremony — Festive Yellow Splash Highlight',
+      category: 'Haldi & Sangeeth Ceremonies',
+      eventLocation: 'Hindupur, AP',
+      eventYear: '2026',
+      thumbnailUrl: '/assets/kbk-logo.jpg',
+      videoUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
+      videoSourceType: 'google_drive',
+      externalDestUrl: '',
+      description: 'Vibrant yellow splash color isolation, beat-matched family dances, and warm festive energy captured in 4K.',
+      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 4,
+      createdAt: '2026-08-12T10:00:00Z'
+    },
+    {
+      id: 'work-sangeeth-celebration-2026',
+      title: 'Sangeeth Celebration Night — Dynamic Beat-Matched Edit',
+      category: 'Haldi & Sangeeth Ceremonies',
+      eventLocation: 'Bengaluru, KA',
+      eventYear: '2026',
+      thumbnailUrl: '/assets/kbk-logo.jpg',
+      videoUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
+      videoSourceType: 'google_drive',
+      externalDestUrl: '',
+      description: 'High-energy musical dance power of Sangeeth night with punchy color vibrance and live performance multicam pacing.',
+      softwareUsed: ['DaVinci Resolve Studio', 'After Effects'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 5,
+      createdAt: '2026-08-11T10:00:00Z'
+    },
+    {
+      id: 'work-pavan-anjali-reception-2026',
+      title: 'Pavan Kumar & Anjali — Luxury Reception Film',
+      category: 'Wedding Highlights',
+      eventLocation: 'Hindupur, AP',
+      eventYear: '2026',
+      thumbnailUrl: '/assets/kbk-logo.jpg',
+      videoUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
+      videoSourceType: 'google_drive',
+      externalDestUrl: '',
+      description: 'Cinematic wedding reception storytelling featuring elegant couple portraits, stage entrances, and guest celebration sequences.',
+      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 6,
+      createdAt: '2026-08-10T10:00:00Z'
+    },
+    {
+      id: 'work-pavan-anjali-muhurtham-2026',
+      title: 'Pavan Kumar & Anjali — Sacred Muhurtham Highlights',
+      category: 'Wedding Highlights',
+      eventLocation: 'Hindupur, AP',
+      eventYear: '2026',
+      thumbnailUrl: '/assets/kbk-logo.jpg',
+      videoUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
+      videoSourceType: 'google_drive',
+      externalDestUrl: '',
+      description: 'Sacred Mangalashtak and Muhurtham rituals crafted into an emotional and timeless family keepsake.',
+      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 7,
+      createdAt: '2026-08-09T10:00:00Z'
+    },
+    {
+      id: 'work-pavan-anjali-teaser-2026',
+      title: 'Pavan Kumar & Anjali — Reception Instagram Teaser',
+      category: 'Cinematic Teasers & Reels (9:16)',
+      eventLocation: 'Hindupur, AP',
+      eventYear: '2026',
+      thumbnailUrl: '/assets/kbk-logo.jpg',
+      videoUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
+      videoSourceType: 'google_drive',
+      externalDestUrl: '',
+      description: 'Fast-paced vertical teaser cut engineered with dynamic bass drops and instant visual hooks.',
+      softwareUsed: ['DaVinci Resolve Studio', 'After Effects'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 8,
+      createdAt: '2026-08-08T10:00:00Z'
+    }
+  ],
+  testimonials: [
+    {
+      id: "test-amulya-2026",
+      clientName: "Amulya & Family",
+      serviceTitle: "Haldi & Sangeeth Ceremonies",
+      location: "Hindupur, Andhra Pradesh",
       rating: 5,
-      reviewText: "The Same-Day Spot Editing at our reception hall was the biggest highlight of our wedding night. Morning rituals were projected on the LED wall by 7 PM. All our guests were amazed by the speed and cinematic quality!",
-      eventDate: "December 2025",
+      reviewText: "The Haldi video editing is absolutely stunning! Bharath Kumar captured every splash, every smile, and every dance move with incredible cinematic precision. The yellow color grading was breathtaking — we cried watching it!",
+      videoUrl: "https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view",
+      thumbnailUrl: "/assets/kbk-logo.jpg",
+      eventDate: "August 2026",
       isVerified: true,
       isPublished: true,
-      createdAt: "2025-12-20T00:00:00.000Z"
+      bookingRef: "KBK-2026-AMULYA",
+      createdAt: "2026-08-10T00:00:00.000Z"
+    },
+    {
+      id: "test-hanumantha-2026",
+      clientName: "Hanumantha Roy & Gayathri",
+      serviceTitle: "Wedding Highlights (Cinematic Master)",
+      location: "Hindupur, Andhra Pradesh",
+      rating: 5,
+      reviewText: "Kurudi Bharath Kumar transformed our wedding footage into a pure movie! The color grading on our silk sarees and the emotional flow during the reception made all our family members amazed.",
+      videoUrl: "https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view",
+      thumbnailUrl: "/assets/kbk-logo.jpg",
+      eventDate: "July 2026",
+      isVerified: true,
+      isPublished: true,
+      bookingRef: "KBK-2026-HROY",
+      createdAt: "2026-08-01T00:00:00.000Z"
+    },
+    {
+      id: "test-pavan-anjali-2026",
+      clientName: "Pavan Kumar & Anjali",
+      serviceTitle: "Wedding Highlights & Spot Edit",
+      location: "Hindupur, Andhra Pradesh",
+      rating: 5,
+      reviewText: "The video pacing and color grading on DaVinci Resolve exceeded all our expectations. The same-day reception teaser was screened on the LED wall and received loud applause from all guests!",
+      videoUrl: "https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10",
+      thumbnailUrl: "/assets/kbk-logo.jpg",
+      eventDate: "June 2026",
+      isVerified: true,
+      isPublished: true,
+      bookingRef: "KBK-2026-PAVAN",
+      createdAt: "2026-07-20T00:00:00.000Z"
     }
   ],
   owners: [
@@ -242,7 +400,7 @@ const DEFAULT_DB: LocalDBData = {
   auditLogs: []
 };
 
-const STORAGE_KEY = 'kbk_local_database_v1';
+const STORAGE_KEY = 'kbk_local_database_v2';
 
 function getDB(): LocalDBData {
   try {
@@ -252,27 +410,10 @@ function getDB(): LocalDBData {
       return DEFAULT_DB;
     }
     const parsed = JSON.parse(raw) as LocalDBData;
-
-    // Upgrade installations that saved the previous Google Drive preview
-    // links. Those links return an HTML preview page and cannot be used as
-    // reliable autoplay media in a <video> element.
-    let upgraded = false;
-    if (parsed.cms?.heroVideoUrl?.includes('1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP')) {
-      parsed.cms.heroVideoUrl = '/assets/hero-reel.mp4';
-      upgraded = true;
+    if (!parsed.works || parsed.works.length === 0) {
+      parsed.works = DEFAULT_DB.works;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
     }
-    const localVideoReplacements: Record<string, string> = {
-      '1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP': '/assets/client-work-1.mp4',
-      '14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs': '/assets/client-work-2.mp4'
-    };
-    parsed.works = parsed.works.map((work) => {
-      const replacement = Object.entries(localVideoReplacements)
-        .find(([fileId]) => work.videoUrl?.includes(fileId))?.[1];
-      if (!replacement) return work;
-      upgraded = true;
-      return { ...work, videoUrl: replacement };
-    });
-    if (upgraded) localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
     return parsed;
   } catch (e) {
     return DEFAULT_DB;

@@ -210,7 +210,11 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
         /* CASE 3: GOOGLE DRIVE (Seamless Edge-to-Edge Stream - Hides Drive's Top Header/White Line) */
         <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
           <iframe
-            src={`https://drive.google.com/file/d/${driveId}/preview`}
+            src={
+              trimmedUrl.includes('folders')
+                ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
+                : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1`
+            }
             title={title}
             className="w-full h-[calc(100%+54px)] -mt-[54px] object-cover border-0 scale-[1.03]"
             allow="autoplay; fullscreen"
