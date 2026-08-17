@@ -1904,10 +1904,20 @@ export const OwnerSpace: React.FC = () => {
                               />
                             );
                           }
+                          if (media.type === 'google-drive' && media.id) {
+                            return (
+                              <iframe
+                                src={`https://drive.google.com/file/d/${media.id}/preview`}
+                                title={work.title}
+                                className="w-full h-full object-cover border-0"
+                                allow="autoplay"
+                              />
+                            );
+                          }
                           return (
                             <video
                               src={getCleanVideoUrl(work.videoUrl)}
-                              poster={media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (work.thumbnailUrl || undefined)}
+                              poster={work.thumbnailUrl || undefined}
                               autoPlay
                               muted
                               loop
@@ -2042,10 +2052,20 @@ export const OwnerSpace: React.FC = () => {
                                 />
                               );
                             }
+                            if (media.type === 'google-drive' && media.id) {
+                              return (
+                                <iframe
+                                  src={`https://drive.google.com/file/d/${media.id}/preview`}
+                                  title={test.clientName}
+                                  className="w-full h-full object-cover border-0"
+                                  allow="autoplay"
+                                />
+                              );
+                            }
                             return (
                               <video
                                 src={getCleanVideoUrl(test.videoUrl)}
-                                poster={media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (test.thumbnailUrl || '/assets/kbk-logo.jpg')}
+                                poster={test.thumbnailUrl || '/assets/kbk-logo.jpg'}
                                 autoPlay
                                 muted
                                 loop
