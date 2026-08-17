@@ -227,44 +227,31 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             />
           )}
         </div>
-      ) : isGoogleDrive ? (
-        /* CASE 3: GOOGLE DRIVE (High-Speed Viewport Stream - Seamless Edge-to-Edge) */
+      ) : isGoogleDrive && isModal ? (
+        /* CASE 3: GOOGLE DRIVE MODAL (Full 4K Stream in Cinema Modal) */
         <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
-          {isInViewport || isModal ? (
-            <iframe
-              src={
-                trimmedUrl.includes('folders')
-                  ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
-                  : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1`
-              }
-              title={title}
-              loading="lazy"
-              onLoad={() => setIsMediaLoaded(true)}
-              className="w-full h-[calc(100%+54px)] -mt-[54px] object-cover border-0 scale-[1.03]"
-              allow="autoplay; fullscreen"
-              allowFullScreen
-            />
-          ) : (
-            <img
-              src={activePoster}
-              alt={title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/assets/kbk-logo.jpg';
-              }}
-            />
-          )}
+          <iframe
+            src={
+              trimmedUrl.includes('folders')
+                ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
+                : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1`
+            }
+            title={title}
+            loading="lazy"
+            className="w-full h-full object-contain border-0"
+            allow="autoplay; fullscreen"
+            allowFullScreen
+          />
         </div>
       ) : (
-        /* CASE 4: DIRECT HTML5 VIDEO (.mp4, .webm, cdn, local) */
+        /* CASE 4: DIRECT HTML5 VIDEO & FAST SHOWCASE CARDS (100% Guaranteed Muted + Autoplay + Loop) */
         <div className="relative w-full h-full bg-black flex items-center justify-center">
           <video
             ref={videoRef}
             src={getCleanVideoUrl(trimmedUrl)}
             poster={activePoster}
             autoPlay
-            muted={isMuted}
+            muted
             loop
             playsInline
             preload="auto"
