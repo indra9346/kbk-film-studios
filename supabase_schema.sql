@@ -338,3 +338,18 @@ BEGIN
   ALTER PUBLICATION supabase_realtime ADD TABLE public.workflow_executions;
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
+
+-- ========================================================================
+-- SEED SHOWCASE FILMS (REAL CLIENT DRIVE VIDEOS)
+-- ========================================================================
+INSERT INTO public.public_works (id, title, category, event_location, event_year, thumbnail_url, video_url, video_source_type, description, software_used, is_featured, is_published, sort_order)
+VALUES
+  ('work-prewedding-1', 'PRE-WEDDING - VIDEO', 'Pre-Wedding Video Editing', 'Hindupur, AP', '2026', '/assets/kbk-logo.jpg', 'https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/view', 'google_drive', 'Master color graded and cinematic pace edited pre-wedding highlight film.', '["Premiere Pro", "DaVinci Resolve"]'::jsonb, true, true, 1),
+  ('work-reception-2', 'LUXURY WEDDING RECEPTION', 'Wedding Highlights', 'Bengaluru, KA', '2026', '/assets/kbk-logo.jpg', 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view?usp=sharing', 'google_drive', 'Grand luxury wedding reception celebration edited with cinematic transitions and HDR color tones.', '["DaVinci Resolve", "After Effects"]'::jsonb, true, true, 2),
+  ('work-muhurtham-3', 'GRAND TRADITIONAL MUHURTHAM', 'Traditional Wedding', 'Anantapur, AP', '2026', '/assets/kbk-logo.jpg', 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view', 'google_drive', 'Sacred Vedic mantras sound restoration and multi-camera synchronized wedding ritual film.', '["Premiere Pro", "DaVinci Resolve Studio"]'::jsonb, true, true, 3)
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  video_url = EXCLUDED.video_url,
+  video_source_type = EXCLUDED.video_source_type,
+  description = EXCLUDED.description;
+
