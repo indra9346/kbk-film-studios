@@ -207,12 +207,12 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
           />
         </div>
       ) : isGoogleDrive ? (
-        /* CASE 3: GOOGLE DRIVE (Direct Clean Stream Without Studio Banner or Double Click) */
+        /* CASE 3: GOOGLE DRIVE (Seamless Edge-to-Edge Stream - Hides Drive's Top Header/White Line) */
         <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
           <iframe
             src={`https://drive.google.com/file/d/${driveId}/preview`}
             title={title}
-            className="w-full h-full object-contain border-0"
+            className="w-full h-[calc(100%+54px)] -mt-[54px] object-cover border-0 scale-[1.03]"
             allow="autoplay; fullscreen"
             allowFullScreen
           />
