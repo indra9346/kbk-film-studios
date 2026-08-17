@@ -7,10 +7,11 @@ import type {
   BookingRequest,
   ServiceProject,
   Client,
+  ServiceItem,
 } from './types.js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || 'https://hhqadycmsxsedlvdfcnn.supabase.co';
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
 export const supabase: SupabaseClient | null =
   supabaseUrl && supabaseServiceRoleKey
@@ -30,17 +31,16 @@ const toBoolean = (value: unknown, fallback = false) => {
   return fallback;
 };
 
-const parsePermissions = (value: unknown): string[] => {
-  if (Array.isArray(value)) return value as string[];
+const parseJson = (value: unknown, fallback: any = []): any => {
+  if (Array.isArray(value) || (typeof value === 'object' && value !== null)) return value;
   if (typeof value === 'string') {
     try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [];
+      return JSON.parse(value);
     } catch {
-      return [];
+      return fallback;
     }
   }
-  return [];
+  return fallback;
 };
 
 export const mapSupabaseOwners = (rows: any[] = []): Owner[] =>
@@ -50,9 +50,31 @@ export const mapSupabaseOwners = (rows: any[] = []): Owner[] =>
     phone: row.phone,
     email: row.email,
     role: row.role,
-    permissions: parsePermissions(row.permissions),
+    permissions: parseJson(row.permissions, []),
     isActive: toBoolean(row.is_active ?? row.isActive, true),
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
+  }));
+
+export const mapSupabaseServices = (rows: any[] = []): ServiceItem[] =>
+  rows.map((row) => ({
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    tagline: row.tagline ?? '',
+    shortDescription: row.short_description ?? row.shortDescription ?? '',
+    detailedDescription: row.detailed_description ?? row.detailedDescription ?? '',
+    priceType: row.price_type ?? row.priceType ?? 'starting_from',
+    basePrice: Number(row.base_price ?? row.basePrice ?? 0),
+    currency: row.currency ?? 'INR',
+    priceLabel: row.price_label ?? row.priceLabel ?? `₹${row.base_price}`,
+    inclusions: parseJson(row.inclusions, []),
+    exclusions: parseJson(row.exclusions, []),
+    turnaroundDays: Number(row.turnaround_days ?? row.turnaroundDays ?? 5),
+    featured: toBoolean(row.featured, false),
+    isUpcoming: toBoolean(row.is_upcoming ?? row.isUpcoming, false),
+    isActive: toBoolean(row.is_active ?? row.isActive, true),
+    sortOrder: Number(row.sort_order ?? row.sortOrder ?? 0),
+    badge: row.badge ?? undefined,
   }));
 
 export const mapSupabaseWorks = (rows: any[] = []): PublicWork[] =>
@@ -67,7 +89,7 @@ export const mapSupabaseWorks = (rows: any[] = []): PublicWork[] =>
     videoSourceType: row.video_source_type ?? row.videoSourceType ?? 'direct_mp4',
     externalDestUrl: row.external_dest_url ?? row.externalDestUrl ?? '',
     description: row.description ?? '',
-    softwareUsed: Array.isArray(row.software_used) ? row.software_used : (Array.isArray(row.softwareUsed) ? row.softwareUsed : ['Premiere Pro', 'DaVinci Resolve']),
+    softwareUsed: parseJson(row.software_used ?? row.softwareUsed, ['Premiere Pro', 'DaVinci Resolve']),
     isFeatured: toBoolean(row.is_featured ?? row.isFeatured, false),
     isPublished: toBoolean(row.is_published ?? row.isPublished, true),
     sortOrder: Number(row.sort_order ?? row.sortOrder ?? 0),
@@ -116,30 +138,28 @@ export const mapSupabaseCms = (row: any): StudioCMSData | null => {
     educationDetails: {
       degree: row.degree ?? row.education_degree ?? 'B.Com (Computer Applications)',
       college: row.college ?? row.education_college ?? 'Sri Krishnadevaraya University (SKU)',
-      coreHighlights: Array.isArray(row.core_highlights) ? row.core_highlights : (Array.isArray(row.coreHighlights) ? row.coreHighlights : []),
+      coreHighlights: parseJson(row.core_highlights ?? row.coreHighlights, []),
       currentPursuit: row.current_pursuit ?? row.currentPursuit ?? 'MBA (2nd Year, Master of Business Administration)',
     },
-    editingSuites: Array.isArray(row.editing_suites) ? row.editing_suites : (Array.isArray(row.editingSuites) ? row.editingSuites : []),
+    editingSuites: parseJson(row.editing_suites ?? row.editingSuites, []),
     heroVideoUrl: row.hero_video_url ?? row.heroVideoUrl ?? '/assets/hero-reel.mp4',
     heroSettledPosterUrl: row.hero_settled_poster_url ?? row.heroSettledPosterUrl ?? '/assets/kbk-logo.jpg',
     priceDisclaimer: row.price_disclaimer ?? row.priceDisclaimer ?? '',
-    termsAndConditions: Array.isArray(row.terms_and_conditions) ? row.terms_and_conditions : (Array.isArray(row.termsAndConditions) ? row.termsAndConditions : []),
+    termsAndConditions: parseJson(row.terms_and_conditions ?? row.termsAndConditions, []),
     contactClarificationMsg: row.contact_clarification_msg ?? row.contactClarificationMsg ?? '',
   };
 };
 
-// Map Supabase client rows to Client objects
 export const mapSupabaseClients = (rows: any[] = []): Client[] =>
   rows.map((row) => ({
     id: row.id,
     fullName: row.full_name ?? row.fullName ?? '',
     phone: row.phone ?? '',
     email: row.email ?? '',
-    city: row.city ?? 'Not specified',
+    city: row.city ?? 'Hindupur, AP',
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
   }));
 
-// Map Supabase booking_requests rows
 export const mapSupabaseBookings = (rows: any[] = []): BookingRequest[] =>
   rows.map((row) => ({
     id: row.id,
@@ -158,9 +178,7 @@ export const mapSupabaseBookings = (rows: any[] = []): BookingRequest[] =>
     referenceLinks: row.reference_links ?? row.referenceLinks ?? '',
     customNotes: row.custom_notes ?? row.customNotes ?? '',
     agreedTerms: toBoolean(row.agreed_terms ?? row.agreedTerms, true),
-    priceSnapshot: (typeof row.price_snapshot === 'object' && row.price_snapshot !== null)
-      ? row.price_snapshot
-      : (row.priceSnapshot ?? {}),
+    priceSnapshot: parseJson(row.price_snapshot ?? row.priceSnapshot, {}),
     quotedAmount: Number(row.quoted_amount ?? row.quotedAmount ?? 0),
     finalAmount: row.final_amount != null ? Number(row.final_amount) : (row.finalAmount != null ? Number(row.finalAmount) : undefined),
     status: row.status ?? 'pending',
@@ -168,9 +186,6 @@ export const mapSupabaseBookings = (rows: any[] = []): BookingRequest[] =>
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
   }));
 
-  
-
-// Map Supabase service_projects rows
 export const mapSupabaseProjects = (rows: any[] = []): ServiceProject[] =>
   rows.map((row) => ({
     id: row.id,
@@ -188,16 +203,16 @@ export const mapSupabaseProjects = (rows: any[] = []): ServiceProject[] =>
     startDate: row.start_date ?? row.startDate ?? '',
     estimatedDeliveryDate: row.estimated_delivery_date ?? row.estimatedDeliveryDate ?? '',
     actualDeliveryDate: row.actual_delivery_date ?? row.actualDeliveryDate,
-    statusHistory: Array.isArray(row.status_history) ? row.status_history : (Array.isArray(row.statusHistory) ? row.statusHistory : []),
+    statusHistory: parseJson(row.status_history ?? row.statusHistory, []),
     internalNotes: row.internal_notes ?? row.internalNotes ?? '',
-    clientMessages: Array.isArray(row.client_messages) ? row.client_messages : (Array.isArray(row.clientMessages) ? row.clientMessages : []),
-    deliveries: Array.isArray(row.deliveries) ? row.deliveries : [],
+    clientMessages: parseJson(row.client_messages ?? row.clientMessages, []),
+    deliveries: parseJson(row.deliveries, []),
     testimonialId: row.testimonial_id ?? row.testimonialId,
+    isOverdue: toBoolean(row.is_overdue ?? row.isOverdue, false),
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
     updatedAt: row.updated_at ?? row.updatedAt ?? new Date().toISOString(),
   }));
 
-// Map client_video_deliveries rows
 export interface ClientVideoDelivery {
   id: string;
   bookingRef: string;
@@ -215,14 +230,14 @@ export interface ClientVideoDelivery {
   mimeType: string;
   fileCategory: string;
   downloadToken: string;
+  storagePath?: string;
+  streamUrl?: string;
   expiryDate?: string;
   downloadCount: number;
   maxDownloads: number;
   isStreamable: boolean;
   isActive: boolean;
   ownerNotes: string;
-  storagePath?: string;
-  streamUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -237,11 +252,11 @@ export const mapSupabaseClientVideoDeliveries = (rows: any[] = []): ClientVideoD
     title: row.title ?? '',
     description: row.description ?? '',
     videoUrl: row.video_url ?? row.videoUrl ?? '',
-    videoSourceType: row.video_source_type ?? row.videoSourceType ?? 'google_drive',
+    videoSourceType: row.video_source_type ?? row.videoSourceType ?? 'direct_mp4',
     thumbnailUrl: row.thumbnail_url ?? row.thumbnailUrl ?? '/assets/kbk-logo.jpg',
     fileName: row.file_name ?? row.fileName ?? '',
     fileSizeBytes: Number(row.file_size_bytes ?? row.fileSizeBytes ?? 0),
-    fileSizeFormatted: row.file_size_formatted ?? row.fileSizeFormatted ?? '',
+    fileSizeFormatted: row.file_size_formatted ?? row.fileSizeFormatted ?? '0 MB',
     mimeType: row.mime_type ?? row.mimeType ?? 'video/mp4',
     fileCategory: row.file_category ?? row.fileCategory ?? 'master_video',
     downloadToken: row.download_token ?? row.downloadToken ?? '',
@@ -255,277 +270,273 @@ export const mapSupabaseClientVideoDeliveries = (rows: any[] = []): ClientVideoD
     updatedAt: row.updated_at ?? row.updatedAt ?? new Date().toISOString(),
   }));
 
+// Hydrate full data snapshot from Supabase PostgreSQL tables
 export async function hydrateSupabaseData() {
   if (!supabase) return null;
 
-  const [ownersRes, worksRes, testimonialsRes, cmsRes, clientVideoDeliveriesRes] = await Promise.all([
-    supabase.from('owners').select('*').order('created_at', { ascending: false }),
-    supabase.from('public_works').select('*').eq('is_published', true).order('sort_order', { ascending: true }),
-    supabase.from('testimonials').select('*').eq('is_published', true).order('created_at', { ascending: false }),
-    supabase.from('studio_cms').select('*').limit(1).maybeSingle(),
-    supabase.from('client_video_deliveries').select('*').eq('is_active', true).order('created_at', { ascending: false }),
-  ]);
+  try {
+    const [ownersRes, servicesRes, worksRes, testimonialsRes, cmsRes, bookingsRes, projectsRes, deliveriesRes, clientsRes] = await Promise.all([
+      supabase.from('owners').select('*').order('created_at', { ascending: false }),
+      supabase.from('services').select('*').order('sort_order', { ascending: true }),
+      supabase.from('public_works').select('*').order('sort_order', { ascending: true }),
+      supabase.from('testimonials').select('*').order('created_at', { ascending: false }),
+      supabase.from('studio_cms').select('*').limit(1).maybeSingle(),
+      supabase.from('booking_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('service_projects').select('*').order('created_at', { ascending: false }),
+      supabase.from('client_video_deliveries').select('*').order('created_at', { ascending: false }),
+      supabase.from('clients').select('*').order('created_at', { ascending: false }),
+    ]);
 
-  return {
-    owners: mapSupabaseOwners(ownersRes.data ?? []),
-    works: mapSupabaseWorks(worksRes.data ?? []),
-    testimonials: mapSupabaseTestimonials(testimonialsRes.data ?? []),
-    studioCMS: cmsRes.data ? mapSupabaseCms(cmsRes.data) : null,
-    clientVideoDeliveries: mapSupabaseClientVideoDeliveries(clientVideoDeliveriesRes.data ?? []),
-  };
-}
-
-// Fetch client video deliveries (owner endpoint - all)
-export async function fetchClientVideoDeliveries(): Promise<ClientVideoDelivery[]> {
-  if (!supabase) return [];
-
-  
-  const { data, error } = await supabase
-    .from('client_video_deliveries')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) {
-    console.error('[Supabase] fetchClientVideoDeliveries error:', error);
-    return [];
-  }
-  return mapSupabaseClientVideoDeliveries(data ?? []);
-}
-
-// Fetch client video deliveries for a specific booking ref
-export async function fetchClientVideoDeliveriesByBookingRef(bookingRef: string): Promise<ClientVideoDelivery[]> {
-  if (!supabase) return [];
-  const { data, error } = await supabase
-    .from('client_video_deliveries')
-    .select('*')
-    .eq('booking_ref', bookingRef)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
-  if (error) {
-    console.error('[Supabase] fetchClientVideoDeliveriesByBookingRef error:', error);
-    return [];
-  }
-  return mapSupabaseClientVideoDeliveries(data ?? []);
-}
-
-// Upsert a client video delivery
-export async function upsertClientVideoDelivery(delivery: ClientVideoDelivery): Promise<ClientVideoDelivery | null> {
-  if (!supabase) return null;
-  const row = {
-    id: delivery.id,
-    booking_ref: delivery.bookingRef,
-    client_id: delivery.clientId,
-    client_name: delivery.clientName,
-    project_id: delivery.projectId ?? null,
-    title: delivery.title,
-    description: delivery.description,
-    video_url: delivery.videoUrl,
-    video_source_type: delivery.videoSourceType,
-    thumbnail_url: delivery.thumbnailUrl,
-    file_name: delivery.fileName,
-    file_size_bytes: delivery.fileSizeBytes,
-    file_size_formatted: delivery.fileSizeFormatted,
-    mime_type: delivery.mimeType,
-    file_category: delivery.fileCategory,
-    download_token: delivery.downloadToken,
-    expiry_date: delivery.expiryDate ?? null,
-    download_count: delivery.downloadCount,
-    max_downloads: delivery.maxDownloads,
-    is_streamable: delivery.isStreamable,
-    is_active: delivery.isActive,
-    owner_notes: delivery.ownerNotes,
-    updated_at: new Date().toISOString(),
-  };
-  const { data, error } = await supabase
-    .from('client_video_deliveries')
-    .upsert(row, { onConflict: 'id' })
-    .select()
-    .single();
-  if (error) {
-    console.error('[Supabase] upsertClientVideoDelivery error:', error);
+    return {
+      owners: mapSupabaseOwners(ownersRes.data ?? []),
+      services: mapSupabaseServices(servicesRes.data ?? []),
+      works: mapSupabaseWorks(worksRes.data ?? []),
+      testimonials: mapSupabaseTestimonials(testimonialsRes.data ?? []),
+      studioCMS: cmsRes.data ? mapSupabaseCms(cmsRes.data) : null,
+      bookingRequests: mapSupabaseBookings(bookingsRes.data ?? []),
+      serviceProjects: mapSupabaseProjects(projectsRes.data ?? []),
+      clientVideoDeliveries: mapSupabaseClientVideoDeliveries(deliveriesRes.data ?? []),
+      clients: mapSupabaseClients(clientsRes.data ?? []),
+    };
+  } catch (err) {
+    console.error('[Supabase] Hydration warning:', err);
     return null;
   }
-  return mapSupabaseClientVideoDeliveries([data])[0] ?? null;
 }
 
-// Delete a client video delivery
-export async function deleteClientVideoDelivery(id: string): Promise<boolean> {
-  if (!supabase) return false;
-  const { error } = await supabase
-    .from('client_video_deliveries')
-    .delete()
-    .eq('id', id);
-  if (error) {
-    console.error('[Supabase] deleteClientVideoDelivery error:', error);
-    return false;
-  }
-  return true;
-}
-
-export async function persistSupabaseData(data: {
-  owners?: Owner[];
-  works?: PublicWork[];
-  testimonials?: Testimonial[];
-  studioCMS?: StudioCMSData;
-  bookingRequests?: BookingRequest[];
-  serviceProjects?: ServiceProject[];
-  clients?: Client[];
-}) {
+// Atomic Supabase Write Operations
+export async function upsertWorkSupabase(work: PublicWork): Promise<void> {
   if (!supabase) return;
+  await supabase.from('public_works').upsert({
+    id: work.id,
+    title: work.title,
+    category: work.category,
+    event_location: work.eventLocation,
+    event_year: work.eventYear,
+    thumbnail_url: work.thumbnailUrl,
+    video_url: work.videoUrl,
+    video_source_type: work.videoSourceType,
+    external_dest_url: work.externalDestUrl ?? '',
+    description: work.description,
+    software_used: work.softwareUsed,
+    is_featured: work.isFeatured,
+    is_published: work.isPublished,
+    sort_order: work.sortOrder,
+    created_at: work.createdAt,
+  }, { onConflict: 'id' });
+}
 
-  if (data.owners) {
-    const ownersRows = data.owners.map((owner) => ({
-      id: owner.id,
-      name: owner.name,
-      phone: owner.phone,
-      email: owner.email,
-      role: owner.role,
-      permissions: owner.permissions,
-      is_active: owner.isActive,
-      created_at: owner.createdAt,
-    }));
-    await supabase.from('owners').upsert(ownersRows, { onConflict: 'id' });
-  }
+export async function deleteWorkSupabase(id: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('public_works').delete().eq('id', id);
+}
 
-  if (data.works) {
-    const worksRows = data.works.map((work) => ({
-      id: work.id,
-      title: work.title,
-      category: work.category,
-      event_location: work.eventLocation,
-      event_year: work.eventYear,
-      thumbnail_url: work.thumbnailUrl,
-      video_url: work.videoUrl,
-      video_source_type: work.videoSourceType,
-      external_dest_url: work.externalDestUrl ?? '',
-      description: work.description,
-      software_used: work.softwareUsed,
-      is_featured: work.isFeatured,
-      is_published: work.isPublished,
-      sort_order: work.sortOrder,
-      created_at: work.createdAt,
-    }));
-    await supabase.from('public_works').upsert(worksRows, { onConflict: 'id' });
-  }
+export async function upsertServiceSupabase(service: ServiceItem): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('services').upsert({
+    id: service.id,
+    slug: service.slug,
+    title: service.title,
+    tagline: service.tagline,
+    short_description: service.shortDescription,
+    detailed_description: service.detailedDescription,
+    price_type: service.priceType,
+    base_price: service.basePrice,
+    currency: service.currency,
+    price_label: service.priceLabel,
+    inclusions: service.inclusions,
+    exclusions: service.exclusions,
+    turnaround_days: service.turnaroundDays,
+    featured: service.featured,
+    is_upcoming: service.isUpcoming,
+    is_active: service.isActive,
+    sort_order: service.sortOrder,
+    badge: service.badge ?? null,
+  }, { onConflict: 'id' });
+}
 
-  if (data.testimonials) {
-    const testimonialRows = data.testimonials.map((item) => ({
-      id: item.id,
-      client_name: item.clientName,
-      service_title: item.serviceTitle,
-      event_date: item.eventDate,
-      location: item.location,
-      rating: item.rating,
-      review_text: item.reviewText,
-      video_url: item.videoUrl ?? '',
-      thumbnail_url: item.thumbnailUrl ?? '/assets/kbk-logo.jpg',
-      is_verified: item.isVerified,
-      is_published: item.isPublished,
-      booking_ref: item.bookingRef ?? null,
-      created_at: item.createdAt,
-    }));
-    await supabase.from('testimonials').upsert(testimonialRows, { onConflict: 'id' });
-  }
+export async function deleteServiceSupabase(id: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('services').delete().eq('id', id);
+}
 
-  if (data.studioCMS) {
-    const cmsRow = {
-      studio_name: data.studioCMS.studioName,
-      tagline: data.studioCMS.tagline,
-      founder_name: data.studioCMS.founderName,
-      founder_title: data.studioCMS.founderTitle,
-      phone: data.studioCMS.phone,
-      whatsapp_number: data.studioCMS.whatsappNumber,
-      email: data.studioCMS.email,
-      location: data.studioCMS.location,
-      instagram_handle: data.studioCMS.instagramHandle,
-      instagram_url: data.studioCMS.instagramUrl,
-      youtube_handle: data.studioCMS.youtubeHandle,
-      youtube_url: data.studioCMS.youtubeUrl,
-      facebook_handle: data.studioCMS.facebookHandle,
-      facebook_url: data.studioCMS.facebookUrl,
-      happy_clients_count: data.studioCMS.happyClientsCount,
-      films_delivered_count: data.studioCMS.filmsDeliveredCount,
-      years_experience: data.studioCMS.yearsExperience,
-      satisfaction_rate: data.studioCMS.satisfactionRate,
-      founder_bio: data.studioCMS.founderBio,
-      degree: data.studioCMS.educationDetails.degree,
-      college: data.studioCMS.educationDetails.college,
-      core_highlights: data.studioCMS.educationDetails.coreHighlights,
-      current_pursuit: data.studioCMS.educationDetails.currentPursuit,
-      editing_suites: data.studioCMS.editingSuites,
-      hero_video_url: data.studioCMS.heroVideoUrl,
-      hero_settled_poster_url: data.studioCMS.heroSettledPosterUrl,
-      price_disclaimer: data.studioCMS.priceDisclaimer,
-      terms_and_conditions: data.studioCMS.termsAndConditions,
-      contact_clarification_msg: data.studioCMS.contactClarificationMsg,
-    };
-    await supabase.from('studio_cms').upsert(cmsRow, { onConflict: 'id' });
-  }
+export async function upsertTestimonialSupabase(item: Testimonial): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('testimonials').upsert({
+    id: item.id,
+    client_name: item.clientName,
+    service_title: item.serviceTitle,
+    event_date: item.eventDate,
+    location: item.location,
+    rating: item.rating,
+    review_text: item.reviewText,
+    video_url: item.videoUrl ?? '',
+    thumbnail_url: item.thumbnailUrl ?? '/assets/kbk-logo.jpg',
+    is_verified: item.isVerified,
+    is_published: item.isPublished,
+    booking_ref: item.bookingRef ?? null,
+    created_at: item.createdAt,
+  }, { onConflict: 'id' });
+}
 
-  if (data.bookingRequests) {
-    const bookingRows = data.bookingRequests.map((b) => ({
-      id: b.id,
-      booking_ref: b.bookingRef,
-      client_id: b.clientId,
-      client_name: b.clientName,
-      client_phone: b.clientPhone,
-      client_email: b.clientEmail,
-      client_city: b.clientCity,
-      service_id: b.serviceId,
-      service_title: b.serviceTitle,
-      event_date: b.eventDate,
-      preferred_delivery_date: b.preferredDeliveryDate,
-      budget_range: b.budgetRange,
-      footage_details: b.footageDetails,
-      reference_links: b.referenceLinks,
-      custom_notes: b.customNotes,
-      agreed_terms: b.agreedTerms,
-      price_snapshot: b.priceSnapshot,
-      quoted_amount: b.quotedAmount,
-      final_amount: b.finalAmount ?? null,
-      status: b.status,
-      rejection_reason: b.rejectionReason ?? null,
-      created_at: b.createdAt,
-    }));
-    await supabase.from('booking_requests').upsert(bookingRows, { onConflict: 'id' });
-  }
+export async function deleteTestimonialSupabase(id: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('testimonials').delete().eq('id', id);
+}
 
-  if (data.serviceProjects) {
-    const projectRows = data.serviceProjects.map((p) => ({
-      id: p.id,
-      booking_id: p.bookingId,
-      booking_ref: p.bookingRef,
-      client_id: p.clientId,
-      client_name: p.clientName,
-      client_phone: p.clientPhone,
-      client_email: p.clientEmail,
-      service_id: p.serviceId,
-      service_title: p.serviceTitle,
-      tracking_token: p.trackingToken,
-      current_stage: p.currentStage,
-      stage_progress_percent: p.stageProgressPercent,
-      start_date: p.startDate,
-      estimated_delivery_date: p.estimatedDeliveryDate,
-      actual_delivery_date: p.actualDeliveryDate ?? null,
-      status_history: p.statusHistory,
-      internal_notes: p.internalNotes,
-      client_messages: p.clientMessages,
-      deliveries: p.deliveries,
-      testimonial_id: p.testimonialId ?? null,
-      created_at: p.createdAt,
-      updated_at: p.updatedAt,
-    }));
-    await supabase.from('service_projects').upsert(projectRows, { onConflict: 'id' });
-  }
+export async function upsertBookingSupabase(b: BookingRequest): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('booking_requests').upsert({
+    id: b.id,
+    booking_ref: b.bookingRef,
+    client_id: b.clientId,
+    client_name: b.clientName,
+    client_phone: b.clientPhone,
+    client_email: b.clientEmail,
+    client_city: b.clientCity,
+    service_id: b.serviceId,
+    service_title: b.serviceTitle,
+    event_date: b.eventDate,
+    preferred_delivery_date: b.preferredDeliveryDate,
+    budget_range: b.budgetRange,
+    footage_details: b.footageDetails,
+    reference_links: b.referenceLinks,
+    custom_notes: b.customNotes,
+    agreed_terms: b.agreedTerms,
+    price_snapshot: b.priceSnapshot,
+    quoted_amount: b.quotedAmount,
+    final_amount: b.finalAmount ?? null,
+    status: b.status,
+    rejection_reason: b.rejectionReason ?? null,
+    created_at: b.createdAt,
+  }, { onConflict: 'id' });
+}
 
-  if (data.clients) {
-    const clientRows = data.clients.map((c) => ({
-      id: c.id,
-      full_name: c.fullName,
-      phone: c.phone,
-      email: c.email,
-      city: c.city,
-      created_at: c.createdAt,
-    }));
-    await supabase.from('clients').upsert(clientRows, { onConflict: 'id' });
-  }
+export async function deleteBookingSupabase(id: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('booking_requests').delete().or(`id.eq.${id},booking_ref.eq.${id}`);
+}
+
+export async function upsertProjectSupabase(p: ServiceProject): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('service_projects').upsert({
+    id: p.id,
+    booking_id: p.bookingId,
+    booking_ref: p.bookingRef,
+    client_id: p.clientId,
+    client_name: p.clientName,
+    client_phone: p.clientPhone,
+    client_email: p.clientEmail,
+    service_id: p.serviceId,
+    service_title: p.serviceTitle,
+    tracking_token: p.trackingToken,
+    current_stage: p.currentStage,
+    stage_progress_percent: p.stageProgressPercent,
+    start_date: p.startDate,
+    estimated_delivery_date: p.estimatedDeliveryDate,
+    actual_delivery_date: p.actualDeliveryDate ?? null,
+    status_history: p.statusHistory,
+    internal_notes: p.internalNotes,
+    client_messages: p.clientMessages,
+    deliveries: p.deliveries,
+    testimonial_id: p.testimonialId ?? null,
+    is_overdue: p.isOverdue ?? false,
+    created_at: p.createdAt,
+    updated_at: p.updatedAt,
+  }, { onConflict: 'id' });
+}
+
+export async function deleteProjectSupabase(id: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('service_projects').delete().or(`id.eq.${id},booking_ref.eq.${id}`);
+}
+
+export async function updateCmsSupabase(cms: StudioCMSData): Promise<void> {
+  if (!supabase) return;
+  const row = {
+    studio_name: cms.studioName,
+    tagline: cms.tagline,
+    founder_name: cms.founderName,
+    founder_title: cms.founderTitle,
+    phone: cms.phone,
+    whatsapp_number: cms.whatsappNumber,
+    email: cms.email,
+    location: cms.location,
+    instagram_handle: cms.instagramHandle,
+    instagram_url: cms.instagramUrl,
+    youtube_handle: cms.youtubeHandle,
+    youtube_url: cms.youtubeUrl,
+    facebook_handle: cms.facebookHandle,
+    facebook_url: cms.facebookUrl,
+    happy_clients_count: cms.happyClientsCount,
+    films_delivered_count: cms.filmsDeliveredCount,
+    years_experience: cms.yearsExperience,
+    satisfaction_rate: cms.satisfactionRate,
+    founder_bio: cms.founderBio,
+    degree: cms.educationDetails?.degree,
+    college: cms.educationDetails?.college,
+    core_highlights: cms.educationDetails?.coreHighlights,
+    current_pursuit: cms.educationDetails?.currentPursuit,
+    editing_suites: cms.editingSuites,
+    hero_video_url: cms.heroVideoUrl,
+    hero_settled_poster_url: cms.heroSettledPosterUrl,
+    price_disclaimer: cms.priceDisclaimer,
+    terms_and_conditions: cms.termsAndConditions,
+    contact_clarification_msg: cms.contactClarificationMsg,
+    updated_at: new Date().toISOString(),
+  };
+  await supabase.from('studio_cms').upsert(row);
+}
+
+export async function upsertClientVideoDeliverySupabase(d: ClientVideoDelivery): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('client_video_deliveries').upsert({
+    id: d.id,
+    booking_ref: d.bookingRef,
+    client_id: d.clientId,
+    client_name: d.clientName,
+    project_id: d.projectId ?? null,
+    title: d.title,
+    description: d.description,
+    video_url: d.videoUrl,
+    video_source_type: d.videoSourceType,
+    thumbnail_url: d.thumbnailUrl,
+    file_name: d.fileName,
+    file_size_bytes: d.fileSizeBytes,
+    file_size_formatted: d.fileSizeFormatted,
+    mime_type: d.mimeType,
+    file_category: d.fileCategory,
+    download_token: d.downloadToken,
+    expiry_date: d.expiryDate ?? null,
+    download_count: d.downloadCount,
+    max_downloads: d.maxDownloads,
+    is_streamable: d.isStreamable,
+    is_active: d.isActive,
+    owner_notes: d.ownerNotes,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'id' });
+}
+
+export async function deleteClientVideoDeliverySupabase(id: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('client_video_deliveries').delete().eq('id', id);
+}
+
+export async function upsertOwnerSupabase(owner: Owner): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('owners').upsert({
+    id: owner.id,
+    name: owner.name,
+    phone: owner.phone,
+    email: owner.email,
+    role: owner.role,
+    permissions: owner.permissions,
+    is_active: owner.isActive,
+    created_at: owner.createdAt,
+  }, { onConflict: 'id' });
+}
+
+export async function deleteOwnerSupabase(id: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('owners').delete().eq('id', id);
 }

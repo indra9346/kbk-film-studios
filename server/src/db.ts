@@ -17,10 +17,21 @@ import {
 import {
   isSupabaseEnabled,
   hydrateSupabaseData,
-  persistSupabaseData,
-  fetchClientVideoDeliveries,
-  upsertClientVideoDelivery,
-  deleteClientVideoDelivery,
+  upsertWorkSupabase,
+  deleteWorkSupabase,
+  upsertServiceSupabase,
+  deleteServiceSupabase,
+  upsertTestimonialSupabase,
+  deleteTestimonialSupabase,
+  upsertBookingSupabase,
+  deleteBookingSupabase,
+  upsertProjectSupabase,
+  deleteProjectSupabase,
+  updateCmsSupabase,
+  upsertClientVideoDeliverySupabase,
+  deleteClientVideoDeliverySupabase,
+  upsertOwnerSupabase,
+  deleteOwnerSupabase,
   ClientVideoDelivery
 } from './supabase.js';
 
@@ -841,18 +852,6 @@ class DatabaseManager {
       this.data = newData;
     }
 
-    if (isSupabaseEnabled()) {
-      void persistSupabaseData({
-        owners: this.data.owners,
-        works: this.data.publicWorks,
-        testimonials: this.data.testimonials,
-        studioCMS: this.data.studioCMS,
-        bookingRequests: this.data.bookingRequests,
-        serviceProjects: this.data.serviceProjects,
-        clients: this.data.clients,
-      });
-    }
-
     try {
       fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf-8');
     } catch (err) {
@@ -860,7 +859,7 @@ class DatabaseManager {
     }
   }
 
-  // Getters & Setters
+  // Getters
   public getOwners() { return this.data.owners; }
   public getClients() { return this.data.clients; }
   public getServices() { return this.data.services; }
@@ -875,16 +874,210 @@ class DatabaseManager {
   public getOTPVerifications() { return this.data.otpVerifications; }
   public getClientVideoDeliveries() { return this.data.clientVideoDeliveries || []; }
 
+  // Atomic Public Works Operations
+  public async saveWork(work: PublicWork): Promise<PublicWork> {
+    const idx = this.data.publicWorks.findIndex(w => w.id === work.id);
+    if (idx >= 0) {
+      this.data.publicWorks[idx] = work;
+    } else {
+      this.data.publicWorks.unshift(work);
+    }
+    if (isSupabaseEnabled()) {
+      await upsertWorkSupabase(work);
+    }
+    this.saveDatabase();
+    return work;
+  }
+
+  public async deleteWork(id: string): Promise<boolean> {
+    const cleanId = decodeURIComponent(id || '').trim();
+    const idx = this.data.publicWorks.findIndex(w => w.id === cleanId || w.id.toLowerCase() === cleanId.toLowerCase());
+    if (idx >= 0) {
+      this.data.publicWorks.splice(idx, 1);
+      if (isSupabaseEnabled()) {
+        await deleteWorkSupabase(cleanId);
+      }
+      this.saveDatabase();
+      return true;
+    }
+    if (isSupabaseEnabled()) {
+      await deleteWorkSupabase(cleanId);
+    }
+    return false;
+  }
+
+  // Atomic Services Operations
+  public async saveService(service: ServiceItem): Promise<ServiceItem> {
+    const idx = this.data.services.findIndex(s => s.id === service.id);
+    if (idx >= 0) {
+      this.data.services[idx] = service;
+    } else {
+      this.data.services.push(service);
+    }
+    if (isSupabaseEnabled()) {
+      await upsertServiceSupabase(service);
+    }
+    this.saveDatabase();
+    return service;
+  }
+
+  public async deleteService(id: string): Promise<boolean> {
+    const idx = this.data.services.findIndex(s => s.id === id);
+    if (idx >= 0) {
+      this.data.services.splice(idx, 1);
+      if (isSupabaseEnabled()) {
+        await deleteServiceSupabase(id);
+      }
+      this.saveDatabase();
+      return true;
+    }
+    if (isSupabaseEnabled()) {
+      await deleteServiceSupabase(id);
+    }
+    return false;
+  }
+
+  // Atomic Testimonials Operations
+  public async saveTestimonial(testimonial: Testimonial): Promise<Testimonial> {
+    const idx = this.data.testimonials.findIndex(t => t.id === testimonial.id);
+    if (idx >= 0) {
+      this.data.testimonials[idx] = testimonial;
+    } else {
+      this.data.testimonials.unshift(testimonial);
+    }
+    if (isSupabaseEnabled()) {
+      await upsertTestimonialSupabase(testimonial);
+    }
+    this.saveDatabase();
+    return testimonial;
+  }
+
+  public async deleteTestimonial(id: string): Promise<boolean> {
+    const idx = this.data.testimonials.findIndex(t => t.id === id);
+    if (idx >= 0) {
+      this.data.testimonials.splice(idx, 1);
+      if (isSupabaseEnabled()) {
+        await deleteTestimonialSupabase(id);
+      }
+      this.saveDatabase();
+      return true;
+    }
+    if (isSupabaseEnabled()) {
+      await deleteTestimonialSupabase(id);
+    }
+    return false;
+  }
+
+  // Atomic Bookings Operations
+  public async saveBooking(booking: BookingRequest): Promise<BookingRequest> {
+    const idx = this.data.bookingRequests.findIndex(b => b.id === booking.id || b.bookingRef === booking.bookingRef);
+    if (idx >= 0) {
+      this.data.bookingRequests[idx] = booking;
+    } else {
+      this.data.bookingRequests.unshift(booking);
+    }
+    if (isSupabaseEnabled()) {
+      await upsertBookingSupabase(booking);
+    }
+    this.saveDatabase();
+    return booking;
+  }
+
+  public async deleteBooking(id: string): Promise<boolean> {
+    const idx = this.data.bookingRequests.findIndex(b => b.id === id || b.bookingRef === id);
+    if (idx >= 0) {
+      const removed = this.data.bookingRequests.splice(idx, 1)[0];
+      this.data.serviceProjects = this.data.serviceProjects.filter(p => p.bookingId !== removed.id && p.bookingRef !== removed.bookingRef);
+      if (isSupabaseEnabled()) {
+        await deleteBookingSupabase(id);
+      }
+      this.saveDatabase();
+      return true;
+    }
+    if (isSupabaseEnabled()) {
+      await deleteBookingSupabase(id);
+    }
+    return false;
+  }
+
+  // Atomic Project Operations
+  public async saveProject(project: ServiceProject): Promise<ServiceProject> {
+    const idx = this.data.serviceProjects.findIndex(p => p.id === project.id || p.bookingRef === project.bookingRef);
+    if (idx >= 0) {
+      this.data.serviceProjects[idx] = project;
+    } else {
+      this.data.serviceProjects.unshift(project);
+    }
+    if (isSupabaseEnabled()) {
+      await upsertProjectSupabase(project);
+    }
+    this.saveDatabase();
+    return project;
+  }
+
+  public async deleteProject(id: string): Promise<boolean> {
+    const idx = this.data.serviceProjects.findIndex(p => p.id === id || p.bookingRef === id);
+    if (idx >= 0) {
+      this.data.serviceProjects.splice(idx, 1);
+      if (isSupabaseEnabled()) {
+        await deleteProjectSupabase(id);
+      }
+      this.saveDatabase();
+      return true;
+    }
+    if (isSupabaseEnabled()) {
+      await deleteProjectSupabase(id);
+    }
+    return false;
+  }
+
+  // Atomic CMS Operations
+  public async updateCMS(cms: StudioCMSData): Promise<StudioCMSData> {
+    this.data.studioCMS = cms;
+    if (isSupabaseEnabled()) {
+      await updateCmsSupabase(cms);
+    }
+    this.saveDatabase();
+    return cms;
+  }
+
+  // Atomic Owner Operations
+  public async saveOwner(owner: Owner): Promise<Owner> {
+    const idx = this.data.owners.findIndex(o => o.id === owner.id || o.phone === owner.phone || o.email === owner.email);
+    if (idx >= 0) {
+      this.data.owners[idx] = owner;
+    } else {
+      this.data.owners.push(owner);
+    }
+    if (isSupabaseEnabled()) {
+      await upsertOwnerSupabase(owner);
+    }
+    this.saveDatabase();
+    return owner;
+  }
+
+  public async deleteOwner(id: string): Promise<boolean> {
+    const idx = this.data.owners.findIndex(o => o.id === id);
+    if (idx >= 0) {
+      this.data.owners.splice(idx, 1);
+      if (isSupabaseEnabled()) {
+        await deleteOwnerSupabase(id);
+      }
+      this.saveDatabase();
+      return true;
+    }
+    if (isSupabaseEnabled()) {
+      await deleteOwnerSupabase(id);
+    }
+    return false;
+  }
+
   // Client Video Deliveries Management
   public async addClientVideoDelivery(delivery: ClientVideoDelivery): Promise<ClientVideoDelivery> {
     if (!this.data.clientVideoDeliveries) this.data.clientVideoDeliveries = [];
     this.data.clientVideoDeliveries.unshift(delivery);
     if (isSupabaseEnabled()) {
-      const saved = await upsertClientVideoDelivery(delivery);
-      if (saved) {
-        const idx = this.data.clientVideoDeliveries.findIndex(d => d.id === delivery.id);
-        if (idx !== -1) this.data.clientVideoDeliveries[idx] = saved;
-      }
+      await upsertClientVideoDeliverySupabase(delivery);
     }
     this.saveDatabase();
     return delivery;
@@ -897,7 +1090,7 @@ class DatabaseManager {
     const updated = { ...this.data.clientVideoDeliveries[idx], ...updates, updatedAt: new Date().toISOString() };
     this.data.clientVideoDeliveries[idx] = updated;
     if (isSupabaseEnabled()) {
-      await upsertClientVideoDelivery(updated);
+      await upsertClientVideoDeliverySupabase(updated);
     }
     this.saveDatabase();
     return updated;
@@ -909,19 +1102,10 @@ class DatabaseManager {
     if (idx === -1) return false;
     this.data.clientVideoDeliveries.splice(idx, 1);
     if (isSupabaseEnabled()) {
-      await deleteClientVideoDelivery(id);
+      await deleteClientVideoDeliverySupabase(id);
     }
     this.saveDatabase();
     return true;
-  }
-
-  public async syncClientVideoDeliveriesFromSupabase(): Promise<void> {
-    if (!isSupabaseEnabled()) return;
-    const deliveries = await fetchClientVideoDeliveries();
-    if (deliveries.length > 0) {
-      this.data.clientVideoDeliveries = deliveries;
-      this.saveDatabase();
-    }
   }
 
   public addAuditLog(entry: Omit<AuditLog, 'id' | 'timestamp'>) {
@@ -938,3 +1122,4 @@ class DatabaseManager {
 
 export const db = new DatabaseManager();
 export type { ClientVideoDelivery };
+

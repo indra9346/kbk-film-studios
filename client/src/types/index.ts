@@ -158,6 +158,7 @@ export interface ServiceProject {
   }>;
   deliveries: PrivateDeliveryFile[];
   testimonialId?: string;
+  isOverdue?: boolean;
   createdAt: string;
   updatedAt: string;
 }

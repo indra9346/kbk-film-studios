@@ -158,6 +158,36 @@ export interface ServiceProject {
   }>;
   deliveries: PrivateDeliveryFile[];
   testimonialId?: string;
+  isOverdue?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClientVideoDelivery {
+  id: string;
+  bookingRef: string;
+  clientId?: string;
+  clientName?: string;
+  projectId?: string;
+  title: string;
+  description?: string;
+  videoUrl: string;
+  videoSourceType?: string;
+  thumbnailUrl?: string;
+  fileName?: string;
+  fileSizeBytes?: number;
+  fileSizeFormatted?: string;
+  mimeType?: string;
+  fileCategory?: string;
+  downloadToken?: string;
+  storagePath?: string;
+  streamUrl?: string;
+  expiryDate?: string;
+  downloadCount?: number;
+  maxDownloads?: number;
+  isStreamable?: boolean;
+  isActive?: boolean;
+  ownerNotes?: string;
   createdAt: string;
   updatedAt: string;
 }

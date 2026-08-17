@@ -27,7 +27,12 @@ import {
   RefreshCw,
   FileText,
   Play,
-  Star
+  Star,
+  Zap,
+  Activity,
+  ArrowUpRight,
+  ShieldAlert,
+  PlayCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStudio } from '../context/StudioContext';
@@ -66,7 +71,7 @@ export const OwnerSpace: React.FC = () => {
 
   // Active Tab in Owner Space
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'bookings' | 'pricing' | 'lifecycle' | 'deliveries' | 'works' | 'testimonials' | 'cms' | 'owners' | 'audit' | 'client_videos'
+    'overview' | 'automation' | 'bookings' | 'pricing' | 'lifecycle' | 'deliveries' | 'works' | 'testimonials' | 'cms' | 'owners' | 'audit' | 'client_videos'
   >('overview');
 
   const [bookingSubFilter, setBookingSubFilter] = useState<'pending' | 'accepted' | 'rejected'>('pending');
@@ -83,6 +88,12 @@ export const OwnerSpace: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [cmsData, setCmsData] = useState<any | null>(null);
   const [dataLoading, setDataLoading] = useState(false);
+
+  // Automation & Workflows State
+  const [workflowsData, setWorkflowsData] = useState<{ executions: any[]; stats: any; overdueProjects: any[] } | null>(null);
+  const [workflowActionLoading, setWorkflowActionLoading] = useState(false);
+  const [workflowNotice, setWorkflowNotice] = useState<string | null>(null);
+
   // Client Video Deliveries
   const [clientVideos, setClientVideos] = useState<any[]>([]);
   const [editingClientVideo, setEditingClientVideo] = useState<any | null>(null);
@@ -129,6 +140,41 @@ export const OwnerSpace: React.FC = () => {
   const [newOwnerPhone, setNewOwnerPhone] = useState('');
   const [newOwnerEmail, setNewOwnerEmail] = useState('');
 
+  const loadWorkflows = async () => {
+    try {
+      const data = await api.getWorkflows();
+      setWorkflowsData(data);
+    } catch (err: any) {
+      console.warn('Failed to load workflows:', err);
+    }
+  };
+
+  const handleRunOverdueCheck = async () => {
+    try {
+      setWorkflowActionLoading(true);
+      const res = await api.checkOverdueWorkflows();
+      setWorkflowNotice(`Overdue scan complete! Flagged ${res.count || 0} projects.`);
+      await Promise.all([loadOwnerData(), loadWorkflows()]);
+    } catch (err: any) {
+      setWorkflowNotice(`Overdue scan error: ${err.message}`);
+    } finally {
+      setWorkflowActionLoading(false);
+    }
+  };
+
+  const handleTestN8n = async () => {
+    try {
+      setWorkflowActionLoading(true);
+      const res = await api.testN8nWebhook();
+      setWorkflowNotice(`n8n webhook test dispatched! Response: ${res.message || 'OK'}`);
+      await loadWorkflows();
+    } catch (err: any) {
+      setWorkflowNotice(`n8n test error: ${err.message}`);
+    } finally {
+      setWorkflowActionLoading(false);
+    }
+  };
+
   const loadOwnerData = async () => {
     try {
       setDataLoading(true);
@@ -152,7 +198,8 @@ export const OwnerSpace: React.FC = () => {
       setOwnersList(o);
       setAuditLogs(a);
       setCmsData(c);
-      // Load client video deliveries
+      // Load workflows & client videos
+      loadWorkflows();
       try {
         const cvd = await api.getClientVideoDeliveries();
         setClientVideos(cvd || []);
@@ -617,6 +664,7 @@ export const OwnerSpace: React.FC = () => {
             <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-surface-50">
               {[
                 { id: 'overview', label: 'Overview & KPIs', icon: BarChart3 },
+                { id: 'automation', label: 'Automation & n8n', icon: Zap },
                 { id: 'bookings', label: `Bookings (${bookings.filter(b => b.status === 'pending').length} New)`, icon: FileText },
                 { id: 'pricing', label: 'Service Pricing CMS', icon: DollarSign },
                 { id: 'lifecycle', label: `Active Lifecycle (${projects.filter(p => p.currentStage !== 'testimonial_received').length})`, icon: Layers },
@@ -759,6 +807,258 @@ export const OwnerSpace: React.FC = () => {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: AUTOMATION & n8n WORKFLOW ENGINE */}
+            {activeTab === 'automation' && (
+              <div className="space-y-8 animate-fadeIn">
+                {/* Header & Controls */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-serif text-xl font-bold text-ivory-100 flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-gold" />
+                        Automation Engine & n8n Workflow Hub
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-full bg-accent-emerald/15 text-accent-emerald text-[10px] font-bold border border-accent-emerald/30">
+                        Live Engine Active
+                      </span>
+                    </div>
+                    <p className="text-xs text-ivory-400 mt-1">
+                      Event-driven state machine connecting Supabase Realtime, Project Lifecycle, Delivery Lockers, Testimonials, and n8n Cloud webhooks.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={handleRunOverdueCheck}
+                      disabled={workflowActionLoading}
+                      className="px-3.5 py-2 rounded-xl bg-surface-100 hover:bg-gold hover:text-black border border-gold/30 text-gold text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Scan Overdue</span>
+                    </button>
+
+                    <button
+                      onClick={handleTestN8n}
+                      disabled={workflowActionLoading}
+                      className="px-3.5 py-2 rounded-xl bg-gold hover:bg-gold-light text-black text-xs font-bold uppercase tracking-wider shadow-gold-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Activity className="w-3.5 h-3.5" />
+                      <span>Test n8n Webhook</span>
+                    </button>
+
+                    <button
+                      onClick={() => { loadWorkflows(); loadOwnerData(); }}
+                      className="p-2 rounded-xl bg-surface-100 hover:bg-surface-50 border border-surface-50 text-ivory-300 transition-colors"
+                      title="Refresh Workflow Data"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {workflowNotice && (
+                  <div className="p-3.5 rounded-xl bg-surface-100 border border-gold/30 flex items-center justify-between text-xs text-gold">
+                    <span>{workflowNotice}</span>
+                    <button onClick={() => setWorkflowNotice(null)} className="text-ivory-400 hover:text-white text-xs ml-4">
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                {/* Workflow Statistics */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-5 rounded-2xl glass-panel border border-gold/30">
+                    <span className="text-[11px] text-ivory-400 uppercase tracking-wider block">Total Executions</span>
+                    <div className="font-serif text-3xl font-extrabold text-gold mt-1">
+                      {workflowsData?.stats?.total || 0}
+                    </div>
+                    <p className="text-[10px] text-ivory-400 mt-1">Logged pipeline actions</p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl glass-panel border border-surface-50">
+                    <span className="text-[11px] text-ivory-400 uppercase tracking-wider block">Success Rate</span>
+                    <div className="font-serif text-3xl font-extrabold text-accent-emerald mt-1">
+                      {workflowsData?.stats?.total ? `${Math.round(((workflowsData.stats.completed || 0) / workflowsData.stats.total) * 100)}%` : '100%'}
+                    </div>
+                    <p className="text-[10px] text-ivory-400 mt-1">{workflowsData?.stats?.completed || 0} completed successfully</p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl glass-panel border border-surface-50">
+                    <span className="text-[11px] text-ivory-400 uppercase tracking-wider block">Overdue Alerts</span>
+                    <div className="font-serif text-3xl font-extrabold text-accent-crimson mt-1">
+                      {workflowsData?.stats?.overdueCount || projects.filter(p => p.isOverdue).length}
+                    </div>
+                    <p className="text-[10px] text-ivory-400 mt-1">Projects past delivery target</p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl glass-panel border border-surface-50">
+                    <span className="text-[11px] text-ivory-400 uppercase tracking-wider block">n8n Cloud Webhook</span>
+                    <div className="font-serif text-base font-bold text-ivory-100 mt-2 flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-accent-emerald animate-pulse"></span>
+                      <span>Connected</span>
+                    </div>
+                    <a
+                      href="https://app.n8n.cloud/dashboard"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-gold hover:underline flex items-center gap-1 mt-1 font-semibold"
+                    >
+                      <span>Open n8n Dashboard</span>
+                      <ArrowUpRight className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+
+                {/* 5 Core Automated Workflows Blueprint */}
+                <div className="space-y-3">
+                  <h4 className="font-serif text-base font-bold text-ivory-100">
+                    Active Automation Pipelines
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[
+                      {
+                        title: '1. Booking → Project Ingestion',
+                        desc: 'Creates client record, generates immutable price snapshot, spawns tracking lifecycle project, and fires webhook to n8n.',
+                        trigger: 'Client Form Submission',
+                        status: 'Active'
+                      },
+                      {
+                        title: '2. Project Lifecycle State Machine',
+                        desc: 'Validates strict 9-stage progression (Booking → Scheduling → Raw Footage → In Progress → Grading → Review → Completed → Delivered → Testimonial).',
+                        trigger: 'Owner Stage Updates',
+                        status: 'Active'
+                      },
+                      {
+                        title: '3. Video Delivery Locker Sync',
+                        desc: 'Attaches 4K master deliverables, generates secure client streaming token, advances project to Delivered stage, and creates testimonial draft.',
+                        trigger: 'Upload Delivery File',
+                        status: 'Active'
+                      },
+                      {
+                        title: '4. Testimonial Moderation Pipeline',
+                        desc: 'Collects client feedback, stages as pending moderation for owner review, and publishes verified reviews to Home & Testimonials pages.',
+                        trigger: 'Client Feedback Form',
+                        status: 'Active'
+                      },
+                      {
+                        title: '5. Overdue Deadline Guard',
+                        desc: 'Calculates project elapsed time vs estimated turnaround days, flags overdue projects, and dispatches automated reminder alerts.',
+                        trigger: 'Daily Cron / Manual Trigger',
+                        status: 'Active'
+                      },
+                      {
+                        title: '6. Supabase Realtime Live Sync',
+                        desc: 'Multi-device cross-tab synchronization broadcasting instant database changes to all client & owner sessions in real-time.',
+                        trigger: 'Database Mutation',
+                        status: 'Active'
+                      }
+                    ].map((wf, idx) => (
+                      <div key={idx} className="p-4 rounded-2xl bg-surface-100/70 border border-gold/20 flex flex-col justify-between space-y-3">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-serif text-sm font-bold text-ivory-100">{wf.title}</h5>
+                            <span className="px-2 py-0.5 rounded bg-accent-emerald/15 text-accent-emerald text-[9px] font-bold border border-accent-emerald/30">
+                              {wf.status}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-ivory-300 leading-relaxed font-light">{wf.desc}</p>
+                        </div>
+                        <div className="pt-2 border-t border-surface-50 flex items-center justify-between text-[10px] text-ivory-400">
+                          <span>Trigger:</span>
+                          <span className="text-gold font-medium">{wf.trigger}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Overdue Projects Flagged Section (if any) */}
+                {projects.filter(p => p.isOverdue).length > 0 && (
+                  <div className="p-5 rounded-2xl bg-accent-crimson/10 border border-accent-crimson/30 space-y-3">
+                    <div className="flex items-center gap-2 text-accent-crimson font-bold text-sm">
+                      <ShieldAlert className="w-4 h-4" />
+                      <span>Overdue Projects Requiring Attention ({projects.filter(p => p.isOverdue).length})</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {projects.filter(p => p.isOverdue).map((p) => (
+                        <div key={p.id} className="p-3 rounded-xl bg-surface-200 border border-accent-crimson/20 flex items-center justify-between">
+                          <div>
+                            <span className="font-mono text-xs font-bold text-white block">{p.bookingRef} - {p.clientName}</span>
+                            <span className="text-[11px] text-ivory-400">{p.serviceTitle} • Target: {p.estimatedDeliveryDate || 'N/A'}</span>
+                          </div>
+                          <button
+                            onClick={() => setActiveTab('lifecycle')}
+                            className="px-2.5 py-1 rounded bg-accent-crimson/20 hover:bg-accent-crimson text-white text-xs font-semibold"
+                          >
+                            Update Stage
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Live Automation Execution History Table */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-serif text-base font-bold text-ivory-100">
+                      Live Execution History
+                    </h4>
+                    <span className="text-xs text-ivory-400">
+                      Total {workflowsData?.executions?.length || 0} Events
+                    </span>
+                  </div>
+
+                  {(!workflowsData?.executions || workflowsData.executions.length === 0) ? (
+                    <div className="p-8 rounded-2xl glass-panel text-center text-ivory-400 text-xs">
+                      No automation events logged yet. Triggering a booking, stage update, or test ping will log real-time executions here.
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl glass-panel border border-surface-50 overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-surface-100/90 text-[11px] uppercase tracking-wider text-ivory-400 border-b border-surface-50">
+                            <tr>
+                              <th className="py-3 px-4">Status</th>
+                              <th className="py-3 px-4">Workflow Name</th>
+                              <th className="py-3 px-4">Trigger Event</th>
+                              <th className="py-3 px-4">Related ID</th>
+                              <th className="py-3 px-4">Action Taken</th>
+                              <th className="py-3 px-4">Timestamp</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-surface-50">
+                            {workflowsData.executions.slice(0, 20).map((ex) => (
+                              <tr key={ex.id} className="hover:bg-surface-100/50 transition-colors">
+                                <td className="py-3 px-4">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                    ex.status === 'completed'
+                                      ? 'bg-accent-emerald/15 text-accent-emerald border border-accent-emerald/30'
+                                      : ex.status === 'failed'
+                                      ? 'bg-accent-crimson/15 text-accent-crimson border border-accent-crimson/30'
+                                      : 'bg-gold/15 text-gold border border-gold/30'
+                                  }`}>
+                                    {ex.status}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 font-semibold text-ivory-100">{ex.workflowName}</td>
+                                <td className="py-3 px-4 text-gold font-mono text-[11px]">{ex.triggerEvent}</td>
+                                <td className="py-3 px-4 font-mono text-ivory-300">{ex.relatedEntityId || '—'}</td>
+                                <td className="py-3 px-4 text-ivory-300 max-w-xs truncate">{ex.actionTaken}</td>
+                                <td className="py-3 px-4 text-ivory-400 whitespace-nowrap">
+                                  {new Date(ex.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

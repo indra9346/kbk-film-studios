@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { X, ExternalLink, Calendar, MapPin, Layers, Film, Sparkles, CheckCircle2 } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { X, ExternalLink, Calendar, MapPin, Layers, Film, Sparkles, CheckCircle2, Volume2, VolumeX } from 'lucide-react';
 import { PublicWork } from '../../types';
 import { getVideoType, getCleanVideoUrl } from './VideoCard';
 
@@ -10,7 +10,7 @@ interface VideoModalProps {
 
 export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = React.useState(true);
+  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     if (work && videoRef.current) {
@@ -21,13 +21,15 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
 
   if (!work) return null;
 
+  const media = getVideoType(work.videoUrl);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-xl animate-fadeIn">
-      <div className="relative w-full max-w-4xl max-h-[95vh] flex flex-col bg-surface-200 border border-gold/40 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-4xl max-h-[95vh] flex flex-col bg-surface-200 border border-gold/40 rounded-3xl shadow-2xl overflow-hidden">
         {/* Top Control Bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-50 bg-surface-100/90">
           <div className="flex items-center gap-3">
-            <span className="px-2.5 py-1 rounded bg-gold/15 text-gold text-xs font-bold uppercase tracking-wider border border-gold/30">
+            <span className="px-2.5 py-1 rounded-md bg-gold/15 text-gold text-xs font-bold uppercase tracking-wider border border-gold/30">
               {work.category}
             </span>
             <h3 className="font-serif font-bold text-base sm:text-lg text-white">
@@ -35,16 +37,20 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsMuted((prev) => !prev)}
-              className="px-3 py-1.5 rounded-lg bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 text-[10px] font-bold uppercase tracking-wider transition-colors"
-            >
-              {isMuted ? 'Unmute' : 'Mute'}
-            </button>
+            {media.type === 'direct' && (
+              <button
+                type="button"
+                onClick={() => setIsMuted((prev) => !prev)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 text-xs font-bold uppercase tracking-wider transition-colors"
+              >
+                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                <span>{isMuted ? 'Unmute' : 'Mute'}</span>
+              </button>
+            )}
             <button
               onClick={onClose}
-              className="p-2 rounded-lg bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 transition-colors"
+              className="p-2 rounded-xl bg-surface-200 hover:bg-gold hover:text-black text-ivory-300 transition-colors"
+              title="Close Cinema View"
             >
               <X className="w-5 h-5" />
             </button>
@@ -53,33 +59,36 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
 
         {/* Video Player Section */}
         <div className="relative aspect-video w-full bg-black flex flex-col items-center justify-center">
-          {(() => {
-            const media = getVideoType(work.videoUrl);
-            if (media.type === 'youtube' && media.id) {
-              return (
-                <iframe
-                  src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${media.id}&controls=1&rel=0&playsinline=1`}
-                  title={work.title}
-                  className="w-full h-full object-contain border-0"
-                  allow="autoplay; encrypted-media; picture-in-picture; muted"
-                  allowFullScreen
-                  frameBorder="0"
-                />
-              );
-            }
-            return (
-              <video
-                ref={videoRef}
-                src={getCleanVideoUrl(work.videoUrl)}
-                controls
-                autoPlay
-                muted={isMuted}
-                playsInline
-                loop
-                className="w-full h-full object-contain"
-              />
-            );
-          })()}
+          {media.type === 'youtube' && media.id ? (
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${media.id}?autoplay=1&mute=0&controls=1&rel=0&playsinline=1`}
+              title={work.title}
+              className="w-full h-full object-contain border-0"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+              frameBorder="0"
+            />
+          ) : media.type === 'google-drive' && media.id ? (
+            <iframe
+              src={`https://drive.google.com/file/d/${media.id}/preview`}
+              title={work.title}
+              className="w-full h-full object-contain border-0"
+              allow="autoplay"
+              allowFullScreen
+              frameBorder="0"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              src={getCleanVideoUrl(work.videoUrl)}
+              controls
+              autoPlay
+              muted={isMuted}
+              playsInline
+              loop
+              className="w-full h-full object-contain"
+            />
+          )}
         </div>
 
         {/* Details & Creative Breakdown */}
@@ -101,7 +110,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
             <h4 className="font-serif font-bold text-sm text-gold uppercase tracking-wider mb-1.5">
               Film Narrative & Post-Production Treatment
             </h4>
-            <p className="text-ivory-200 leading-relaxed">
+            <p className="text-ivory-200 leading-relaxed font-light">
               {work.description}
             </p>
           </div>
@@ -112,7 +121,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
               <Layers className="w-3.5 h-3.5 text-gold" /> Post-Production Stack:
             </span>
             {work.softwareUsed?.map((item, idx) => (
-              <span key={idx} className="px-2.5 py-1 rounded bg-surface-100 text-ivory-300 border border-gold/20 text-xs">
+              <span key={idx} className="px-2.5 py-1 rounded-lg bg-surface-100 text-ivory-300 border border-gold/20 text-xs">
                 {item}
               </span>
             ))}

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Maximize2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Maximize2, Play, Volume2, VolumeX } from 'lucide-react';
 import { PublicWork } from '../../types';
 
 interface VideoCardProps {
@@ -7,8 +7,50 @@ interface VideoCardProps {
   onSelect: (work: PublicWork) => void;
 }
 
+export const getVideoType = (url: string) => {
+  if (!url) return { type: 'unknown', id: '' };
+  const trimmed = url.trim();
+
+  // YouTube / YouTube Shorts / youtu.be
+  if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
+    const shortsMatch = trimmed.match(/shorts\/([a-zA-Z0-9_-]+)/);
+    if (shortsMatch && shortsMatch[1]) {
+      return { type: 'youtube', id: shortsMatch[1] };
+    }
+    const standardMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/);
+    if (standardMatch && standardMatch[1]) {
+      return { type: 'youtube', id: standardMatch[1] };
+    }
+  }
+
+  // Google Drive
+  if (trimmed.includes('drive.google.com') || trimmed.includes('docs.google.com')) {
+    const match =
+      trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+      trimmed.match(/\/file\/u\/\d+\/d\/([a-zA-Z0-9_-]+)/) ||
+      trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
+      trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    return { type: 'google-drive', id: (match && match[1]) || '' };
+  }
+
+  return { type: 'direct', id: trimmed };
+};
+
+export const getCleanVideoUrl = (url: string): string => {
+  if (!url) return '/assets/hero-reel.mp4';
+  const media = getVideoType(url);
+  if (media.type === 'google-drive' && media.id) {
+    return `/api/public/stream-drive/${media.id}`;
+  }
+  if (media.type === 'direct' && url.startsWith('http')) {
+    return url;
+  }
+  return url || '/assets/hero-reel.mp4';
+};
+
 const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> = ({ src, poster, title }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -17,21 +59,41 @@ const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> 
     el.muted = true;
     el.playsInline = true;
     el.setAttribute('playsinline', 'true');
+    el.setAttribute('webkit-playsinline', 'true');
     el.loop = true;
     el.autoplay = true;
-    el.preload = 'auto';
 
-    const tryPlay = () => {
-      if (el.paused) {
-        el.play().catch(() => {
-          // Autoplay is intentionally restricted by browser policy until the user interacts.
+    // Viewport IntersectionObserver to trigger play when scrolled into view
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            el.play()
+              .then(() => setIsPlaying(true))
+              .catch(() => {
+                // Autoplay may be restricted before user gesture; remains muted poster
+              });
+          } else {
+            el.pause();
+            setIsPlaying(false);
+          }
         });
-      }
-    };
+      },
+      { threshold: 0.25 }
+    );
 
-    tryPlay();
-    el.addEventListener('loadeddata', tryPlay);
-    return () => el.removeEventListener('loadeddata', tryPlay);
+    observer.observe(el);
+
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    el.addEventListener('play', onPlay);
+    el.addEventListener('pause', onPause);
+
+    return () => {
+      observer.disconnect();
+      el.removeEventListener('play', onPlay);
+      el.removeEventListener('pause', onPause);
+    };
   }, [src]);
 
   return (
@@ -51,35 +113,6 @@ const AutoplayVideo: React.FC<{ src: string; poster?: string; title?: string }> 
   );
 };
 
-export const getVideoType = (url: string) => {
-  if (!url) return { type: 'unknown', id: '' };
-  if (url.includes('youtube.com') || url.includes('youtu.be')) {
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([^&?#]+)/);
-    return { type: 'youtube', id: (match && match[1]) || '' };
-  }
-  if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
-    const match =
-      url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
-      url.match(/\/file\/u\/\d+\/d\/([a-zA-Z0-9_-]+)/) ||
-      url.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
-      url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    return { type: 'google-drive', id: (match && match[1]) || '' };
-  }
-  return { type: 'direct', id: url };
-};
-
-export const getCleanVideoUrl = (url: string): string => {
-  if (!url) return '/assets/hero-reel.mp4';
-  const media = getVideoType(url);
-  if (media.type === 'google-drive' && media.id) {
-    return `/api/public/stream-drive/${media.id}`;
-  }
-  if (media.type === 'direct' && url.startsWith('http')) {
-    return url;
-  }
-  return url || '/assets/hero-reel.mp4';
-};
-
 export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
   const media = getVideoType(work.videoUrl);
   const videoSrc = getCleanVideoUrl(work.videoUrl);
@@ -87,22 +120,31 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
   return (
     <div
       onClick={() => onSelect(work)}
-      className="group relative rounded-2xl overflow-hidden glass-panel glass-panel-hover cursor-pointer border border-gold/20 flex flex-col transition-all duration-300 hover:border-gold/50 shadow-lg hover:shadow-gold-sm"
+      className="group relative rounded-3xl overflow-hidden glass-panel glass-panel-hover cursor-pointer border border-gold/20 flex flex-col transition-all duration-300 hover:border-gold/60 shadow-lg hover:shadow-gold-sm"
     >
       {/* Video Container (16:9 Aspect Ratio) */}
       <div className="relative aspect-video w-full overflow-hidden bg-black group/preview">
         {media.type === 'youtube' && media.id ? (
           <iframe
-            src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0&modestbranding=1&rel=0&playsinline=1`}
+            src={`https://www.youtube-nocookie.com/embed/${media.id}?autoplay=1&mute=1&loop=1&playlist=${media.id}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`}
             title={work.title}
             className="w-full h-full object-cover border-0 pointer-events-none scale-105"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; muted"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             frameBorder="0"
           />
+        ) : media.type === 'google-drive' && media.id ? (
+          <div className="relative w-full h-full">
+            <iframe
+              src={`https://drive.google.com/file/d/${media.id}/preview`}
+              title={work.title}
+              className="w-full h-full object-cover border-0 pointer-events-none scale-105"
+              allow="autoplay"
+            />
+          </div>
         ) : (
           <AutoplayVideo
             src={videoSrc}
-            poster={media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (work.thumbnailUrl || undefined)}
+            poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
             title={work.title}
           />
         )}
@@ -121,7 +163,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
           </span>
         </div>
 
-        {/* Center Hover Expand Icon */}
+        {/* Center Hover Cinema View Icon */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
           <div className="w-12 h-12 rounded-full bg-gold/90 text-black flex items-center justify-center shadow-gold-md scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300">
             <Maximize2 className="w-5 h-5" />
@@ -129,7 +171,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({ work, onSelect }) => {
         </div>
 
         {/* Event Location & Year Pill (Bottom Right) */}
-        <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-surface-200/85 backdrop-blur-sm border border-surface-50 text-[10px] text-ivory-300 z-10">
+        <div className="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full bg-surface-200/85 backdrop-blur-sm border border-surface-50 text-[10px] text-ivory-300 z-10">
           {work.eventLocation} • {work.eventYear}
         </div>
       </div>

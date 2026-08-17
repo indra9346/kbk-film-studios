@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import { db } from './db.js';
+import { workflowEngine } from './workflowEngine.js';
 import {
   BookingRequest,
   ServiceProject,
@@ -378,7 +379,7 @@ app.get('/api/testimonials', (req: Request, res: Response) => {
 });
 
 // Submit New Booking Request
-app.post('/api/bookings', (req: Request, res: Response) => {
+app.post('/api/bookings', async (req: Request, res: Response) => {
   const {
     fullName,
     phone,
@@ -461,8 +462,14 @@ app.post('/api/bookings', (req: Request, res: Response) => {
     createdAt: new Date().toISOString()
   };
 
-  db.getBookingRequests().unshift(booking);
-  db.saveDatabase();
+  await db.saveBooking(booking);
+
+  // Trigger Automation Workflow: Client creation + Project creation + Audit Log + n8n dispatch
+  try {
+    await workflowEngine.handleBookingSubmitted(booking, db);
+  } catch (wfErr) {
+    console.error('[WorkflowEngine] Booking automation error:', wfErr);
+  }
 
   db.addAuditLog({
     actorRole: 'client',
@@ -1205,59 +1212,36 @@ app.post('/api/owner/bookings/:id/price-revision', requireOwnerAuth, (req: AuthR
   res.json({ success: true, booking, history: historyEntry });
 });
 
-// Delete Booking Request (and associated lifecycle project)
-app.delete('/api/owner/bookings/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+// Delete Booking Request
+app.delete('/api/owner/bookings/:id', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const index = db.getBookingRequests().findIndex(b => b.id === id || b.bookingRef === id);
-  if (index === -1) {
-    res.status(404).json({ error: 'Booking not found' });
-    return;
-  }
-
-  const removed = db.getBookingRequests().splice(index, 1)[0];
-
-  // Also remove corresponding project if any exists
-  const projIndex = db.getServiceProjects().findIndex(
-    p => p.bookingId === removed.id || p.bookingRef === removed.bookingRef
-  );
-  if (projIndex !== -1) {
-    db.getServiceProjects().splice(projIndex, 1);
-  }
-
-  db.saveDatabase();
+  await db.deleteBooking(id);
 
   db.addAuditLog({
     actorRole: req.owner?.role as any || 'primary_owner',
     actorName: req.owner?.name || 'Owner',
     actorIdentifier: req.owner?.phone || 'owner',
     action: 'BOOKING_DELETED',
-    details: `Booking ${removed.bookingRef} for client ${removed.clientName} was deleted by ${req.owner?.name}.`
+    details: `Booking ${id} was deleted by ${req.owner?.name}.`
   });
 
-  res.json({ success: true, message: `Booking ${removed.bookingRef} deleted successfully.` });
+  res.json({ success: true, message: `Booking ${id} deleted successfully.` });
 });
 
 // Delete Service Project Lifecycle
-app.delete('/api/owner/projects/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.delete('/api/owner/projects/:id', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const index = db.getServiceProjects().findIndex(p => p.id === id || p.bookingRef === id);
-  if (index === -1) {
-    res.status(404).json({ error: 'Project not found' });
-    return;
-  }
-
-  const removed = db.getServiceProjects().splice(index, 1)[0];
-  db.saveDatabase();
+  await db.deleteProject(id);
 
   db.addAuditLog({
     actorRole: req.owner?.role as any || 'primary_owner',
     actorName: req.owner?.name || 'Owner',
     actorIdentifier: req.owner?.phone || 'owner',
     action: 'PROJECT_DELETED',
-    details: `Lifecycle Project ${removed.bookingRef} for client ${removed.clientName} was deleted by ${req.owner?.name}.`
+    details: `Lifecycle Project ${id} was deleted by ${req.owner?.name}.`
   });
 
-  res.json({ success: true, message: `Project ${removed.bookingRef} deleted successfully.` });
+  res.json({ success: true, message: `Project ${id} deleted successfully.` });
 });
 
 // Manage Service Projects Lifecycle (9 Stages)
@@ -1265,60 +1249,30 @@ app.get('/api/owner/projects', requireOwnerAuth, (req: AuthRequest, res: Respons
   res.json(db.getServiceProjects());
 });
 
-app.patch('/api/owner/projects/:id/stage', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.patch('/api/owner/projects/:id/stage', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { stage, stageLabel, message, progressPercent } = req.body;
+  const { stage, message } = req.body;
 
-  const project = db.getServiceProjects().find(p => p.id === id);
-  if (!project) {
-    res.status(404).json({ error: 'Project not found' });
-    return;
+  try {
+    const project = await workflowEngine.handleProjectStatusTransition(
+      id,
+      stage,
+      req.owner?.name || 'Kurudi Bharath Kumar',
+      message,
+      db
+    );
+    res.json({ success: true, project });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Failed to update project stage' });
   }
-
-  const stageProgressMap: Record<ServiceProjectStage, number> = {
-    booking_requested: 10,
-    accepted_scheduled: 20,
-    raw_footage_received: 35,
-    in_progress: 50,
-    color_grading_audio: 70,
-    in_review: 85,
-    service_completed: 95,
-    files_delivered: 100,
-    testimonial_received: 100
-  };
-
-  project.currentStage = stage;
-  project.stageProgressPercent = progressPercent || stageProgressMap[stage as ServiceProjectStage] || 50;
-  project.updatedAt = new Date().toISOString();
-
-  project.statusHistory.push({
-    id: `stat-${Date.now()}`,
-    stage,
-    stageLabel: stageLabel || stage.replace(/_/g, ' ').toUpperCase(),
-    message: message || `Status updated to ${stageLabel || stage}`,
-    updatedBy: req.owner?.name || 'Kurudi Bharath Kumar',
-    timestamp: new Date().toISOString()
-  });
-
-  db.saveDatabase();
-
-  db.addAuditLog({
-    actorRole: req.owner?.role as any || 'primary_owner',
-    actorName: req.owner?.name || 'Owner',
-    actorIdentifier: req.owner?.phone || 'owner',
-    action: 'LIFECYCLE_STAGE_ADVANCED',
-    details: `Project ${project.bookingRef} updated to stage: ${stage}.`
-  });
-
-  res.json({ success: true, project });
 });
 
 // Upload / Attach Private Delivery File for Client Locker
-app.post('/api/owner/projects/:id/delivery', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.post('/api/owner/projects/:id/delivery', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const { title, fileName, fileSizeBytes, fileCategory, expiryDays, maxDownloads } = req.body;
 
-  const project = db.getServiceProjects().find(p => p.id === id);
+  const project = db.getServiceProjects().find(p => p.id === id || p.bookingRef === id);
   if (!project) {
     res.status(404).json({ error: 'Project not found' });
     return;
@@ -1348,34 +1302,40 @@ app.post('/api/owner/projects/:id/delivery', requireOwnerAuth, (req: AuthRequest
     createdAt: new Date().toISOString()
   };
 
-  db.getPrivateDeliveries().push(newDelivery);
   project.deliveries.push(newDelivery);
+  await db.saveProject(project);
 
-  // Automatically advance project stage to files_delivered if not already
-  if (project.currentStage !== 'files_delivered' && project.currentStage !== 'testimonial_received') {
-    project.currentStage = 'files_delivered';
-    project.stageProgressPercent = 100;
-    project.statusHistory.push({
-      id: `stat-${Date.now()}`,
-      stage: 'files_delivered',
-      stageLabel: 'Files Delivered & Handover Confirmed',
-      message: `Master deliverables (${newDelivery.title}) uploaded to your private client locker!`,
-      updatedBy: req.owner?.name || 'Kurudi Bharath Kumar',
-      timestamp: new Date().toISOString()
-    });
-  }
+  const clientDeliveryRecord = {
+    id: `cvd-${Date.now()}`,
+    bookingRef: project.bookingRef,
+    clientId: project.clientId,
+    clientName: project.clientName,
+    projectId: project.id,
+    title: newDelivery.title,
+    description: `Private deliverable for ${project.serviceTitle}`,
+    videoUrl: newDelivery.streamUrl || '/assets/hero-reel.mp4',
+    videoSourceType: 'direct_mp4',
+    thumbnailUrl: '/assets/kbk-logo.jpg',
+    fileName: newDelivery.fileName,
+    fileSizeBytes: newDelivery.fileSizeBytes,
+    fileSizeFormatted: newDelivery.fileSizeFormatted,
+    mimeType: newDelivery.mimeType,
+    fileCategory: newDelivery.fileCategory,
+    downloadToken: newDelivery.downloadToken,
+    expiryDate: newDelivery.expiryDate,
+    downloadCount: 0,
+    maxDownloads: newDelivery.maxDownloads,
+    isStreamable: true,
+    isActive: true,
+    ownerNotes: `Attached by ${req.owner?.name || 'Owner'}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
 
-  db.saveDatabase();
+  await db.addClientVideoDelivery(clientDeliveryRecord);
+  await workflowEngine.handleVideoDeliveryAdded(clientDeliveryRecord, db);
 
-  db.addAuditLog({
-    actorRole: req.owner?.role as any || 'primary_owner',
-    actorName: req.owner?.name || 'Owner',
-    actorIdentifier: req.owner?.phone || 'owner',
-    action: 'PRIVATE_DELIVERY_UPLOADED',
-    details: `Uploaded private deliverable "${newDelivery.title}" for ${project.bookingRef}.`
-  });
-
-  res.status(201).json({ success: true, delivery: newDelivery, project });
+  res.status(201).json({ success: true, delivery: newDelivery, clientDelivery: clientDeliveryRecord });
 });
 
 // Manage Services Pricing & Catalog CRUD
@@ -1443,7 +1403,7 @@ app.put('/api/owner/services/:id', requireOwnerAuth, (req: AuthRequest, res: Res
 });
 
 // Manage Works CRUD
-app.post('/api/owner/works', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.post('/api/owner/works', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const { title, category, eventLocation, eventYear, thumbnailUrl, videoUrl, videoSourceType, externalDestUrl, description, softwareUsed } = req.body;
 
   const newWork: PublicWork = {
@@ -1464,13 +1424,20 @@ app.post('/api/owner/works', requireOwnerAuth, (req: AuthRequest, res: Response)
     createdAt: new Date().toISOString()
   };
 
-  db.getPublicWorks().unshift(newWork);
-  db.saveDatabase();
+  await db.saveWork(newWork);
+
+  db.addAuditLog({
+    actorRole: req.owner?.role as any || 'primary_owner',
+    actorName: req.owner?.name || 'Owner',
+    actorIdentifier: req.owner?.phone || 'owner',
+    action: 'SHOWCASE_WORK_CREATED',
+    details: `Added new showcase film "${newWork.title}" under ${newWork.category}.`
+  });
 
   res.status(201).json({ success: true, work: newWork });
 });
 
-app.put('/api/owner/works/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.put('/api/owner/works/:id', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const work = db.getPublicWorks().find(w => w.id === id);
   if (!work) {
@@ -1479,34 +1446,27 @@ app.put('/api/owner/works/:id', requireOwnerAuth, (req: AuthRequest, res: Respon
   }
 
   Object.assign(work, req.body);
-  db.saveDatabase();
+  await db.saveWork(work);
   res.json({ success: true, work });
 });
 
-app.delete('/api/owner/works/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.delete('/api/owner/works/:id', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const cleanId = decodeURIComponent(req.params.id || '').trim();
-  const index = db.getPublicWorks().findIndex(w => w.id === cleanId || w.id.toLowerCase() === cleanId.toLowerCase());
-  if (index === -1) {
-    res.status(404).json({ error: 'Work not found' });
-    return;
-  }
-
-  const removed = db.getPublicWorks().splice(index, 1);
-  db.saveDatabase();
+  await db.deleteWork(cleanId);
 
   db.addAuditLog({
     actorRole: req.owner?.role as any || 'primary_owner',
     actorName: req.owner?.name || 'Owner',
     actorIdentifier: req.owner?.phone || 'owner',
     action: 'SHOWCASE_WORK_DELETED',
-    details: `Deleted showcase work "${removed[0]?.title || cleanId}" (${cleanId})`
+    details: `Deleted showcase work (${cleanId})`
   });
 
   res.json({ success: true, message: 'Work deleted successfully' });
 });
 
 // Manage Testimonials CRUD
-app.post('/api/owner/testimonials', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.post('/api/owner/testimonials', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const newTestimonial: Testimonial = {
     id: `test-${Date.now()}`,
     clientName: req.body.clientName,
@@ -1522,12 +1482,11 @@ app.post('/api/owner/testimonials', requireOwnerAuth, (req: AuthRequest, res: Re
     createdAt: new Date().toISOString()
   };
 
-  db.getTestimonials().unshift(newTestimonial);
-  db.saveDatabase();
+  await db.saveTestimonial(newTestimonial);
   res.status(201).json({ success: true, testimonial: newTestimonial });
 });
 
-app.put('/api/owner/testimonials/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.put('/api/owner/testimonials/:id', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const testimonial = db.getTestimonials().find(t => t.id === id);
   if (!testimonial) {
@@ -1536,28 +1495,21 @@ app.put('/api/owner/testimonials/:id', requireOwnerAuth, (req: AuthRequest, res:
   }
 
   Object.assign(testimonial, req.body);
-  db.saveDatabase();
+  await db.saveTestimonial(testimonial);
   res.json({ success: true, testimonial });
 });
 
-app.delete('/api/owner/testimonials/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.delete('/api/owner/testimonials/:id', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const index = db.getTestimonials().findIndex(t => t.id === id);
-  if (index === -1) {
-    res.status(404).json({ error: 'Testimonial not found' });
-    return;
-  }
-
-  db.getTestimonials().splice(index, 1);
-  db.saveDatabase();
+  await db.deleteTestimonial(id);
   res.json({ success: true, message: 'Testimonial deleted' });
 });
 
 // Update Studio CMS & Bio
-app.put('/api/owner/cms', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.put('/api/owner/cms', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
   const currentCMS = db.getStudioCMS();
-  Object.assign(currentCMS, req.body);
-  db.saveDatabase();
+  const updated = { ...currentCMS, ...req.body };
+  await db.updateCMS(updated);
 
   db.addAuditLog({
     actorRole: req.owner?.role as any || 'primary_owner',
@@ -1567,7 +1519,47 @@ app.put('/api/owner/cms', requireOwnerAuth, (req: AuthRequest, res: Response) =>
     details: `Updated studio profile settings, bio, education, or counters.`
   });
 
-  res.json({ success: true, studioCMS: currentCMS });
+  res.json({ success: true, studioCMS: updated });
+});
+
+// ----------------------------------------------------
+// AUTOMATION WORKFLOW ENGINE & n8n WEBHOOK ENDPOINTS
+// ----------------------------------------------------
+app.get('/api/owner/workflows', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+  const executions = workflowEngine.getExecutions();
+  const completed = executions.filter(e => e.status === 'completed').length;
+  const failed = executions.filter(e => e.status === 'failed').length;
+  const pending = executions.filter(e => e.status === 'pending').length;
+  const overdueProjects = db.getServiceProjects().filter(p => p.isOverdue);
+
+  res.json({
+    executions,
+    stats: {
+      total: executions.length,
+      completed,
+      failed,
+      pending,
+      overdueCount: overdueProjects.length,
+      n8nConfigured: Boolean(process.env.N8N_WEBHOOK_URL)
+    },
+    overdueProjects
+  });
+});
+
+app.post('/api/owner/workflows/overdue-check', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
+  const flagged = await workflowEngine.checkOverdueProjects(db);
+  res.json({ success: true, count: flagged.length, flagged });
+});
+
+app.post('/api/owner/workflows/test-n8n', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
+  const testPayload = {
+    test: true,
+    triggeredBy: req.owner?.name || 'Kurudi Bharath Kumar',
+    timestamp: new Date().toISOString(),
+    message: 'Hello from KBK Film Studios Automation Engine to n8n Cloud!'
+  };
+  await workflowEngine.dispatchToN8n('TEST_PING', testPayload);
+  res.json({ success: true, message: 'Test ping dispatched to n8n Cloud webhook.', n8nConfigured: Boolean(process.env.N8N_WEBHOOK_URL) });
 });
 
 // Manage Co-Owners Team
@@ -1719,8 +1711,7 @@ app.get('/api/owner/audit-logs', requireOwnerAuth, (req: AuthRequest, res: Respo
 // ----------------------------------------------------
 
 // GET all client video deliveries
-app.get('/api/owner/client-video-deliveries', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
-  await db.syncClientVideoDeliveriesFromSupabase();
+app.get('/api/owner/client-video-deliveries', requireOwnerAuth, (req: AuthRequest, res: Response) => {
   res.json(db.getClientVideoDeliveries());
 });
 

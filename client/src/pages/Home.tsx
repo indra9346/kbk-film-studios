@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, Sparkles, ShieldCheck, ArrowRight, Star, Clock, CheckCircle2, Play, Zap, Palette, Layers, HelpCircle } from 'lucide-react';
+import { Film, Sparkles, ShieldCheck, ArrowRight, Star, Clock, CheckCircle2, XCircle, Play, Zap, Palette, Layers, HelpCircle, ShieldAlert } from 'lucide-react';
 import { useStudio } from '../context/StudioContext';
 import { CinematicHeroVideo } from '../components/hero/CinematicHeroVideo';
 import { VideoCard } from '../components/video/VideoCard';
@@ -10,20 +10,31 @@ import { PublicWork } from '../types';
 
 export const Home: React.FC = () => {
   const { services, works, testimonials, cms, setPreSelectedServiceId, setIsPricingClarificationOpen, setClarificationServiceTitle } = useStudio();
+  const [selectedServiceFilter, setSelectedServiceFilter] = useState<string>('all');
   const [selectedWorkModal, setSelectedWorkModal] = useState<PublicWork | null>(null);
   const navigate = useNavigate();
 
-  const featuredServices = services.filter((s) => s.featured || s.isActive).slice(0, 6);
-  const featuredWorks = works.filter((w) => w.isFeatured || w.isPublished).slice(0, 4);
-  const featuredTestimonials = testimonials.slice(0, 3);
+  const activeServices = services.filter((s) => s.isActive);
+  const filteredServices = selectedServiceFilter === 'all'
+    ? activeServices
+    : selectedServiceFilter === 'wedding'
+    ? activeServices.filter(s => s.slug.includes('wedding') || s.slug.includes('haldi'))
+    : selectedServiceFilter === 'ceremonies'
+    ? activeServices.filter(s => s.slug.includes('maternity') || s.slug.includes('baby') || s.slug.includes('house') || s.slug.includes('cradle'))
+    : selectedServiceFilter === 'fast'
+    ? activeServices.filter(s => s.slug.includes('spot') || s.slug.includes('teaser') || s.slug.includes('reels'))
+    : activeServices.filter(s => s.isUpcoming || s.slug.includes('ai'));
+
+  const featuredWorks = works.filter((w) => w.isFeatured || w.isPublished).slice(0, 6);
+  const featuredTestimonials = testimonials.filter((t) => t.isPublished).slice(0, 3);
 
   const handleBookService = (serviceId: string) => {
     setPreSelectedServiceId(serviceId);
     navigate('/book');
   };
 
-  const handleClarify = (title: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleClarify = (title: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setClarificationServiceTitle(title);
     setIsPricingClarificationOpen(true);
   };
@@ -33,79 +44,124 @@ export const Home: React.FC = () => {
       {/* 1. Cinematic Hero Section with Video Banner Flow */}
       <CinematicHeroVideo />
 
-      {/* 2. Specialized Services Showcase Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <span className="text-xs uppercase tracking-widest text-gold font-bold flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5" /> Post-Production Offerings
-            </span>
-            <h2 className="font-serif text-2xl sm:text-4xl font-bold text-ivory-100">
-              Specialized Video Editing Services
-            </h2>
-            <p className="text-xs sm:text-sm text-ivory-300 max-w-xl font-light">
-              Each package is treated with dedicated cinematic color grading, multi-camera audio restoration, and tailored rhythmic editing.
+      {/* 2. Specialized Services & Transparent Pricing Catalogue Section */}
+      <section id="services" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 scroll-mt-28">
+        <div className="text-center space-y-3 max-w-3xl mx-auto">
+          <span className="text-xs uppercase tracking-widest text-gold font-bold flex items-center justify-center gap-2">
+            <Sparkles className="w-3.5 h-3.5" /> Studio Catalogue & Transparent Pricing
+          </span>
+          <h2 className="font-serif text-3xl sm:text-5xl font-bold text-ivory-100">
+            Specialized Video Editing & Post-Production
+          </h2>
+          <p className="text-xs sm:text-sm text-ivory-300 font-light leading-relaxed">
+            From full wedding master reels and same-day on-venue spot edits to vertical teasers and upcoming AI neural enhancements.
+          </p>
+        </div>
+
+        {/* Pricing Policy Disclaimer Banner */}
+        <div className="max-w-4xl mx-auto p-4 rounded-2xl bg-surface-100/80 border border-gold/30 text-left flex items-start gap-3.5 text-xs text-ivory-300 shadow-md">
+          <ShieldAlert className="w-5 h-5 text-gold shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-semibold text-gold block">Transparent Pricing Policy:</span>
+            <p className="leading-relaxed font-light">
+              {cms?.priceDisclaimer ||
+                'The displayed price covers only the selected post-production video editing service and stated deliverables. Venue travel, lodging, drone capture, and hardware projections are client-managed unless specifically confirmed.'}
             </p>
           </div>
+        </div>
 
-          <Link
-            to="/services"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-gold hover:text-gold-light group"
-          >
-            <span>View All 10 Services & Pricing</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
+        {/* Category Filters */}
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          {[
+            { id: 'all', label: `All ${activeServices.length || 10} Services` },
+            { id: 'wedding', label: 'Weddings & Sangeeth' },
+            { id: 'ceremonies', label: 'Ceremonies & Maternity' },
+            { id: 'fast', label: 'Spot Editing & Fast Reels' },
+            { id: 'ai', label: 'Studio Next-Gen AI Labs' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedServiceFilter(tab.id)}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider uppercase transition-all ${
+                selectedServiceFilter === tab.id
+                  ? 'bg-gold text-black shadow-gold-sm font-bold'
+                  : 'bg-surface-100 text-ivory-300 hover:bg-surface-50 border border-surface-50'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredServices.map((service) => (
+          {filteredServices.map((service) => (
             <div
               key={service.id}
-              className="p-6 rounded-2xl glass-panel glass-panel-hover flex flex-col justify-between space-y-6 border border-gold/20 relative group"
+              className={`p-6 rounded-3xl glass-panel flex flex-col justify-between space-y-6 border transition-all duration-300 group hover:border-gold/60 ${
+                service.featured
+                  ? 'border-gold/40 shadow-gold-sm bg-surface-100/60'
+                  : 'border-surface-50 bg-surface-200/50'
+              }`}
             >
-              {service.badge && (
-                <div className="absolute top-4 right-4 px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] uppercase font-bold tracking-wider">
-                  {service.badge}
+              <div className="space-y-4">
+                {/* Header Badge & Turnaround */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-gold/15 text-gold border border-gold/30 flex items-center justify-center">
+                      <Film className="w-5 h-5" />
+                    </div>
+                    {service.badge && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-gold/15 text-gold text-[10px] font-bold uppercase tracking-wider border border-gold/30">
+                        {service.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-100 text-[11px] text-ivory-300 border border-surface-50">
+                    <Clock className="w-3.5 h-3.5 text-gold" />
+                    <span>Est: {service.turnaroundDays} Days</span>
+                  </div>
                 </div>
-              )}
 
-              <div className="space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
-                  <Film className="w-5 h-5" />
+                {/* Title & Tagline */}
+                <div>
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-ivory-100 group-hover:text-gold transition-colors">
+                    {service.title}
+                  </h3>
+                  <p className="text-xs text-gold/90 font-medium mt-1">
+                    {service.tagline}
+                  </p>
                 </div>
 
-                <h3 className="font-serif text-lg font-bold text-ivory-100 group-hover:text-gold transition-colors">
-                  {service.title}
-                </h3>
-
-                <p className="text-xs text-ivory-300 leading-relaxed font-light">
-                  {service.shortDescription}
+                <p className="text-xs text-ivory-300 leading-relaxed font-light line-clamp-3">
+                  {service.detailedDescription || service.shortDescription}
                 </p>
 
-                {/* Price Pill & Clarification button */}
-                <div className="pt-2 flex items-center justify-between">
+                {/* Price Block & Clarification Button */}
+                <div className="p-3.5 rounded-2xl bg-surface-100/90 border border-gold/20 flex items-center justify-between gap-2">
                   <div>
-                    <span className="text-[10px] text-ivory-400 uppercase tracking-wider block">
-                      Estimated Cost:
+                    <span className="text-[10px] text-ivory-400 uppercase tracking-widest block font-medium">
+                      Estimated Fee:
                     </span>
-                    <span className="font-serif text-base font-bold text-gold">
+                    <span className="font-serif text-lg font-bold text-gold">
                       {service.priceLabel}
                     </span>
                   </div>
+
                   <button
                     onClick={(e) => handleClarify(service.title, e)}
-                    className="p-1.5 rounded-lg bg-surface-100 hover:bg-surface-50 border border-gold/20 text-ivory-300 hover:text-gold text-xs flex items-center gap-1"
+                    className="p-1.5 px-2.5 rounded-lg bg-surface-200 hover:bg-surface-50 border border-gold/20 text-ivory-300 hover:text-gold text-xs flex items-center gap-1.5 transition-all"
                     title="Need price clarification?"
                   >
-                    <HelpCircle className="w-3.5 h-3.5" />
-                    <span className="text-[11px]">Clarify</span>
+                    <HelpCircle className="w-3.5 h-3.5 text-gold" />
+                    <span className="text-[11px] font-medium">Clarify</span>
                   </button>
                 </div>
 
                 {/* Inclusions checklist preview */}
                 <div className="space-y-1.5 pt-2 border-t border-surface-50">
-                  {service.inclusions?.slice(0, 2).map((inc, i) => (
+                  {service.inclusions?.slice(0, 3).map((inc, i) => (
                     <div key={i} className="flex items-start gap-2 text-[11px] text-ivory-300">
                       <CheckCircle2 className="w-3 h-3 text-gold shrink-0 mt-0.5" />
                       <span className="line-clamp-1">{inc}</span>
@@ -117,7 +173,7 @@ export const Home: React.FC = () => {
               {/* Action Button */}
               <button
                 onClick={() => handleBookService(service.id)}
-                className="w-full py-2.5 rounded-xl bg-surface-100 group-hover:bg-gold group-hover:text-black text-ivory-200 border border-gold/30 group-hover:border-gold text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-gold hover:bg-gold-light text-black text-xs font-bold uppercase tracking-wider shadow-gold-sm transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <span>Book This Service</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -157,11 +213,11 @@ export const Home: React.FC = () => {
             <Film className="w-10 h-10 mx-auto text-gold opacity-60" />
             <h3 className="font-serif text-lg font-bold text-ivory-100">Showcase Works Updating</h3>
             <p className="text-xs text-ivory-300 max-w-md mx-auto">
-              New client films and cinematic highlight cuts are being published. Check back shortly or explore our specialized services below.
+              New client films and cinematic highlight cuts are being published. Check back shortly or explore our specialized services above.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredWorks.map((work) => (
               <VideoCard
                 key={work.id}
@@ -240,12 +296,12 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. Client Testimonials Preview */}
+      {/* 6. Client Testimonials Preview */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
             <span className="text-xs uppercase tracking-widest text-gold font-bold flex items-center gap-2">
-              <Star className="w-3.5 h-3.5 fill-gold" /> Verified Client Praise
+              <Star className="w-3.5 h-3.5 fill-gold text-gold" /> Verified Client Praise
             </span>
             <h2 className="font-serif text-2xl sm:text-4xl font-bold text-ivory-100">
               What Clients Say About KBK Films
@@ -265,12 +321,12 @@ export const Home: React.FC = () => {
           {featuredTestimonials.map((t) => (
             <div
               key={t.id}
-              className="p-6 rounded-2xl glass-panel border border-gold/20 flex flex-col justify-between space-y-4"
+              className="p-6 rounded-2xl glass-panel border border-gold/20 flex flex-col justify-between space-y-4 shadow-md"
             >
               <div className="space-y-3">
                 <div className="flex items-center gap-1 text-gold">
                   {[...Array(t.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-gold" />
+                    <Star key={i} className="w-4 h-4 fill-gold text-gold" />
                   ))}
                 </div>
                 <p className="text-xs sm:text-sm text-ivory-200 italic leading-relaxed font-light">
@@ -292,7 +348,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. High-Converting Booking Banner CTA */}
+      {/* 7. High-Converting Booking Banner CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative rounded-3xl overflow-hidden p-8 sm:p-14 text-center space-y-6 bg-gradient-to-br from-surface-100 via-surface-200 to-black border border-gold/40 shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-gold/10 blur-[100px] pointer-events-none"></div>

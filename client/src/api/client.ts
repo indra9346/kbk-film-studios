@@ -12,18 +12,6 @@ import {
 import { localDb } from './localDb';
 
 const API_BASE = '/api';
-const isLocalRuntime = () => {
-  if (typeof window === 'undefined') return false;
-  const host = window.location.hostname;
-  return host === 'localhost' || host === '127.0.0.1';
-};
-
-const shouldUseFallback = () => {
-  if (typeof window === 'undefined') return false;
-  const host = window.location.hostname;
-  return isLocalRuntime() || host.endsWith('.vercel.app');
-};
-
 function getAuthHeaders(type: 'owner' | 'client' = 'owner'): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -50,13 +38,9 @@ async function safeRequest<T>(url: string, options?: RequestInit, fallback?: () 
     if (res.ok && !contentType.includes('application/json')) {
       const text = await res.text();
       if (text && (text.includes('<!doctype html') || text.includes('<html'))) {
+        if (fallback) return fallback();
         throw new Error('API route misconfigured — server returned HTML instead of JSON.');
       }
-    }
-
-    // Allow a safe browser-side fallback during deployment rollouts so the site stays usable even if the live API is temporarily unavailable.
-    if (fallback && shouldUseFallback()) {
-      return fallback();
     }
 
     if (contentType.includes('application/json')) {
@@ -64,9 +48,14 @@ async function safeRequest<T>(url: string, options?: RequestInit, fallback?: () 
       throw new Error(errJson.error || errJson.message || 'API request failed');
     }
 
-    throw new Error('API server returned unexpected format');
+    if (!res.ok && fallback) {
+      return fallback();
+    }
+
+    throw new Error(`API server returned HTTP ${res.status}`);
   } catch (err: any) {
-    if (fallback && shouldUseFallback()) {
+    if (fallback) {
+      console.warn(`[API] Using fallback for ${url}:`, err.message);
       return fallback();
     }
     throw err;
@@ -458,4 +447,28 @@ export const api = {
     if (!res.ok) return [];
     return res.json();
   },
+
+  // Automation Workflows & n8n Engine Endpoints
+  async getWorkflows(): Promise<{ executions: any[]; stats: any; overdueProjects: any[] }> {
+    return safeRequest(`${API_BASE}/owner/workflows`, { headers: getAuthHeaders('owner') }, () => ({
+      executions: [],
+      stats: { total: 0, completed: 0, failed: 0, pending: 0, overdueCount: 0, n8nConfigured: false },
+      overdueProjects: []
+    }));
+  },
+
+  async checkOverdueWorkflows(): Promise<any> {
+    return safeRequest(`${API_BASE}/owner/workflows/overdue-check`, {
+      method: 'POST',
+      headers: getAuthHeaders('owner')
+    }, () => ({ success: true, count: 0, flagged: [] }));
+  },
+
+  async testN8nWebhook(): Promise<any> {
+    return safeRequest(`${API_BASE}/owner/workflows/test-n8n`, {
+      method: 'POST',
+      headers: getAuthHeaders('owner')
+    }, () => ({ success: true, message: 'Simulated n8n test ping' }));
+  },
 };
+

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ServiceItem, PublicWork, Testimonial, StudioCMSData } from '../types';
 import { api } from '../api/client';
+import { supabase, isSupabaseConfigured } from '../api/supabaseClient';
 
 interface StudioContextType {
   cms: StudioCMSData | null;
@@ -70,6 +71,29 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     refreshData();
+
+    // Supabase Realtime Subscription: Instantly sync changes across all devices
+    if (isSupabaseConfigured()) {
+      const channel = supabase
+        .channel('studio_realtime_sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'public_works' }, () => {
+          refreshData();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, () => {
+          refreshData();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'testimonials' }, () => {
+          refreshData();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'studio_cms' }, () => {
+          refreshData();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [refreshData]);
 
   return (
