@@ -989,18 +989,40 @@ export const api = {
       createdAt: work.createdAt || new Date().toISOString()
     };
 
-    if (isSupabaseConfigured()) {
-      try {
-        const row = mapWorkToRow(finalWork);
-        const { error } = await supabase.from('public_works').upsert(row);
-        if (error) console.warn('[Supabase] saveWork error:', error.message);
-      } catch (e) {
-        console.warn('[Supabase] direct saveWork exception:', e);
+    let persisted = false;
+
+    // 1. Direct Supabase write
+    try {
+      const row = mapWorkToRow(finalWork);
+      const { error } = await supabase.from('public_works').upsert(row);
+      if (!error) {
+        persisted = true;
+      } else {
+        console.warn('[Supabase Client] saveWork error:', error.message);
       }
+    } catch (e) {
+      console.warn('[Supabase Client] direct saveWork exception:', e);
+    }
+
+    // 2. Server-side write with Master Service-Role Key
+    try {
+      const res = await fetch(`${API_BASE}/owner/works`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(localStorage.getItem('kbk_owner_token') ? { 'Authorization': `Bearer ${localStorage.getItem('kbk_owner_token')}` } : {})
+        },
+        body: JSON.stringify(finalWork)
+      });
+      if (res.ok) {
+        persisted = true;
+      }
+    } catch (e) {
+      console.warn('[API Server] saveWork note:', e);
     }
 
     localDb.saveWork(finalWork);
-    return { success: true, work: finalWork };
+    return { success: true, work: finalWork, persisted };
   },
 
   async deleteWork(id: string): Promise<any> {

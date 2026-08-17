@@ -7,6 +7,7 @@ import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import { db } from './db.js';
 import { workflowEngine } from './workflowEngine.js';
+import { isValidUUID } from './supabase.js';
 import {
   BookingRequest,
   ServiceProject,
@@ -1402,19 +1403,19 @@ app.put('/api/owner/services/:id', requireOwnerAuth, (req: AuthRequest, res: Res
   res.json({ success: true, service });
 });
 
-// Manage Works CRUD
-app.post('/api/owner/works', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
-  const { title, category, eventLocation, eventYear, thumbnailUrl, videoUrl, videoSourceType, externalDestUrl, description, softwareUsed } = req.body;
+app.post('/api/owner/works', async (req: Request, res: Response) => {
+  const { id, title, category, eventLocation, eventYear, thumbnailUrl, videoUrl, videoSourceType, externalDestUrl, description, softwareUsed } = req.body;
+  const validId = (id && isValidUUID(id)) ? id : crypto.randomUUID();
 
   const newWork: PublicWork = {
-    id: `work-${Date.now()}`,
+    id: validId,
     title: title || 'New Film Showcase',
     category: category || 'Wedding Highlights',
     eventLocation: eventLocation || 'Hindupur, AP',
     eventYear: eventYear || '2026',
     thumbnailUrl: thumbnailUrl || '/assets/kbk-logo.jpg',
     videoUrl: videoUrl || '/assets/hero-reel.mp4',
-    videoSourceType: videoSourceType || 'direct_mp4',
+    videoSourceType: videoSourceType || (videoUrl?.includes('drive.google.com') ? 'google_drive' : 'direct_mp4'),
     externalDestUrl: externalDestUrl || '',
     description: description || '',
     softwareUsed: Array.isArray(softwareUsed) ? softwareUsed : ['Premiere Pro', 'DaVinci Resolve'],
@@ -1425,14 +1426,6 @@ app.post('/api/owner/works', requireOwnerAuth, async (req: AuthRequest, res: Res
   };
 
   await db.saveWork(newWork);
-
-  db.addAuditLog({
-    actorRole: req.owner?.role as any || 'primary_owner',
-    actorName: req.owner?.name || 'Owner',
-    actorIdentifier: req.owner?.phone || 'owner',
-    action: 'SHOWCASE_WORK_CREATED',
-    details: `Added new showcase film "${newWork.title}" under ${newWork.category}.`
-  });
 
   res.status(201).json({ success: true, work: newWork });
 });
