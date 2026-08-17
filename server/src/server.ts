@@ -7,6 +7,7 @@ import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import { db } from './db.js';
 import { workflowEngine } from './workflowEngine.js';
+import { automationEngine } from './automation/engine.js';
 import { isValidUUID } from './supabase.js';
 import {
   BookingRequest,
@@ -467,9 +468,9 @@ app.post('/api/bookings', async (req: Request, res: Response) => {
 
   // Trigger Automation Workflow: Client creation + Project creation + Audit Log + n8n dispatch
   try {
-    await workflowEngine.handleBookingSubmitted(booking, db);
+    await automationEngine.handleBookingCreated(booking, db);
   } catch (wfErr) {
-    console.error('[WorkflowEngine] Booking automation error:', wfErr);
+    console.error('[AutomationEngine] Booking automation error:', wfErr);
   }
 
   db.addAuditLog({
@@ -1255,14 +1256,20 @@ app.patch('/api/owner/projects/:id/stage', requireOwnerAuth, async (req: AuthReq
   const { stage, message } = req.body;
 
   try {
-    const project = await workflowEngine.handleProjectStatusTransition(
-      id,
+    const project = db.getServiceProjects().find(p => p.id === id || p.bookingRef === id);
+    if (!project) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    const updated = await automationEngine.handleProjectStatusChanged(
+      db,
+      project,
       stage,
       req.owner?.name || 'Kurudi Bharath Kumar',
-      message,
-      db
+      message
     );
-    res.json({ success: true, project });
+    res.json({ success: true, project: updated });
   } catch (err: any) {
     res.status(400).json({ error: err.message || 'Failed to update project stage' });
   }
@@ -1334,7 +1341,7 @@ app.post('/api/owner/projects/:id/delivery', requireOwnerAuth, async (req: AuthR
   };
 
   await db.addClientVideoDelivery(clientDeliveryRecord);
-  await workflowEngine.handleVideoDeliveryAdded(clientDeliveryRecord, db);
+  await automationEngine.handleVideoDeliveryAdded(db, clientDeliveryRecord);
 
   res.status(201).json({ success: true, delivery: newDelivery, clientDelivery: clientDeliveryRecord });
 });
@@ -1476,6 +1483,7 @@ app.post('/api/owner/testimonials', requireOwnerAuth, async (req: AuthRequest, r
   };
 
   await db.saveTestimonial(newTestimonial);
+  await automationEngine.runWorkflow('TESTIMONIAL_CREATED', { testimonial: newTestimonial }, db);
   res.status(201).json({ success: true, testimonial: newTestimonial });
 });
 

@@ -267,6 +267,7 @@ export interface AuditLog {
   actorIdentifier: string;
   action: string;
   details: string;
+  metadata?: Record<string, any>;
   ipAddress?: string;
   timestamp: string;
 }
