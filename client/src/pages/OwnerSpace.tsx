@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Film,
   Users,
@@ -119,10 +119,12 @@ export const OwnerSpace: React.FC = () => {
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [deletingWorkId, setDeletingWorkId] = useState<string | null>(null);
+  const workVideoInputRef = useRef<HTMLInputElement | null>(null);
 
   // Testimonial Edit / Create Modal
   const [editingTestimonial, setEditingTestimonial] = useState<Partial<Testimonial> | null>(null);
   const [deletingTestimonialId, setDeletingTestimonialId] = useState<string | null>(null);
+  const testimonialVideoInputRef = useRef<HTMLInputElement | null>(null);
 
   // Deletion Confirmation States
   const [deletingBookingId, setDeletingBookingId] = useState<string | null>(null);
@@ -515,6 +517,21 @@ export const OwnerSpace: React.FC = () => {
     } catch (err: any) {
       alert(err.message || 'Failed to save testimonial');
     }
+  };
+
+  const handleLocalVideoSelect = (event: React.ChangeEvent<HTMLInputElement>, type: 'work' | 'testimonial') => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const localUrl = URL.createObjectURL(file);
+
+    if (type === 'work') {
+      setEditingWork((prev) => prev ? { ...prev, videoUrl: localUrl } : prev);
+    } else {
+      setEditingTestimonial((prev) => prev ? { ...prev, videoUrl: localUrl } : prev);
+    }
+
+    event.target.value = '';
   };
 
   const handleDeleteTestimonial = async (id: string) => {
@@ -2989,15 +3006,34 @@ export const OwnerSpace: React.FC = () => {
                   <span>Video Stream URL (Google Drive / YouTube / MP4 Link)</span>
                   <span className="text-[10px] text-gold font-normal">Auto-streams without buffer</span>
                 </label>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editingWork.videoUrl || ''}
+                    onChange={(e) => setEditingWork({ ...editingWork, videoUrl: e.target.value })}
+                    placeholder="e.g. https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono placeholder:text-ivory-400/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => workVideoInputRef.current?.click()}
+                    className="px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/30 text-gold text-[11px] font-semibold hover:bg-gold/10 transition-colors"
+                  >
+                    Browse Video
+                  </button>
+                </div>
+
                 <input
-                  type="text"
-                  value={editingWork.videoUrl || ''}
-                  onChange={(e) => setEditingWork({ ...editingWork, videoUrl: e.target.value })}
-                  placeholder="e.g. https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view"
-                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono placeholder:text-ivory-400/50"
+                  ref={workVideoInputRef}
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(e) => handleLocalVideoSelect(e, 'work')}
                 />
+
                 <p className="text-[11px] text-ivory-400 font-light">
-                  Paste any public Google Drive file link, YouTube link, or direct MP4. It will play muted with seamless looping and zero buffering.
+                  Paste any public Google Drive file link, YouTube link, or direct MP4. You can also browse a local video file to place it here instantly.
                 </p>
               </div>
 
@@ -3115,15 +3151,34 @@ export const OwnerSpace: React.FC = () => {
                   <span>Customer Video Feedback Stream URL (Optional)</span>
                   <span className="text-[10px] text-gold font-normal">Google Drive / YouTube / MP4</span>
                 </label>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editingTestimonial.videoUrl || ''}
+                    onChange={(e) => setEditingTestimonial({ ...editingTestimonial, videoUrl: e.target.value })}
+                    placeholder="e.g. https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono placeholder:text-ivory-400/50 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => testimonialVideoInputRef.current?.click()}
+                    className="px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/30 text-gold text-[11px] font-semibold hover:bg-gold/10 transition-colors"
+                  >
+                    Browse Video
+                  </button>
+                </div>
+
                 <input
-                  type="text"
-                  value={editingTestimonial.videoUrl || ''}
-                  onChange={(e) => setEditingTestimonial({ ...editingTestimonial, videoUrl: e.target.value })}
-                  placeholder="e.g. https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link"
-                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono placeholder:text-ivory-400/50 text-xs"
+                  ref={testimonialVideoInputRef}
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(e) => handleLocalVideoSelect(e, 'testimonial')}
                 />
+
                 <p className="text-[11px] text-ivory-400 font-light">
-                  Paste any Google Drive share link, YouTube link, or direct MP4 link of the customer's recorded video review.
+                  Paste any Google Drive share link, YouTube link, or direct MP4 link of the customer's recorded video review. You can also browse a local video file here.
                 </p>
               </div>
 

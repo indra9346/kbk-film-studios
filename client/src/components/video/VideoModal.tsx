@@ -78,8 +78,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({ work, onClose }) => {
               poster={work.thumbnailUrl || '/assets/kbk-logo.jpg'}
               autoPlay
               controls
+              controlsList="nodownload noplaybackrate"
               playsInline
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain cinematic-native-video"
             />
           )}
         </div>

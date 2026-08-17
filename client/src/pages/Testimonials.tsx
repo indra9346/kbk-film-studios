@@ -78,12 +78,13 @@ export const Testimonials: React.FC = () => {
                             src={getCleanVideoUrl(t.videoUrl)}
                             poster={media && media.type === 'google-drive' && media.id ? `https://lh3.googleusercontent.com/d/${media.id}=w1280` : (t.thumbnailUrl || '/assets/kbk-logo.jpg')}
                             controls
+                            controlsList="nodownload noplaybackrate"
                             autoPlay
                             muted
                             loop
                             playsInline
                             preload="auto"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover cinematic-native-video"
                           />
                         ) : (
                           <img
