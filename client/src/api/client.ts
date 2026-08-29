@@ -111,7 +111,6 @@ export const api = {
   },
 
   async getWorks(): Promise<PublicWork[]> {
-    const localWorks = localDb.getWorks();
     if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase
@@ -119,36 +118,25 @@ export const api = {
           .select('*')
           .eq('is_published', true)
           .order('sort_order', { ascending: true });
-        if (!error && data && data.length > 0) {
-          const supabaseWorks = data.map(mapWorkFromRow);
-          const hasCuratedDriveVideos = supabaseWorks.some(
-            (w) => w.videoUrl?.includes('drive.google.com') && (w.videoUrl?.includes('1lmZ0mHo4lRI') || w.videoUrl?.includes('1X-bWfeq'))
-          );
-          if (hasCuratedDriveVideos) {
-            return supabaseWorks;
+        if (!error && data) {
+          if (data.length > 0) {
+            return data.map(mapWorkFromRow);
           }
-          // Sync all 8 curated Google Drive works to Supabase
-          for (const lw of localWorks) {
-            try {
-              await supabase.from('public_works').upsert(mapWorkToRow(lw));
-            } catch (_) {}
+          // If table is explicitly empty in Supabase, check local cache or return local curated works
+          const localWorks = localDb.getWorks();
+          if (localWorks.length > 0) {
+            return localWorks;
           }
-        } else if (!error && (!data || data.length === 0)) {
-          for (const lw of localWorks) {
-            try {
-              await supabase.from('public_works').upsert(mapWorkToRow(lw));
-            } catch (_) {}
-          }
+          return [];
         }
       } catch (e) {
-        console.warn('[Supabase] getWorks sync error:', e);
+        console.warn('[Supabase] getWorks query error:', e);
       }
     }
-    return localWorks;
+    return localDb.getWorks();
   },
 
   async getTestimonials(): Promise<Testimonial[]> {
-    const localTestimonials = localDb.getTestimonials();
     if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase
@@ -156,29 +144,17 @@ export const api = {
           .select('*')
           .eq('is_published', true)
           .order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) {
-          const supabaseTestimonials = data.map(mapTestimonialFromRow);
-          const hasCuratedVideoReviews = supabaseTestimonials.some((t) => t.videoUrl?.includes('drive.google.com'));
-          if (hasCuratedVideoReviews) {
-            return supabaseTestimonials;
+        if (!error && data) {
+          if (data.length > 0) {
+            return data.map(mapTestimonialFromRow);
           }
-          for (const lt of localTestimonials) {
-            try {
-              await supabase.from('testimonials').upsert(mapTestimonialToRow(lt));
-            } catch (_) {}
-          }
-        } else if (!error && (!data || data.length === 0)) {
-          for (const lt of localTestimonials) {
-            try {
-              await supabase.from('testimonials').upsert(mapTestimonialToRow(lt));
-            } catch (_) {}
-          }
+          return localDb.getTestimonials();
         }
       } catch (e) {
-        console.warn('[Supabase] getTestimonials sync error:', e);
+        console.warn('[Supabase] getTestimonials query error:', e);
       }
     }
-    return localTestimonials;
+    return localDb.getTestimonials();
   },
 
   async submitBooking(data: any): Promise<{ success: boolean; bookingRef: string; message: string }> {
@@ -1132,6 +1108,36 @@ export const api = {
 
     localDb.deleteWork(id);
     return { success: true, message: 'Work deleted successfully' };
+  },
+
+  async deleteAllWorks(): Promise<any> {
+    if (isSupabaseConfigured()) {
+      try {
+        // Delete all rows in Supabase public_works table
+        const { error } = await supabase.from('public_works').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (error) console.warn('[Supabase] deleteAllWorks error:', error.message);
+      } catch (e) {
+        console.warn('[Supabase] direct deleteAllWorks exception:', e);
+      }
+    }
+
+    localDb.deleteAllWorks();
+    return { success: true, message: 'All works deleted successfully from portfolio & Supabase database.' };
+  },
+
+  async resetDefaultWorks(): Promise<any> {
+    await this.deleteAllWorks();
+    const defaultWorks = localDb.resetDefaultWorks();
+    if (isSupabaseConfigured()) {
+      for (const w of defaultWorks) {
+        try {
+          await supabase.from('public_works').upsert(mapWorkToRow(w));
+        } catch (e) {
+          console.warn('[Supabase] resetDefaultWorks upsert item error:', e);
+        }
+      }
+    }
+    return { success: true, works: defaultWorks };
   },
 
   async deleteBooking(id: string): Promise<any> {

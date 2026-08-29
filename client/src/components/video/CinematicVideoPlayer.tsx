@@ -1,5 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize2, ExternalLink, Image as ImageIcon, Film, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize2,
+  ExternalLink,
+  Image as ImageIcon,
+  Film,
+  RotateCcw,
+  ZoomIn,
+  ZoomOut,
+  Zap,
+  Gauge
+} from 'lucide-react';
 import { extractDriveFileId, getVideoType, isImageMedia, getCleanVideoUrl } from './VideoCard';
 
 export interface CinematicVideoPlayerProps {
@@ -11,6 +25,7 @@ export interface CinematicVideoPlayerProps {
   autoPlayOnScroll?: boolean;
   isModal?: boolean;
   showControls?: boolean;
+  defaultSpeed?: number;
   className?: string;
   onExpand?: () => void;
 }
@@ -24,11 +39,13 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
   autoPlayOnScroll = true,
   isModal = false,
   showControls = true,
+  defaultSpeed = 2, // 2x playback speed by default for fast, engaging wedding showcase preview
   className = '',
   onExpand
 }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(defaultSpeed);
   const [progress, setProgress] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -39,6 +56,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const trimmedUrl = (url || '').trim();
   const isPic = isImageMedia(trimmedUrl);
@@ -50,7 +68,32 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
 
   const activePoster = poster || undefined;
 
-  // Viewport Observer for High-Speed Lazy Streaming (Prevents lagging 8 concurrent heavy iframes)
+  // Resolve local fallback if a Drive video has a corresponding local trimmed asset
+  const getDirectFallbackUrl = () => {
+    if (trimmedUrl.includes('1rqVfAXvqzroASucfdilB3-sRVGk9811Y')) return '/assets/works/sangeeth-celebration.mp4';
+    if (trimmedUrl.includes('1v-OAwOJfS58jSyKbSKHXllw2Tnx7AqA3')) return '/assets/works/muhurtham-sacred.mp4';
+    if (trimmedUrl.includes('1lmZ0mHo4lRI')) return '/assets/works/hanumantha-reception.mp4';
+    if (trimmedUrl.includes('1X-bWfeq')) return '/assets/works/reception-master.mp4';
+    if (trimmedUrl.includes('14Oc3e5cNWXMOGIx')) return '/assets/works/muhurtham-sacred.mp4';
+    if (trimmedUrl.includes('1dHZDL0B23QtW6yo')) return '/assets/works/amulya-haldi.mp4';
+    return null;
+  };
+
+  const directFallback = getDirectFallbackUrl();
+
+  // Helper to send commands to YouTube iFrame via postMessage
+  const postToYouTube = useCallback((func: string, args: any = '') => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      try {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func, args }),
+          '*'
+        );
+      } catch (_) {}
+    }
+  }, []);
+
+  // Viewport Observer for High-Speed Lazy Streaming
   useEffect(() => {
     if (isModal || typeof IntersectionObserver === 'undefined') {
       setIsInViewport(true);
@@ -67,7 +110,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
           }
         });
       },
-      { rootMargin: '150px', threshold: [0, 0.15, 0.5] }
+      { rootMargin: '200px', threshold: [0, 0.15, 0.5] }
     );
 
     if (containerRef.current) {
@@ -79,25 +122,29 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
     };
   }, [isModal]);
 
-  // 1. DIRECT HTML5 VIDEO: Guaranteed Muted + Autoplay + Loop
+  // Apply Playback Speed & Guaranteed Muted Autoplay on HTML5 Video
   useEffect(() => {
-    if (!isDirectVideo) return;
     const video = videoRef.current;
     if (!video) return;
 
     video.defaultMuted = true;
-    video.muted = true;
+    video.muted = isMuted;
     video.loop = true;
     video.playsInline = true;
+    video.playbackRate = playbackSpeed;
 
     const startPlayback = () => {
-      video.muted = true;
+      video.muted = isMuted;
+      video.playbackRate = playbackSpeed;
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
             setIsPlaying(true);
             setPlayRejected(false);
+            if (videoRef.current) {
+              videoRef.current.playbackRate = playbackSpeed;
+            }
           })
           .catch((err) => {
             console.warn('[KBK Video] Autoplay note:', err.message);
@@ -113,7 +160,40 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
       video.pause();
       setIsPlaying(false);
     }
-  }, [isDirectVideo, trimmedUrl, isInViewport]);
+  }, [trimmedUrl, isInViewport, playbackSpeed, isMuted, directFallback]);
+
+  // Manage YouTube iframe when leaving viewport or closing modal
+  useEffect(() => {
+    if (isYouTube) {
+      if (isInViewport) {
+        if (isPlaying) {
+          postToYouTube('playVideo');
+        } else {
+          postToYouTube('pauseVideo');
+        }
+        if (isMuted) {
+          postToYouTube('mute');
+        } else {
+          postToYouTube('unMute');
+        }
+      } else {
+        postToYouTube('pauseVideo');
+        postToYouTube('mute');
+      }
+    }
+  }, [isYouTube, isInViewport, isPlaying, isMuted, postToYouTube]);
+
+  // Clean-up: stop any playing media when unmounting
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.muted = true;
+      }
+      postToYouTube('pauseVideo');
+      postToYouTube('mute');
+    };
+  }, [postToYouTube]);
 
   // Track progress on direct HTML5 video
   const handleTimeUpdate = () => {
@@ -125,26 +205,54 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
   const handleTogglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
     setHasInteracted(true);
-    if (!videoRef.current) return;
 
-    if (videoRef.current.paused) {
-      videoRef.current.play().then(() => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play().then(() => {
+          setIsPlaying(true);
+          setPlayRejected(false);
+          if (videoRef.current) videoRef.current.playbackRate = playbackSpeed;
+        });
+      } else {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+
+    if (isYouTube) {
+      if (isPlaying) {
+        postToYouTube('pauseVideo');
+        setIsPlaying(false);
+      } else {
+        postToYouTube('playVideo');
         setIsPlaying(true);
-        setPlayRejected(false);
-      });
-    } else {
-      videoRef.current.pause();
-      setIsPlaying(false);
+      }
     }
   };
 
   const handleToggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
     setHasInteracted(true);
-    if (!videoRef.current) return;
-    const nextMuted = !videoRef.current.muted;
-    videoRef.current.muted = nextMuted;
+    const nextMuted = !isMuted;
     setIsMuted(nextMuted);
+
+    if (videoRef.current) {
+      videoRef.current.muted = nextMuted;
+    }
+
+    if (isYouTube) {
+      postToYouTube(nextMuted ? 'mute' : 'unMute');
+    }
+  };
+
+  const handleToggleSpeed = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHasInteracted(true);
+    const nextSpeed = playbackSpeed === 2 ? 1 : playbackSpeed === 1 ? 1.5 : 2;
+    setPlaybackSpeed(nextSpeed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = nextSpeed;
+    }
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -155,6 +263,9 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
     videoRef.current.currentTime = pos * videoRef.current.duration;
     setProgress(pos * 100);
   };
+
+  // Determine what video source to render for optimal fast performance
+  const directSrc = isDirectVideo ? getCleanVideoUrl(trimmedUrl) : directFallback;
 
   return (
     <div
@@ -208,14 +319,15 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
           )}
         </div>
       ) : isYouTube ? (
-        /* CASE 2: YOUTUBE (Controlled Loop + Autoplay + Muted) */
-        <div className="w-full h-full relative overflow-hidden bg-black pointer-events-auto">
+        /* CASE 2: YOUTUBE (Controlled Loop + Autoplay + Muted with JS API control) */
+        <div className="w-full h-full relative overflow-hidden bg-black pointer-events-auto flex items-center justify-center">
           {isInViewport || isModal ? (
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${mediaInfo.id}?autoplay=1&mute=1&loop=1&playlist=${mediaInfo.id}&controls=${isModal ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1`}
+              ref={iframeRef}
+              src={`https://www.youtube-nocookie.com/embed/${mediaInfo.id}?enablejsapi=1&autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${mediaInfo.id}&controls=${isModal ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
               title={title}
               loading="lazy"
-              className="w-full h-full object-cover border-0 scale-105"
+              className={`w-full h-full ${aspectRatio === '9/16' ? 'object-contain max-w-[280px]' : 'object-cover scale-105'} border-0`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
@@ -227,9 +339,69 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
               loading="lazy"
             />
           )}
+
+          {/* YouTube Speed Badge */}
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 pointer-events-none">
+            <span className="px-2 py-0.5 rounded-full bg-black/80 text-gold text-[10px] font-mono font-bold tracking-wider border border-gold/40 backdrop-blur-md flex items-center gap-1 shadow-md">
+              <Zap className="w-2.5 h-2.5 fill-gold" />
+              <span>YOUTUBE HD</span>
+            </span>
+          </div>
+        </div>
+      ) : directSrc ? (
+        /* CASE 3: ULTRA FAST DIRECT 2X AUTOPLAY HTML5 VIDEO (Plays flawlessly on Mobile & Desktop) */
+        <div className="relative w-full h-full bg-black flex items-center justify-center">
+          <video
+            ref={videoRef}
+            src={directSrc}
+            poster={activePoster}
+            autoPlay
+            muted
+            loop
+            playsInline
+            disablePictureInPicture
+            preload="auto"
+            onLoadedData={() => {
+              setIsMediaLoaded(true);
+              if (videoRef.current && (isInViewport || isModal)) {
+                videoRef.current.muted = isMuted;
+                videoRef.current.playbackRate = playbackSpeed;
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            onTimeUpdate={handleTimeUpdate}
+            className="w-full h-full object-cover transform-gpu will-change-transform"
+          />
+
+          {/* 2X Speed Indicator Badge on Top Right */}
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleToggleSpeed}
+              className="px-2 py-0.5 rounded-full bg-black/80 hover:bg-gold hover:text-black text-gold text-[10px] font-mono font-bold tracking-wider border border-gold/40 backdrop-blur-md flex items-center gap-1 shadow-md transition-all active:scale-95"
+              title="Click to toggle 2x / 1.5x / 1x playback speed"
+            >
+              <Zap className="w-2.5 h-2.5 fill-gold group-hover:fill-black" />
+              <span>{playbackSpeed}x SPEED</span>
+            </button>
+          </div>
+
+          {/* Fallback Play button if browser rejected initial autoplay */}
+          {playRejected && !isPlaying && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
+              <button
+                type="button"
+                onClick={handleTogglePlay}
+                className="w-12 h-12 rounded-full bg-gold hover:bg-gold-light text-black flex items-center justify-center shadow-gold transition-transform hover:scale-110"
+                title="Click to play video"
+              >
+                <Play className="w-5 h-5 fill-current ml-0.5" />
+              </button>
+            </div>
+          )}
         </div>
       ) : isGoogleDrive ? (
-        /* CASE 3: GOOGLE DRIVE (Direct Specific Client Video Stream on all Cards) */
+        /* CASE 4: GOOGLE DRIVE PREVIEW EMBED (For full direct client links) */
         <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
           {isInViewport || isModal ? (
             <iframe
@@ -251,71 +423,39 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
           )}
         </div>
       ) : (
-        /* CASE 4: DIRECT HTML5 VIDEO & FAST SHOWCASE CARDS (100% Guaranteed Muted + Autoplay + Loop) */
-        <div className="relative w-full h-full bg-black flex items-center justify-center">
-          <video
-            ref={videoRef}
-            src={getCleanVideoUrl(trimmedUrl)}
-            poster={activePoster}
-            autoPlay
-            muted
-            loop
-            playsInline
-            disablePictureInPicture
-            preload="auto"
-            onLoadedData={() => {
-              setIsMediaLoaded(true);
-              if (videoRef.current && (isInViewport || isModal)) {
-                videoRef.current.muted = true;
-                videoRef.current.play().catch(() => {});
-              }
-            }}
-            onTimeUpdate={handleTimeUpdate}
-            className="w-full h-full object-cover transform-gpu will-change-transform"
-          />
-
-          {/* Fallback Play button if browser rejected initial autoplay */}
-          {playRejected && !isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
-              <button
-                type="button"
-                onClick={handleTogglePlay}
-                className="w-12 h-12 rounded-full bg-gold hover:bg-gold-light text-black flex items-center justify-center shadow-gold transition-transform hover:scale-110"
-                title="Click to play video"
-              >
-                <Play className="w-5 h-5 fill-current ml-0.5" />
-              </button>
-            </div>
-          )}
+        <div className="w-full h-full bg-surface-200 flex items-center justify-center text-ivory-400 text-xs font-mono">
+          <span>Ready to Preview</span>
         </div>
       )}
 
-      {/* MINIMAL KBK CONTROLS OVERLAY (Below Video on Mobile, Vibrant & Clear) */}
-      {showControls && isDirectVideo && (
+      {/* CONTROLS OVERLAY (Sound Toggle, 2x Toggle, Scrubber, Cinema Modal) */}
+      {showControls && (directSrc || isYouTube) && (
         <div
           className={`absolute inset-x-0 bottom-0 p-2 sm:p-3 sm:bg-gradient-to-t sm:from-black/85 sm:via-black/30 sm:to-transparent transition-opacity duration-300 z-20 ${
             isHovered || !isPlaying || hasInteracted ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
           }`}
         >
-          {/* Mini Gold Scrubber Progress Line (Clean below video, non-dimming) */}
-          <div
-            onClick={handleSeek}
-            className="w-full h-1 sm:h-1.5 bg-white/20 hover:h-2 rounded-full cursor-pointer overflow-hidden transition-all mb-1.5 sm:mb-2"
-          >
+          {/* Mini Gold Scrubber Progress Line for Direct Videos */}
+          {directSrc && (
             <div
-              className="h-full bg-gold transition-all duration-100 shadow-gold-sm"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+              onClick={handleSeek}
+              className="w-full h-1 sm:h-1.5 bg-white/20 hover:h-2 rounded-full cursor-pointer overflow-hidden transition-all mb-1.5 sm:mb-2"
+            >
+              <div
+                className="h-full bg-gold transition-all duration-100 shadow-gold-sm"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
 
-          {/* Simple Control Buttons */}
+          {/* Simple Touch Control Buttons */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 sm:gap-1.5">
               <button
                 type="button"
                 onClick={handleTogglePlay}
                 className="p-1 sm:p-1.5 rounded-lg bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 transition-colors shadow-sm"
-                title={isPlaying ? 'Pause' : 'Play'}
+                title={isPlaying ? 'Pause Video & Mute' : 'Play Video'}
               >
                 {isPlaying ? <Pause className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" />}
               </button>
@@ -323,11 +463,26 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
               <button
                 type="button"
                 onClick={handleToggleMute}
-                className="p-1 sm:p-1.5 rounded-lg bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border border-gold/30 transition-colors shadow-sm"
+                className={`p-1 sm:p-1.5 rounded-lg border transition-colors shadow-sm flex items-center gap-1 text-[10px] font-bold ${
+                  !isMuted ? 'bg-gold text-black border-gold' : 'bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border-gold/30'
+                }`}
                 title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
               >
                 {isMuted ? <VolumeX className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
+                <span className="text-[9px] uppercase hidden xs:inline">{isMuted ? 'Muted' : 'Sound ON'}</span>
               </button>
+
+              {directSrc && (
+                <button
+                  type="button"
+                  onClick={handleToggleSpeed}
+                  className="px-2 py-1 rounded-lg bg-black/80 hover:bg-gold hover:text-black text-gold text-[10px] font-mono font-bold border border-gold/30 transition-colors shadow-sm flex items-center gap-0.5"
+                  title="Toggle playback speed"
+                >
+                  <Gauge className="w-3 h-3" />
+                  <span>{playbackSpeed}x</span>
+                </button>
+              )}
             </div>
 
             {onExpand && (
@@ -341,7 +496,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
                 title="Open Cinema View"
               >
                 <Maximize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden sm:inline">Cinema</span>
+                <span className="hidden sm:inline">Cinema View</span>
               </button>
             )}
           </div>

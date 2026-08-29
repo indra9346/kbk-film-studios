@@ -2042,7 +2042,47 @@ export const OwnerSpace: React.FC = () => {
                       Managed in Supabase table <code className="text-gold font-mono">public.public_works</code> • Broadcasts to all devices live.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        const confirmed = window.confirm('⚠️ Are you sure you want to DELETE ALL existing videos in the portfolio and Supabase public_works table? This will remove all duplicate/old rows.');
+                        if (!confirmed) return;
+                        try {
+                          await api.deleteAllWorks();
+                          await loadOwnerData();
+                          await refreshData();
+                          alert('✅ All showcase videos successfully deleted from database and website!');
+                        } catch (err: any) {
+                          alert(`Error deleting works: ${err.message}`);
+                        }
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-accent-crimson/20 hover:bg-accent-crimson/40 text-accent-crimson border border-accent-crimson/40 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                      title="Clear all bloated/duplicate rows from database"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete All Videos</span>
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        const confirmed = window.confirm('Restore curated real client videos (Sangeetha & Aditya Sangeeth, Muhurtham, etc.)?');
+                        if (!confirmed) return;
+                        try {
+                          await api.resetDefaultWorks();
+                          await loadOwnerData();
+                          await refreshData();
+                          alert('✅ Real client wedding films successfully restored!');
+                        } catch (err: any) {
+                          alert(`Error: ${err.message}`);
+                        }
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-surface-100 hover:bg-gold/20 text-gold border border-gold/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                      title="Restore curated real client videos"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-gold" />
+                      <span>Load Real Client Videos</span>
+                    </button>
+
                     <button
                       onClick={async () => {
                         try {

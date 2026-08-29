@@ -179,6 +179,40 @@ const DEFAULT_DB: LocalDBData = {
   ],
   works: [
     {
+      id: 'work-sangeetha-aditya-sangeeth-2026',
+      title: 'Sangeetha & Aditya — Dynamic Sangeeth Celebration Night',
+      category: 'Haldi & Sangeeth Ceremonies',
+      eventLocation: 'Bengaluru, KA',
+      eventYear: '2026',
+      thumbnailUrl: '',
+      videoUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
+      videoSourceType: 'google_drive',
+      externalDestUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
+      description: 'High-energy musical dance power of Sangeetha & Aditya Sangeeth celebration with punchy color grading and dynamic multicam pacing.',
+      softwareUsed: ['DaVinci Resolve Studio', 'After Effects', 'Premiere Pro'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 1,
+      createdAt: '2026-08-20T10:00:00Z'
+    },
+    {
+      id: 'work-sangeetha-aditya-muhurtham-2026',
+      title: 'Sangeetha & Aditya — Sacred Wedding Muhurtham & Ritual Highlights',
+      category: 'Wedding Highlights',
+      eventLocation: 'Hindupur, AP',
+      eventYear: '2026',
+      thumbnailUrl: '',
+      videoUrl: 'https://drive.google.com/file/d/1v-OAwOJfS58jSyKbSKHXllw2Tnx7AqA3/view',
+      videoSourceType: 'google_drive',
+      externalDestUrl: 'https://drive.google.com/file/d/1v-OAwOJfS58jSyKbSKHXllw2Tnx7AqA3/view',
+      description: 'Sacred Vedic mantras sound restoration and multi-camera synchronized traditional wedding ritual film for Sangeetha & Aditya.',
+      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 2,
+      createdAt: '2026-08-19T10:00:00Z'
+    },
+    {
       id: 'work-hanumantha-reception-2026',
       title: 'Hanumantha Roy & Gayathri — Grand Reception Highlights',
       category: 'Wedding Highlights',
@@ -192,8 +226,8 @@ const DEFAULT_DB: LocalDBData = {
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro', 'After Effects'],
       isFeatured: true,
       isPublished: true,
-      sortOrder: 1,
-      createdAt: '2026-08-15T10:00:00Z'
+      sortOrder: 3,
+      createdAt: '2026-08-18T10:00:00Z'
     },
     {
       id: 'work-reception-master-2026',
@@ -204,30 +238,13 @@ const DEFAULT_DB: LocalDBData = {
       thumbnailUrl: '',
       videoUrl: '/assets/works/reception-master.mp4',
       videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view?usp=drive_link',
+      externalDestUrl: 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view',
       description: 'A master graded wedding reception highlight film woven into a seamless, emotionally moving cinematic narrative.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
       isPublished: true,
-      sortOrder: 2,
-      createdAt: '2026-08-14T10:00:00Z'
-    },
-    {
-      id: 'work-muhurtham-sacred-2026',
-      title: 'Traditional Wedding Muhurtham — Sacred Ritual Highlights',
-      category: 'Wedding Highlights',
-      eventLocation: 'Hindupur, AP',
-      eventYear: '2026',
-      thumbnailUrl: '',
-      videoUrl: '/assets/works/muhurtham-sacred.mp4',
-      videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view?usp=drive_link',
-      description: 'Sacred Vedic mantras sound restoration and multi-camera synchronized traditional wedding ritual film.',
-      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
-      isFeatured: true,
-      isPublished: true,
-      sortOrder: 3,
-      createdAt: '2026-08-13T10:00:00Z'
+      sortOrder: 4,
+      createdAt: '2026-08-17T10:00:00Z'
     },
     {
       id: 'work-amulya-haldi-2026',
@@ -243,25 +260,8 @@ const DEFAULT_DB: LocalDBData = {
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
       isPublished: true,
-      sortOrder: 4,
-      createdAt: '2026-08-12T10:00:00Z'
-    },
-    {
-      id: 'work-sangeeth-celebration-2026',
-      title: 'Sangeeth Celebration Night — Dynamic Beat-Matched Edit',
-      category: 'Haldi & Sangeeth Ceremonies',
-      eventLocation: 'Bengaluru, KA',
-      eventYear: '2026',
-      thumbnailUrl: '',
-      videoUrl: '/assets/works/sangeeth-celebration.mp4',
-      videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
-      description: 'High-energy musical dance power of Sangeeth night with punchy color vibrance and live performance multicam pacing.',
-      softwareUsed: ['DaVinci Resolve Studio', 'After Effects'],
-      isFeatured: true,
-      isPublished: true,
       sortOrder: 5,
-      createdAt: '2026-08-11T10:00:00Z'
+      createdAt: '2026-08-16T10:00:00Z'
     },
     {
       id: 'work-pavan-anjali-reception-2026',
@@ -272,13 +272,13 @@ const DEFAULT_DB: LocalDBData = {
       thumbnailUrl: '',
       videoUrl: '/assets/works/pavan-anjali-reception.mp4',
       videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
+      externalDestUrl: 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view',
       description: 'Cinematic wedding reception storytelling featuring elegant couple portraits, stage entrances, and guest celebration sequences.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
       isPublished: true,
       sortOrder: 6,
-      createdAt: '2026-08-10T10:00:00Z'
+      createdAt: '2026-08-15T10:00:00Z'
     },
     {
       id: 'work-pavan-anjali-muhurtham-2026',
@@ -289,30 +289,30 @@ const DEFAULT_DB: LocalDBData = {
       thumbnailUrl: '',
       videoUrl: '/assets/works/pavan-anjali-muhurtham.mp4',
       videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
+      externalDestUrl: 'https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view',
       description: 'Sacred Mangalashtak and Muhurtham rituals crafted into an emotional and timeless family keepsake.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
       isPublished: true,
       sortOrder: 7,
-      createdAt: '2026-08-09T10:00:00Z'
+      createdAt: '2026-08-14T10:00:00Z'
     },
     {
       id: 'work-pavan-anjali-teaser-2026',
-      title: 'Pavan Kumar & Anjali — Reception Instagram Teaser',
+      title: 'Pavan Kumar & Anjali — Reception Instagram Teaser (9:16)',
       category: 'Cinematic Teasers & Reels (9:16)',
       eventLocation: 'Hindupur, AP',
       eventYear: '2026',
       thumbnailUrl: '',
       videoUrl: '/assets/works/pavan-anjali-teaser.mp4',
       videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/drive/folders/1jEFlIwpKfTXuXj7gzAZ2xCewN1tkxz10',
+      externalDestUrl: 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view',
       description: 'Fast-paced vertical teaser cut engineered with dynamic bass drops and instant visual hooks.',
       softwareUsed: ['DaVinci Resolve Studio', 'After Effects'],
       isFeatured: true,
       isPublished: true,
       sortOrder: 8,
-      createdAt: '2026-08-08T10:00:00Z'
+      createdAt: '2026-08-13T10:00:00Z'
     }
   ],
   testimonials: [
@@ -330,6 +330,21 @@ const DEFAULT_DB: LocalDBData = {
       isPublished: true,
       bookingRef: "KBK-2026-AMULYA",
       createdAt: "2026-08-10T00:00:00.000Z"
+    },
+    {
+      id: "test-sangeetha-aditya-2026",
+      clientName: "Sangeetha & Aditya",
+      serviceTitle: "Sangeeth Night & Wedding Muhurtham Master",
+      location: "Bengaluru / Hindupur",
+      rating: 5,
+      reviewText: "KBK Film Studios delivered sheer magic! The beat sync on our Sangeeth dance night and the sacred mantra restoration on our Muhurtham film were beyond world class. Highly recommended!",
+      videoUrl: "https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view",
+      thumbnailUrl: "",
+      eventDate: "August 2026",
+      isVerified: true,
+      isPublished: true,
+      bookingRef: "KBK-2026-SANGEETHA",
+      createdAt: "2026-08-08T00:00:00.000Z"
     },
     {
       id: "test-hanumantha-2026",
@@ -400,7 +415,7 @@ const DEFAULT_DB: LocalDBData = {
   auditLogs: []
 };
 
-const STORAGE_KEY = 'kbk_local_database_v6';
+const STORAGE_KEY = 'kbk_local_database_v8';
 
 function getDB(): LocalDBData {
   try {
@@ -410,10 +425,14 @@ function getDB(): LocalDBData {
       return DEFAULT_DB;
     }
     const parsed = JSON.parse(raw) as LocalDBData;
-    if (!parsed.works || parsed.works.length === 0 || parsed.works.some(w => w.videoUrl?.includes('drive.google.com'))) {
-      parsed.works = DEFAULT_DB.works;
-      parsed.testimonials = DEFAULT_DB.testimonials;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    if (!parsed.services || parsed.services.length === 0) {
+      parsed.services = DEFAULT_DB.services;
+    }
+    if (!parsed.cms) {
+      parsed.cms = DEFAULT_DB.cms;
+    }
+    if (!parsed.owners || parsed.owners.length === 0) {
+      parsed.owners = DEFAULT_DB.owners;
     }
     return parsed;
   } catch (e) {
@@ -437,10 +456,10 @@ export const localDb = {
     return getDB().services;
   },
   getWorks(): PublicWork[] {
-    return getDB().works;
+    return getDB().works || [];
   },
   getTestimonials(): Testimonial[] {
-    return getDB().testimonials;
+    return getDB().testimonials || [];
   },
   getOwners(): Owner[] {
     return getDB().owners;
@@ -510,7 +529,7 @@ export const localDb = {
       serviceTitle: service.title,
       eventDate: data.eventDate || new Date().toISOString().split('T')[0],
       preferredDeliveryDate: data.preferredDeliveryDate || '',
-      budgetRange: data.budgetRange || `?${service.basePrice.toLocaleString('en-IN')}`,
+      budgetRange: data.budgetRange || `₹${service.basePrice.toLocaleString('en-IN')}`,
       footageDetails: data.footageDetails || '',
       referenceLinks: data.referenceLinks || '',
       customNotes: data.customNotes || '',
@@ -572,6 +591,7 @@ export const localDb = {
       softwareUsed: work.softwareUsed || ['DaVinci Resolve'],
       createdAt: work.createdAt || new Date().toISOString()
     };
+    if (!db.works) db.works = [];
     const index = db.works.findIndex(item => item.id === normalized.id);
     if (index >= 0) db.works[index] = normalized;
     else db.works.unshift(normalized);
@@ -581,9 +601,23 @@ export const localDb = {
 
   deleteWork(id: string): { success: boolean; message: string } {
     const db = getDB();
-    db.works = db.works.filter(work => work.id !== id);
+    db.works = (db.works || []).filter(work => work.id !== id);
     saveDB(db);
     return { success: true, message: 'Showcase work removed.' };
+  },
+
+  deleteAllWorks(): { success: boolean; message: string } {
+    const db = getDB();
+    db.works = [];
+    saveDB(db);
+    return { success: true, message: 'All showcase works cleared from cache.' };
+  },
+
+  resetDefaultWorks(): PublicWork[] {
+    const db = getDB();
+    db.works = [...DEFAULT_DB.works];
+    saveDB(db);
+    return db.works;
   },
 
   saveTestimonial(testimonial: any): { success: boolean; testimonial: Testimonial } {
@@ -596,6 +630,7 @@ export const localDb = {
       rating: Number(testimonial.rating) || 5,
       createdAt: testimonial.createdAt || new Date().toISOString()
     };
+    if (!db.testimonials) db.testimonials = [];
     const index = db.testimonials.findIndex(item => item.id === normalized.id);
     if (index >= 0) db.testimonials[index] = normalized;
     else db.testimonials.unshift(normalized);
@@ -605,7 +640,7 @@ export const localDb = {
 
   deleteTestimonial(id: string): { success: boolean; message: string } {
     const db = getDB();
-    db.testimonials = db.testimonials.filter(testimonial => testimonial.id !== id);
+    db.testimonials = (db.testimonials || []).filter(testimonial => testimonial.id !== id);
     saveDB(db);
     return { success: true, message: 'Testimonial removed.' };
   },
