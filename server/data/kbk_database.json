@@ -514,49 +514,7 @@
       "createdAt": "2026-02-08T15:00:00Z"
     }
   ],
-  "publicWorks": [
-    {
-      "id": "work-amulya-haldi-2026",
-      "title": "Amulya Haldi Ceremony — Cinematic Edit",
-      "category": "Haldi & Sangeeth Ceremonies",
-      "eventLocation": "Hindupur, AP",
-      "eventYear": "2026",
-      "thumbnailUrl": "/assets/kbk-logo.jpg",
-      "videoUrl": "https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view",
-      "videoSourceType": "google_drive",
-      "externalDestUrl": "",
-      "description": "A vibrant and joyful Haldi ceremony cinematic highlight — yellow splash color isolation, beat-matched family dances, and warm festive energy captured in breathtaking 4K.",
-      "softwareUsed": [
-        "DaVinci Resolve Studio",
-        "Adobe Premiere Pro"
-      ],
-      "isFeatured": true,
-      "isPublished": true,
-      "sortOrder": 1,
-      "createdAt": "2026-08-10T10:00:00Z"
-    },
-    {
-      "id": "work-demo-wedding-2026",
-      "title": "Venkatesh & Divya — Wedding Master Highlight",
-      "category": "Wedding Highlights",
-      "eventLocation": "Hindupur, AP",
-      "eventYear": "2026",
-      "thumbnailUrl": "/assets/kbk-logo.jpg",
-      "videoUrl": "/assets/client-work-1.mp4",
-      "videoSourceType": "direct_mp4",
-      "externalDestUrl": "",
-      "description": "A breathtaking wedding master highlight film — Muhurtham, Mangalashtak, reception speeches, and candid family moments woven into a seamless 10-minute emotional cinematic narrative.",
-      "softwareUsed": [
-        "DaVinci Resolve Studio",
-        "Adobe Premiere Pro",
-        "After Effects"
-      ],
-      "isFeatured": true,
-      "isPublished": true,
-      "sortOrder": 2,
-      "createdAt": "2026-02-10T10:00:00Z"
-    }
-  ],
+  "publicWorks": [],
   "testimonials": [
     {
       "id": "test-amulya-2026",
