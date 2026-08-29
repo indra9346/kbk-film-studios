@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
 import {
   Play,
   Pause,
   Volume2,
   VolumeX,
   Maximize2,
-  ExternalLink,
   Image as ImageIcon,
   Film,
   RotateCcw,
@@ -15,8 +14,10 @@ import {
   Gauge
 } from 'lucide-react';
 import { extractDriveFileId, getVideoType, isImageMedia, getCleanVideoUrl } from './VideoCard';
+import { useStudio } from '../../context/StudioContext';
 
 export interface CinematicVideoPlayerProps {
+  id?: string;
   url?: string;
   poster?: string;
   title?: string;
@@ -31,6 +32,7 @@ export interface CinematicVideoPlayerProps {
 }
 
 export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
+  id,
   url = '',
   poster,
   title = 'KBK Cinematic Film',
@@ -43,7 +45,13 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
   className = '',
   onExpand
 }) => {
+  const generatedId = useId();
+  const playerId = id || `${title}-${url}-${generatedId}`;
+
+  const { activeAudiblePlayerId, setActiveAudiblePlayerId } = useStudio();
+
   const [isPlaying, setIsPlaying] = useState(true);
+  // STRICTLY MUTED BY DEFAULT FOR ALL VIDEOS
   const [isMuted, setIsMuted] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(defaultSpeed);
   const [progress, setProgress] = useState(0);
@@ -93,7 +101,19 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
     }
   }, []);
 
-  // Viewport Observer for High-Speed Lazy Streaming
+  // SINGLE ACTIVE AUDIO CHANNEL ENFORCEMENT:
+  // If another video on the page becomes audible, immediately MUTE this video
+  useEffect(() => {
+    if (activeAudiblePlayerId && activeAudiblePlayerId !== playerId) {
+      setIsMuted(true);
+      if (videoRef.current) {
+        videoRef.current.muted = true;
+      }
+      postToYouTube('mute');
+    }
+  }, [activeAudiblePlayerId, playerId, postToYouTube]);
+
+  // Viewport Observer for Lazy Streaming
   useEffect(() => {
     if (isModal || typeof IntersectionObserver === 'undefined') {
       setIsInViewport(true);
@@ -127,6 +147,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
+    // ALWAYS STRICTLY MUTED BY DEFAULT
     video.defaultMuted = true;
     video.muted = isMuted;
     video.loop = true;
@@ -236,6 +257,15 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
 
+    if (!nextMuted) {
+      // User explicitly requested Sound for THIS player -> tell context to mute all other players
+      setActiveAudiblePlayerId(playerId);
+    } else {
+      if (activeAudiblePlayerId === playerId) {
+        setActiveAudiblePlayerId(null);
+      }
+    }
+
     if (videoRef.current) {
       videoRef.current.muted = nextMuted;
     }
@@ -319,12 +349,12 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
           )}
         </div>
       ) : isYouTube ? (
-        /* CASE 2: YOUTUBE (Controlled Loop + Autoplay + Muted with JS API control) */
+        /* CASE 2: YOUTUBE (100% Guaranteed Muted Loop + Autoplay) */
         <div className="w-full h-full relative overflow-hidden bg-black pointer-events-auto flex items-center justify-center">
           {isInViewport || isModal ? (
             <iframe
               ref={iframeRef}
-              src={`https://www.youtube-nocookie.com/embed/${mediaInfo.id}?enablejsapi=1&autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${mediaInfo.id}&controls=${isModal ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+              src={`https://www.youtube-nocookie.com/embed/${mediaInfo.id}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${mediaInfo.id}&controls=${isModal ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
               title={title}
               loading="lazy"
               className={`w-full h-full ${aspectRatio === '9/16' ? 'object-contain max-w-[280px]' : 'object-cover scale-105'} border-0`}
@@ -349,7 +379,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
           </div>
         </div>
       ) : directSrc ? (
-        /* CASE 3: ULTRA FAST DIRECT 2X AUTOPLAY HTML5 VIDEO (Plays flawlessly on Mobile & Desktop) */
+        /* CASE 3: ULTRA FAST DIRECT 2X AUTOPLAY HTML5 VIDEO (100% Strictly Muted Loop Autoplay) */
         <div className="relative w-full h-full bg-black flex items-center justify-center">
           <video
             ref={videoRef}
@@ -401,14 +431,14 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
           )}
         </div>
       ) : isGoogleDrive ? (
-        /* CASE 4: GOOGLE DRIVE PREVIEW EMBED (For full direct client links) */
+        /* CASE 4: GOOGLE DRIVE PREVIEW EMBED (Strictly Muted preview) */
         <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
           {isInViewport || isModal ? (
             <iframe
               src={
                 trimmedUrl.includes('folders')
                   ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
-                  : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1`
+                  : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1&mute=1`
               }
               title={title}
               loading="lazy"
@@ -466,7 +496,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
                 className={`p-1 sm:p-1.5 rounded-lg border transition-colors shadow-sm flex items-center gap-1 text-[10px] font-bold ${
                   !isMuted ? 'bg-gold text-black border-gold' : 'bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border-gold/30'
                 }`}
-                title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+                title={isMuted ? 'Unmute Audio (Plays single sound)' : 'Mute Audio'}
               >
                 {isMuted ? <VolumeX className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                 <span className="text-[9px] uppercase hidden xs:inline">{isMuted ? 'Muted' : 'Sound ON'}</span>

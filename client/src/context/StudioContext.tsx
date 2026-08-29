@@ -12,9 +12,11 @@ interface StudioContextType {
   error: string | null;
   refreshData: () => Promise<void>;
 
-  // Single-active video player state
+  // Single-active video player & audio state
   activePlayingVideoId: string | null;
   setActivePlayingVideoId: (id: string | null) => void;
+  activeAudiblePlayerId: string | null;
+  setActiveAudiblePlayerId: (id: string | null) => void;
 
   // Selected Service for booking modal
   preSelectedServiceId: string | null;
@@ -42,6 +44,7 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [error, setError] = useState<string | null>(null);
 
   const [activePlayingVideoId, setActivePlayingVideoId] = useState<string | null>(null);
+  const [activeAudiblePlayerId, setActiveAudiblePlayerId] = useState<string | null>(null);
   const [preSelectedServiceId, setPreSelectedServiceId] = useState<string | null>(null);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [isPricingClarificationOpen, setIsPricingClarificationOpen] = useState(false);
@@ -108,6 +111,8 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         refreshData,
         activePlayingVideoId,
         setActivePlayingVideoId,
+        activeAudiblePlayerId,
+        setActiveAudiblePlayerId,
         preSelectedServiceId,
         setPreSelectedServiceId,
         isTermsModalOpen,
