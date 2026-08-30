@@ -179,38 +179,38 @@ const DEFAULT_DB: LocalDBData = {
   ],
   works: [
     {
+      id: 'work-amulya-haldi-2026',
+      title: 'Amulya Haldi Ceremony — Festive Highlights',
+      category: 'Haldi & Sangeeth Ceremonies',
+      eventLocation: 'Hindupur, AP',
+      eventYear: '2026',
+      thumbnailUrl: '',
+      videoUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/preview',
+      videoSourceType: 'google_drive',
+      externalDestUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
+      description: 'Vibrant yellow splash color isolation, beat-matched family celebration, and warm festive energy captured in 4K.',
+      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+      isFeatured: true,
+      isPublished: true,
+      sortOrder: 1,
+      createdAt: '2026-08-25T10:00:00Z'
+    },
+    {
       id: 'work-sangeetha-aditya-sangeeth-2026',
       title: 'Sangeetha & Aditya — Dynamic Sangeeth Celebration Night',
       category: 'Haldi & Sangeeth Ceremonies',
-      eventLocation: 'Bengaluru, KA',
+      eventLocation: 'Bengaluru / Hindupur',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
+      videoUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/preview',
       videoSourceType: 'google_drive',
       externalDestUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
       description: 'High-energy musical dance power of Sangeetha & Aditya Sangeeth celebration with punchy color grading and dynamic multicam pacing.',
       softwareUsed: ['DaVinci Resolve Studio', 'After Effects', 'Premiere Pro'],
       isFeatured: true,
       isPublished: true,
-      sortOrder: 1,
-      createdAt: '2026-08-20T10:00:00Z'
-    },
-    {
-      id: 'work-sangeetha-aditya-muhurtham-2026',
-      title: 'Sangeetha & Aditya — Sacred Wedding Muhurtham & Ritual Highlights',
-      category: 'Wedding Highlights',
-      eventLocation: 'Hindupur, AP',
-      eventYear: '2026',
-      thumbnailUrl: '',
-      videoUrl: 'https://drive.google.com/file/d/1v-OAwOJfS58jSyKbSKHXllw2Tnx7AqA3/view',
-      videoSourceType: 'google_drive',
-      externalDestUrl: 'https://drive.google.com/file/d/1v-OAwOJfS58jSyKbSKHXllw2Tnx7AqA3/view',
-      description: 'Sacred Vedic mantras sound restoration and multi-camera synchronized traditional wedding ritual film for Sangeetha & Aditya.',
-      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
-      isFeatured: true,
-      isPublished: true,
       sortOrder: 2,
-      createdAt: '2026-08-19T10:00:00Z'
+      createdAt: '2026-08-24T10:00:00Z'
     },
     {
       id: 'work-hanumantha-reception-2026',
@@ -219,100 +219,32 @@ const DEFAULT_DB: LocalDBData = {
       eventLocation: 'Hindupur, AP',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: '/assets/works/hanumantha-reception.mp4',
-      videoSourceType: 'direct_mp4',
+      videoUrl: 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/preview',
+      videoSourceType: 'google_drive',
       externalDestUrl: 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view',
       description: 'Grand luxury reception film featuring multi-camera speech capture, cinematic slow-motion highlights, and rich HDR color grading.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro', 'After Effects'],
       isFeatured: true,
       isPublished: true,
       sortOrder: 3,
-      createdAt: '2026-08-18T10:00:00Z'
+      createdAt: '2026-08-23T10:00:00Z'
     },
     {
-      id: 'work-reception-master-2026',
-      title: 'Luxury Wedding Reception — 4K Master Cut',
-      category: 'Wedding Highlights',
-      eventLocation: 'Bengaluru, KA',
+      id: 'work-pre-wedding-2026',
+      title: 'Cinematic Pre-Wedding Visual Story',
+      category: 'Pre-Wedding Video Editing',
+      eventLocation: 'Hindupur / Outdoor Scenic',
       eventYear: '2026',
       thumbnailUrl: '',
-      videoUrl: '/assets/works/reception-master.mp4',
-      videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view',
-      description: 'A master graded wedding reception highlight film woven into a seamless, emotionally moving cinematic narrative.',
+      videoUrl: 'https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/preview',
+      videoSourceType: 'google_drive',
+      externalDestUrl: 'https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/view',
+      description: 'Dreamy visual narrative with slow-motion couple portraits, warm cinematic tone mapping, and seamless storytelling.',
       softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
       isFeatured: true,
       isPublished: true,
       sortOrder: 4,
-      createdAt: '2026-08-17T10:00:00Z'
-    },
-    {
-      id: 'work-amulya-haldi-2026',
-      title: 'Amulya Haldi Ceremony — Festive Yellow Splash Highlight',
-      category: 'Haldi & Sangeeth Ceremonies',
-      eventLocation: 'Hindupur, AP',
-      eventYear: '2026',
-      thumbnailUrl: '',
-      videoUrl: '/assets/works/amulya-haldi.mp4',
-      videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
-      description: 'Vibrant yellow splash color isolation, beat-matched family dances, and warm festive energy captured in 4K.',
-      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
-      isFeatured: true,
-      isPublished: true,
-      sortOrder: 5,
-      createdAt: '2026-08-16T10:00:00Z'
-    },
-    {
-      id: 'work-pavan-anjali-reception-2026',
-      title: 'Pavan Kumar & Anjali — Luxury Reception Film',
-      category: 'Wedding Highlights',
-      eventLocation: 'Hindupur, AP',
-      eventYear: '2026',
-      thumbnailUrl: '',
-      videoUrl: '/assets/works/pavan-anjali-reception.mp4',
-      videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view',
-      description: 'Cinematic wedding reception storytelling featuring elegant couple portraits, stage entrances, and guest celebration sequences.',
-      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
-      isFeatured: true,
-      isPublished: true,
-      sortOrder: 6,
-      createdAt: '2026-08-15T10:00:00Z'
-    },
-    {
-      id: 'work-pavan-anjali-muhurtham-2026',
-      title: 'Pavan Kumar & Anjali — Sacred Muhurtham Highlights',
-      category: 'Wedding Highlights',
-      eventLocation: 'Hindupur, AP',
-      eventYear: '2026',
-      thumbnailUrl: '',
-      videoUrl: '/assets/works/pavan-anjali-muhurtham.mp4',
-      videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/file/d/14Oc3e5cNWXMOGIxPXk4V-OlN620eBqWs/view',
-      description: 'Sacred Mangalashtak and Muhurtham rituals crafted into an emotional and timeless family keepsake.',
-      softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
-      isFeatured: true,
-      isPublished: true,
-      sortOrder: 7,
-      createdAt: '2026-08-14T10:00:00Z'
-    },
-    {
-      id: 'work-pavan-anjali-teaser-2026',
-      title: 'Pavan Kumar & Anjali — Reception Instagram Teaser (9:16)',
-      category: 'Cinematic Teasers & Reels (9:16)',
-      eventLocation: 'Hindupur, AP',
-      eventYear: '2026',
-      thumbnailUrl: '',
-      videoUrl: '/assets/works/pavan-anjali-teaser.mp4',
-      videoSourceType: 'direct_mp4',
-      externalDestUrl: 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view',
-      description: 'Fast-paced vertical teaser cut engineered with dynamic bass drops and instant visual hooks.',
-      softwareUsed: ['DaVinci Resolve Studio', 'After Effects'],
-      isFeatured: true,
-      isPublished: true,
-      sortOrder: 8,
-      createdAt: '2026-08-13T10:00:00Z'
+      createdAt: '2026-08-22T10:00:00Z'
     }
   ],
   testimonials: [
@@ -415,7 +347,26 @@ const DEFAULT_DB: LocalDBData = {
   auditLogs: []
 };
 
-const STORAGE_KEY = 'kbk_local_database_v8';
+const STORAGE_KEY = 'kbk_local_database_v9';
+
+function purgeLegacyStorage() {
+  try {
+    const legacyKeys = [
+      'kbk_local_database_v8',
+      'kbk_local_database_v7',
+      'kbk_local_database_v6',
+      'kbk_local_database_v5',
+      'kbk_local_database_v4',
+      'kbk_local_database_v3',
+      'kbk_local_database_v2',
+      'kbk_local_database_v1',
+      'kbk_local_db'
+    ];
+    legacyKeys.forEach(k => localStorage.removeItem(k));
+  } catch (_) {}
+}
+
+purgeLegacyStorage();
 
 function getDB(): LocalDBData {
   try {
@@ -434,6 +385,9 @@ function getDB(): LocalDBData {
     if (!parsed.owners || parsed.owners.length === 0) {
       parsed.owners = DEFAULT_DB.owners;
     }
+    if (!parsed.works) {
+      parsed.works = [];
+    }
     return parsed;
   } catch (e) {
     return DEFAULT_DB;
@@ -444,7 +398,7 @@ function saveDB(data: LocalDBData) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
-    console.error('Failed to save local database:', e);
+    console.warn('LocalStorage save note (quota or private mode):', e);
   }
 }
 

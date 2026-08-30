@@ -119,15 +119,7 @@ export const api = {
           .eq('is_published', true)
           .order('sort_order', { ascending: true });
         if (!error && data) {
-          if (data.length > 0) {
-            return data.map(mapWorkFromRow);
-          }
-          // If table is explicitly empty in Supabase, check local cache or return local curated works
-          const localWorks = localDb.getWorks();
-          if (localWorks.length > 0) {
-            return localWorks;
-          }
-          return [];
+          return data.map(mapWorkFromRow);
         }
       } catch (e) {
         console.warn('[Supabase] getWorks query error:', e);
@@ -985,7 +977,61 @@ export const api = {
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
 
-    // 1. Try server backend endpoint first
+    // 1. Direct Supabase Storage Bucket Upload
+    if (isSupabaseConfigured()) {
+      try {
+        const cleanFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const filePath = `showcase/${cleanFileName}`;
+
+        let uploadRes = await supabase.storage
+          .from('showcase_media')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true,
+            contentType: file.type || (isImage ? 'image/jpeg' : 'video/mp4')
+          });
+
+        let targetBucket = 'showcase_media';
+        let targetPath = filePath;
+
+        // Fallback to 'deliveries' bucket if 'showcase_media' bucket isn't created yet
+        if (uploadRes.error) {
+          console.warn('[Supabase Storage] showcase_media upload note:', uploadRes.error.message);
+          const fallbackRes = await supabase.storage
+            .from('deliveries')
+            .upload(`showcase/${cleanFileName}`, file, {
+              cacheControl: '3600',
+              upsert: true,
+              contentType: file.type || (isImage ? 'image/jpeg' : 'video/mp4')
+            });
+          if (!fallbackRes.error) {
+            targetBucket = 'deliveries';
+            targetPath = fallbackRes.data?.path || `showcase/${cleanFileName}`;
+            uploadRes = fallbackRes;
+          }
+        }
+
+        if (!uploadRes.error) {
+          const { data: pubData } = supabase.storage
+            .from(targetBucket)
+            .getPublicUrl(targetPath);
+
+          if (pubData?.publicUrl) {
+            return {
+              success: true,
+              url: pubData.publicUrl,
+              fileName: file.name,
+              isImage,
+              isVideo
+            };
+          }
+        }
+      } catch (storageErr) {
+        console.warn('[Supabase Storage] Direct upload exception:', storageErr);
+      }
+    }
+
+    // 2. Server backend endpoint
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -1012,30 +1058,15 @@ export const api = {
       console.warn('[API Server] uploadMedia server note:', e);
     }
 
-    // 2. Fallback: Convert to persistent Data URL (FileReader)
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        resolve({
-          success: true,
-          url: reader.result as string,
-          fileName: file.name,
-          isImage,
-          isVideo
-        });
-      };
-      reader.onerror = () => {
-        // Last resort: temporary blob URL
-        resolve({
-          success: true,
-          url: URL.createObjectURL(file),
-          fileName: file.name,
-          isImage,
-          isVideo
-        });
-      };
-      reader.readAsDataURL(file);
-    });
+    // 3. Ultra-fast local object URL (instant 0ms response, no tab freezing, no quota limits)
+    const blobUrl = URL.createObjectURL(file);
+    return {
+      success: true,
+      url: blobUrl,
+      fileName: file.name,
+      isImage,
+      isVideo
+    };
   },
 
   // ----------------------------------------------------

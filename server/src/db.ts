@@ -347,7 +347,76 @@ const INITIAL_SERVICES: ServiceItem[] = [
   }
 ];
 
-const INITIAL_PUBLIC_WORKS: PublicWork[] = [];
+const INITIAL_PUBLIC_WORKS: PublicWork[] = [
+  {
+    id: 'work-amulya-haldi-2026',
+    title: 'Amulya Haldi Ceremony — Festive Highlights',
+    category: 'Haldi & Sangeeth Ceremonies',
+    eventLocation: 'Hindupur, AP',
+    eventYear: '2026',
+    thumbnailUrl: '',
+    videoUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/preview',
+    videoSourceType: 'google_drive',
+    externalDestUrl: 'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
+    description: 'Vibrant yellow splash color isolation, beat-matched family celebration, and warm festive energy captured in 4K.',
+    softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+    isFeatured: true,
+    isPublished: true,
+    sortOrder: 1,
+    createdAt: '2026-08-25T10:00:00Z'
+  },
+  {
+    id: 'work-sangeetha-aditya-sangeeth-2026',
+    title: 'Sangeetha & Aditya — Dynamic Sangeeth Celebration Night',
+    category: 'Haldi & Sangeeth Ceremonies',
+    eventLocation: 'Bengaluru / Hindupur',
+    eventYear: '2026',
+    thumbnailUrl: '',
+    videoUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/preview',
+    videoSourceType: 'google_drive',
+    externalDestUrl: 'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
+    description: 'High-energy musical dance power of Sangeetha & Aditya Sangeeth celebration with punchy color grading and dynamic multicam pacing.',
+    softwareUsed: ['DaVinci Resolve Studio', 'After Effects', 'Premiere Pro'],
+    isFeatured: true,
+    isPublished: true,
+    sortOrder: 2,
+    createdAt: '2026-08-24T10:00:00Z'
+  },
+  {
+    id: 'work-hanumantha-reception-2026',
+    title: 'Hanumantha Roy & Gayathri — Grand Reception Highlights',
+    category: 'Wedding Highlights',
+    eventLocation: 'Hindupur, AP',
+    eventYear: '2026',
+    thumbnailUrl: '',
+    videoUrl: 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/preview',
+    videoSourceType: 'google_drive',
+    externalDestUrl: 'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view',
+    description: 'Grand luxury reception film featuring multi-camera speech capture, cinematic slow-motion highlights, and rich HDR color grading.',
+    softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro', 'After Effects'],
+    isFeatured: true,
+    isPublished: true,
+    sortOrder: 3,
+    createdAt: '2026-08-23T10:00:00Z'
+  },
+  {
+    id: 'work-pre-wedding-2026',
+    title: 'Cinematic Pre-Wedding Visual Story',
+    category: 'Pre-Wedding Video Editing',
+    eventLocation: 'Hindupur / Outdoor Scenic',
+    eventYear: '2026',
+    thumbnailUrl: '',
+    videoUrl: 'https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/preview',
+    videoSourceType: 'google_drive',
+    externalDestUrl: 'https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/view',
+    description: 'Dreamy visual narrative with slow-motion couple portraits, warm cinematic tone mapping, and seamless storytelling.',
+    softwareUsed: ['DaVinci Resolve Studio', 'Adobe Premiere Pro'],
+    isFeatured: true,
+    isPublished: true,
+    sortOrder: 4,
+    createdAt: '2026-08-22T10:00:00Z'
+  }
+];
 
 const INITIAL_TESTIMONIALS: Testimonial[] = [
   {

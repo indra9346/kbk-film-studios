@@ -76,18 +76,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
 
   const activePoster = poster || undefined;
 
-  // Resolve local fallback if a Drive video has a corresponding local trimmed asset
-  const getDirectFallbackUrl = () => {
-    if (trimmedUrl.includes('1rqVfAXvqzroASucfdilB3-sRVGk9811Y')) return '/assets/works/sangeeth-celebration.mp4';
-    if (trimmedUrl.includes('1v-OAwOJfS58jSyKbSKHXllw2Tnx7AqA3')) return '/assets/works/muhurtham-sacred.mp4';
-    if (trimmedUrl.includes('1lmZ0mHo4lRI')) return '/assets/works/hanumantha-reception.mp4';
-    if (trimmedUrl.includes('1X-bWfeq')) return '/assets/works/reception-master.mp4';
-    if (trimmedUrl.includes('14Oc3e5cNWXMOGIx')) return '/assets/works/muhurtham-sacred.mp4';
-    if (trimmedUrl.includes('1dHZDL0B23QtW6yo')) return '/assets/works/amulya-haldi.mp4';
-    return null;
-  };
 
-  const directFallback = getDirectFallbackUrl();
 
   // Helper to send commands to YouTube iFrame via postMessage
   const postToYouTube = useCallback((func: string, args: any = '') => {
@@ -181,7 +170,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
       video.pause();
       setIsPlaying(false);
     }
-  }, [trimmedUrl, isInViewport, playbackSpeed, isMuted, directFallback]);
+  }, [trimmedUrl, isInViewport, playbackSpeed, isMuted]);
 
   // Manage YouTube iframe when leaving viewport or closing modal
   useEffect(() => {
@@ -295,7 +284,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
   };
 
   // Determine what video source to render for optimal fast performance
-  const directSrc = isDirectVideo ? getCleanVideoUrl(trimmedUrl) : directFallback;
+  const directSrc = isDirectVideo ? getCleanVideoUrl(trimmedUrl) : '';
 
   return (
     <div
@@ -438,12 +427,12 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
               src={
                 trimmedUrl.includes('folders')
                   ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
-                  : `https://drive.google.com/file/d/${driveId}/preview?autoplay=1&mute=1`
+                  : `https://drive.google.com/file/d/${driveId}/preview`
               }
               title={title}
               loading="lazy"
-              className={`w-full ${isModal ? 'h-full object-contain' : 'h-[calc(100%+54px)] -mt-[54px] object-cover scale-[1.03]'} border-0`}
-              allow="autoplay; fullscreen"
+              className="w-full h-full object-cover border-0"
+              allow="autoplay; fullscreen; encrypted-media"
               allowFullScreen
             />
           ) : (

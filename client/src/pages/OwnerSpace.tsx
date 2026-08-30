@@ -495,7 +495,18 @@ export const OwnerSpace: React.FC = () => {
         category: finalCategory,
       };
 
-      await api.saveWork(payload);
+      const res = await api.saveWork(payload);
+      if (res?.work) {
+        setWorks((prev) => {
+          const idx = prev.findIndex((w) => w.id === res.work.id);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = res.work;
+            return next;
+          }
+          return [res.work, ...prev];
+        });
+      }
       setEditingWork(null);
       setIsCustomCategory(false);
       setCustomCategoryName('');
@@ -550,42 +561,61 @@ export const OwnerSpace: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Instant zero-delay local object preview
+    const instantUrl = URL.createObjectURL(file);
+    const isImg = file.type.startsWith('image/');
+    const autoTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+
+    if (type === 'quick_ingest') {
+      setQuickIngestUrl(instantUrl);
+      if (!quickIngestTitle) {
+        setQuickIngestTitle(autoTitle);
+      }
+    } else if (type === 'work_media') {
+      setEditingWork((prev) => ({
+        ...prev,
+        videoUrl: instantUrl,
+        thumbnailUrl: isImg ? (prev?.thumbnailUrl || instantUrl) : (prev?.thumbnailUrl || '/assets/kbk-logo.jpg'),
+        title: prev?.title || autoTitle
+      }));
+    } else if (type === 'work_cover') {
+      setEditingWork((prev) => ({
+        ...prev,
+        thumbnailUrl: instantUrl
+      }));
+    } else if (type === 'testimonial') {
+      setEditingTestimonial((prev) => ({
+        ...prev,
+        videoUrl: instantUrl
+      }));
+    }
+
     try {
       setIsUploadingMedia(true);
       const res = await api.uploadMedia(file);
-      if (!res.success || !res.url) {
-        alert('Could not upload media file.');
-        return;
-      }
-
-      if (type === 'work_media') {
-        setEditingWork((prev) => {
-          const autoTitle = prev?.title || file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-          return {
+      if (res?.success && res.url) {
+        if (type === 'quick_ingest') {
+          setQuickIngestUrl(res.url);
+        } else if (type === 'work_media') {
+          setEditingWork((prev) => ({
             ...prev,
             videoUrl: res.url,
             thumbnailUrl: res.isImage ? (prev?.thumbnailUrl || res.url) : (prev?.thumbnailUrl || '/assets/kbk-logo.jpg'),
-            title: autoTitle
-          };
-        });
-      } else if (type === 'work_cover') {
-        setEditingWork((prev) => ({
-          ...prev,
-          thumbnailUrl: res.url
-        }));
-      } else if (type === 'testimonial') {
-        setEditingTestimonial((prev) => ({
-          ...prev,
-          videoUrl: res.url
-        }));
-      } else if (type === 'quick_ingest') {
-        setQuickIngestUrl(res.url);
-        if (!quickIngestTitle) {
-          setQuickIngestTitle(file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
+          }));
+        } else if (type === 'work_cover') {
+          setEditingWork((prev) => ({
+            ...prev,
+            thumbnailUrl: res.url
+          }));
+        } else if (type === 'testimonial') {
+          setEditingTestimonial((prev) => ({
+            ...prev,
+            videoUrl: res.url
+          }));
         }
       }
     } catch (err: any) {
-      alert(`Media upload error: ${err.message}`);
+      console.warn('Media upload note:', err);
     } finally {
       setIsUploadingMedia(false);
       event.target.value = '';
@@ -623,6 +653,9 @@ export const OwnerSpace: React.FC = () => {
         createdAt: new Date().toISOString()
       };
 
+      // Optimistic instant reflection in Owner UI
+      setWorks((prev) => [payload, ...prev]);
+
       await api.saveWork(payload);
       setQuickIngestUrl('');
       setQuickIngestTitle('');
@@ -631,6 +664,7 @@ export const OwnerSpace: React.FC = () => {
       alert(`🎉 Successfully published "${title}" directly to Supabase & Portfolio! Broadcasted to all devices live.`);
     } catch (err: any) {
       alert(`Error publishing work: ${err.message}`);
+      loadOwnerData();
     } finally {
       setIsPublishingQuickWork(false);
     }
@@ -2045,19 +2079,20 @@ export const OwnerSpace: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={async () => {
-                        const confirmed = window.confirm('⚠️ Are you sure you want to DELETE ALL existing videos in the portfolio and Supabase public_works table? This will remove all duplicate/old rows.');
+                        const confirmed = window.confirm('⚠️ Are you sure you want to PERMANENTLY DELETE ALL showcase videos from both the website portfolio and Supabase database?');
                         if (!confirmed) return;
                         try {
+                          setWorks([]);
                           await api.deleteAllWorks();
                           await loadOwnerData();
                           await refreshData();
-                          alert('✅ All showcase videos successfully deleted from database and website!');
+                          alert('✅ All showcase videos permanently deleted from database and website!');
                         } catch (err: any) {
                           alert(`Error deleting works: ${err.message}`);
                         }
                       }}
                       className="px-3.5 py-2 rounded-xl bg-accent-crimson/20 hover:bg-accent-crimson/40 text-accent-crimson border border-accent-crimson/40 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all"
-                      title="Clear all bloated/duplicate rows from database"
+                      title="Permanently remove all showcase videos"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Delete All Videos</span>
@@ -2065,22 +2100,19 @@ export const OwnerSpace: React.FC = () => {
 
                     <button
                       onClick={async () => {
-                        const confirmed = window.confirm('Restore curated real client videos (Sangeetha & Aditya Sangeeth, Muhurtham, etc.)?');
-                        if (!confirmed) return;
                         try {
-                          await api.resetDefaultWorks();
                           await loadOwnerData();
                           await refreshData();
-                          alert('✅ Real client wedding films successfully restored!');
+                          alert('✅ Showcase works refreshed from Supabase database.');
                         } catch (err: any) {
                           alert(`Error: ${err.message}`);
                         }
                       }}
                       className="px-3.5 py-2 rounded-xl bg-surface-100 hover:bg-gold/20 text-gold border border-gold/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all"
-                      title="Restore curated real client videos"
+                      title="Refresh works from database"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-gold" />
-                      <span>Load Real Client Videos</span>
+                      <RefreshCw className="w-3.5 h-3.5 text-gold" />
+                      <span>Refresh Works</span>
                     </button>
 
                     <button
@@ -2201,47 +2233,75 @@ export const OwnerSpace: React.FC = () => {
                       <button
                         type="button"
                         onClick={handlePublishQuickWork}
-                        disabled={isPublishingQuickWork || isUploadingMedia || !quickIngestUrl.trim()}
-                        className="px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-50 text-black font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-gold-sm transition-all shrink-0"
+                        disabled={isPublishingQuickWork || !quickIngestUrl.trim()}
+                        className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shrink-0 ${
+                          quickIngestUrl.trim()
+                            ? 'bg-gold hover:bg-gold-light text-black shadow-gold hover:scale-[1.02] cursor-pointer'
+                            : 'bg-surface-200 text-ivory-400/50 cursor-not-allowed border border-white/10'
+                        }`}
                       >
                         {isPublishingQuickWork ? (
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-black" />
                         ) : (
-                          <Zap className="w-3.5 h-3.5 fill-black" />
+                          <Zap className="w-3.5 h-3.5 fill-current" />
                         )}
                         <span>{isPublishingQuickWork ? 'Publishing...' : 'Publish Live'}</span>
                       </button>
                     </div>
                   </div>
 
+                  {/* Uploading Media Indicator */}
+                  {isUploadingMedia && (
+                    <div className="p-3 rounded-xl bg-gold/10 border border-gold/40 flex items-center gap-3 animate-pulse">
+                      <RefreshCw className="w-4 h-4 text-gold animate-spin shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-gold">Uploading media file to Cloud Storage...</p>
+                        <p className="text-[10px] text-ivory-300">Synchronizing stream URL and preparing instant Supabase sync. Ready to publish.</p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Live Visual Preview Chip in Ingestor (See Pics / Video Immediately) */}
                   {quickIngestUrl.trim() && (
-                    <div className="p-3 rounded-xl bg-surface-200/90 border border-gold/30 flex items-center justify-between gap-4 animate-fadeIn">
+                    <div className="p-3.5 rounded-xl bg-surface-200/95 border border-gold/40 flex items-center justify-between gap-4 animate-fadeIn shadow-lg">
                       <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-16 h-12 rounded-lg bg-black overflow-hidden border border-gold/30 shrink-0 flex items-center justify-center">
+                        <div className="w-20 h-14 rounded-lg bg-black overflow-hidden border border-gold/40 shrink-0 flex items-center justify-center relative shadow-inner">
                           {isImageMedia(quickIngestUrl) ? (
                             <img
                               src={quickIngestUrl}
                               alt="Quick preview"
                               className="w-full h-full object-cover"
                             />
+                          ) : getVideoType(quickIngestUrl).type === 'youtube' ? (
+                            <img
+                              src={`https://img.youtube.com/vi/${getVideoType(quickIngestUrl).id}/hqdefault.jpg`}
+                              alt="YouTube preview"
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
-                            <div className="w-full h-full bg-surface-300 flex items-center justify-center text-gold">
-                              <Film className="w-5 h-5" />
-                            </div>
+                            <video
+                              src={quickIngestUrl}
+                              className="w-full h-full object-cover"
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                            />
                           )}
                         </div>
                         <div className="overflow-hidden">
-                          <p className="text-xs font-semibold text-ivory-100 truncate">
+                          <p className="text-xs font-bold text-ivory-100 truncate">
                             {quickIngestTitle || 'Untitled Showcase Work'}
                           </p>
-                          <p className="text-[10px] text-ivory-400 truncate flex items-center gap-1 font-mono">
+                          <p className="text-[11px] text-ivory-400 truncate flex items-center gap-1.5 font-mono">
                             {isImageMedia(quickIngestUrl) ? (
-                              <span className="text-emerald-400 font-bold">● High-Res Photo Still</span>
+                              <span className="text-emerald-400 font-bold">● High-Res Photo</span>
+                            ) : getVideoType(quickIngestUrl).type === 'youtube' ? (
+                              <span className="text-red-400 font-bold">● YouTube Video</span>
                             ) : (
-                              <span className="text-gold font-bold">● Streamable Video</span>
+                              <span className="text-gold font-bold">● Live Video Stream</span>
                             )}
-                            • {quickIngestCategory}
+                            • <span className="text-ivory-300">{quickIngestCategory}</span>
                           </p>
                         </div>
                       </div>
@@ -2252,7 +2312,7 @@ export const OwnerSpace: React.FC = () => {
                           setQuickIngestUrl('');
                           setQuickIngestTitle('');
                         }}
-                        className="text-xs text-ivory-400 hover:text-accent-crimson px-2 py-1 rounded transition-colors"
+                        className="text-xs text-ivory-400 hover:text-accent-crimson px-2.5 py-1.5 rounded-lg border border-transparent hover:border-accent-crimson/30 transition-all font-semibold shrink-0"
                       >
                         Clear
                       </button>

@@ -340,7 +340,125 @@ EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- ========================================================================
--- SHOWCASE FILMS SEED DISABLED
--- Static public showcase entries have been removed from the live website.
+-- REAL CLIENT SHOWCASE FILMS SEED
 -- ========================================================================
+INSERT INTO public.public_works (
+  id, title, category, event_location, event_year, thumbnail_url, video_url, video_source_type, external_dest_url, description, software_used, is_featured, is_published, sort_order
+)
+VALUES
+  (
+    'a1b2c3d4-e5f6-4a7b-8c9d-000000000001',
+    'Amulya Haldi Ceremony — Festive Highlights',
+    'Haldi & Sangeeth Ceremonies',
+    'Hindupur, AP',
+    '2026',
+    '/assets/founder.jpg',
+    'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/preview',
+    'google_drive',
+    'https://drive.google.com/file/d/1dHZDL0B23QtW6yo6HK_MfcDTMHk4J6Dn/view',
+    'Vibrant yellow splash color isolation, beat-matched family celebration, and warm festive energy captured in 4K.',
+    '["DaVinci Resolve Studio", "Adobe Premiere Pro"]'::jsonb,
+    true,
+    true,
+    1
+  ),
+  (
+    'a1b2c3d4-e5f6-4a7b-8c9d-000000000002',
+    'Sangeetha & Aditya — Dynamic Sangeeth Celebration Night',
+    'Haldi & Sangeeth Ceremonies',
+    'Bengaluru / Hindupur',
+    '2026',
+    '/assets/founder.jpg',
+    'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/preview',
+    'google_drive',
+    'https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view',
+    'High-energy musical dance power of Sangeetha & Aditya Sangeeth celebration with punchy color grading and dynamic multicam pacing.',
+    '["DaVinci Resolve Studio", "After Effects", "Premiere Pro"]'::jsonb,
+    true,
+    true,
+    2
+  ),
+  (
+    'a1b2c3d4-e5f6-4a7b-8c9d-000000000003',
+    'Hanumantha Roy & Gayathri — Grand Reception Highlights',
+    'Wedding Highlights',
+    'Hindupur, AP',
+    '2026',
+    '/assets/founder.jpg',
+    'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/preview',
+    'google_drive',
+    'https://drive.google.com/file/d/1lmZ0mHo4lRI-Ie3452i-wrkM1uFC0jji/view',
+    'Grand luxury reception film featuring multi-camera speech capture, cinematic slow-motion highlights, and rich HDR color grading.',
+    '["DaVinci Resolve Studio", "Adobe Premiere Pro", "After Effects"]'::jsonb,
+    true,
+    true,
+    3
+  ),
+  (
+    'a1b2c3d4-e5f6-4a7b-8c9d-000000000004',
+    'Cinematic Pre-Wedding Visual Story',
+    'Pre-Wedding Video Editing',
+    'Hindupur / Outdoor Scenic',
+    '2026',
+    '/assets/founder.jpg',
+    'https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/preview',
+    'google_drive',
+    'https://drive.google.com/file/d/1HQo2mJ2eszSMeSexO5wN2GxVMCTtJy2q/view',
+    'Dreamy visual narrative with slow-motion couple portraits, warm cinematic tone mapping, and seamless storytelling.',
+    '["DaVinci Resolve Studio", "Adobe Premiere Pro"]'::jsonb,
+    true,
+    true,
+    4
+  )
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  video_url = EXCLUDED.video_url,
+  category = EXCLUDED.category,
+  external_dest_url = EXCLUDED.external_dest_url,
+  description = EXCLUDED.description;
+
+-- ========================================================================
+-- SUPABASE STORAGE BUCKET INITIALIZATION & POLICIES
+-- ========================================================================
+DO $$
+BEGIN
+  -- 1. Create showcase_media bucket if not present
+  INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  VALUES (
+    'showcase_media',
+    'showcase_media',
+    true,
+    524288000, -- 500MB
+    ARRAY['video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska', 'image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  )
+  ON CONFLICT (id) DO UPDATE SET public = true;
+
+  -- 2. Create deliveries bucket if not present
+  INSERT INTO storage.buckets (id, name, public, file_size_limit)
+  VALUES ('deliveries', 'deliveries', true, 1073741824) -- 1GB
+  ON CONFLICT (id) DO UPDATE SET public = true;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+-- Enable public read/write storage policies for showcase_media
+DO $$
+BEGIN
+  DROP POLICY IF EXISTS "Public showcase media read" ON storage.objects;
+  CREATE POLICY "Public showcase media read" ON storage.objects
+    FOR SELECT TO anon, authenticated, service_role USING (bucket_id IN ('showcase_media', 'deliveries'));
+
+  DROP POLICY IF EXISTS "Public showcase media insert" ON storage.objects;
+  CREATE POLICY "Public showcase media insert" ON storage.objects
+    FOR INSERT TO anon, authenticated, service_role WITH CHECK (bucket_id IN ('showcase_media', 'deliveries'));
+
+  DROP POLICY IF EXISTS "Public showcase media update" ON storage.objects;
+  CREATE POLICY "Public showcase media update" ON storage.objects
+    FOR UPDATE TO anon, authenticated, service_role USING (bucket_id IN ('showcase_media', 'deliveries'));
+
+  DROP POLICY IF EXISTS "Public showcase media delete" ON storage.objects;
+  CREATE POLICY "Public showcase media delete" ON storage.objects
+    FOR DELETE TO anon, authenticated, service_role USING (bucket_id IN ('showcase_media', 'deliveries'));
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
 

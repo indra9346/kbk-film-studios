@@ -38,7 +38,13 @@ export const isImageMedia = (url?: string): boolean => {
 
 export const getVideoType = (url: string) => {
   if (!url) return { type: 'unknown', id: '' };
-  const trimmed = url.trim();
+  let trimmed = url.trim();
+
+  // Extract src if user pasted a raw <iframe> tag
+  const iframeSrcMatch = trimmed.match(/src=["']([^"']+)["']/i);
+  if (iframeSrcMatch && iframeSrcMatch[1]) {
+    trimmed = iframeSrcMatch[1];
+  }
 
   if (isImageMedia(trimmed)) {
     return { type: 'image', id: trimmed };
