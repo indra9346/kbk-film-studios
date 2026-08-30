@@ -448,10 +448,10 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
       )}
 
       {/* CONTROLS OVERLAY (Sound Toggle, 2x Toggle, Scrubber, Cinema Modal) */}
-      {showControls && (directSrc || isYouTube) && (
+      {showControls && (
         <div
           className={`absolute inset-x-0 bottom-0 p-2 sm:p-3 sm:bg-gradient-to-t sm:from-black/85 sm:via-black/30 sm:to-transparent transition-opacity duration-300 z-20 ${
-            isHovered || !isPlaying || hasInteracted ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
+            isHovered || !isPlaying || hasInteracted || isGoogleDrive ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
           }`}
         >
           {/* Mini Gold Scrubber Progress Line for Direct Videos */}

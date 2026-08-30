@@ -627,7 +627,16 @@ export const OwnerSpace: React.FC = () => {
     const url = quickIngestUrl.trim();
     const title = quickIngestTitle.trim() || 'Client Showcase Work';
     if (!url) {
-      alert('Please enter a video/photo URL or browse a local file from your machine!');
+      alert('Please enter a video/photo URL (YouTube, Google Drive, or cloud MP4)!');
+      return;
+    }
+
+    if (url.startsWith('blob:')) {
+      if (isUploadingMedia) {
+        alert('⏳ Your video file is still uploading to Cloud Storage. Please wait a few moments until the cloud upload finishes, then click Publish Live!');
+        return;
+      }
+      alert('⚠️ Notice: Local temporary browser files cannot be streamed to mobile users or visitors over the web. To ensure your film streams in 100% HD with instant autoplay on all mobile devices and PCs, please paste your YouTube link (e.g. YouTube Shorts or HD video) or Google Drive link!');
       return;
     }
 

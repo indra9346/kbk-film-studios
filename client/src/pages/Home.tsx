@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, Sparkles, ShieldCheck, ArrowRight, Star, Clock, CheckCircle2, XCircle, Play, Zap, Palette, Layers, HelpCircle, ShieldAlert } from 'lucide-react';
+import { Film, Sparkles, ShieldCheck, ArrowRight, Star, Clock, CheckCircle2, XCircle, Play, Zap, Palette, Layers, HelpCircle, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import { useStudio } from '../context/StudioContext';
 import { CinematicHeroVideo } from '../components/hero/CinematicHeroVideo';
 import { VideoCard } from '../components/video/VideoCard';
@@ -11,6 +11,7 @@ import { PublicWork } from '../types';
 export const Home: React.FC = () => {
   const { services, works, testimonials, cms, setPreSelectedServiceId, setIsPricingClarificationOpen, setClarificationServiceTitle } = useStudio();
   const [selectedServiceFilter, setSelectedServiceFilter] = useState<string>('all');
+  const [showAllServices, setShowAllServices] = useState<boolean>(false);
   const [selectedWorkModal, setSelectedWorkModal] = useState<PublicWork | null>(null);
   const navigate = useNavigate();
 
@@ -24,6 +25,10 @@ export const Home: React.FC = () => {
     : selectedServiceFilter === 'fast'
     ? activeServices.filter(s => s.slug.includes('spot') || s.slug.includes('teaser') || s.slug.includes('reels'))
     : activeServices.filter(s => s.isUpcoming || s.slug.includes('ai'));
+
+  const displayedServices = (selectedServiceFilter === 'all' && !showAllServices)
+    ? filteredServices.slice(0, 3)
+    : filteredServices;
 
   const featuredWorks = works.filter((w) => w.isFeatured || w.isPublished).slice(0, 6);
   const featuredTestimonials = testimonials.filter((t) => t.isPublished).slice(0, 3);
@@ -104,12 +109,12 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredServices.map((service) => (
+        {/* Services Grid (Clean 3-Item Default with Smooth Expand) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-500">
+          {displayedServices.map((service) => (
             <div
               key={service.id}
-              className={`p-6 rounded-3xl glass-panel flex flex-col justify-between space-y-6 border transition-all duration-300 group hover:border-gold/60 ${
+              className={`p-6 rounded-3xl glass-panel flex flex-col justify-between space-y-6 border transition-all duration-300 group hover:border-gold/60 animate-fadeIn ${
                 service.featured
                   ? 'border-gold/40 shadow-gold-sm bg-surface-100/60'
                   : 'border-surface-50 bg-surface-200/50'
@@ -192,6 +197,35 @@ export const Home: React.FC = () => {
             </div>
           ))}
         </div>
+
+        {/* Dynamic Expand / Minimize Motion Control (Prevents Mobile Scroll Fatigue) */}
+        {selectedServiceFilter === 'all' && filteredServices.length > 3 && (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-fadeIn">
+            {!showAllServices ? (
+              <button
+                type="button"
+                onClick={() => setShowAllServices(true)}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-surface-100 hover:bg-gold/15 text-gold border border-gold/40 text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-3 transition-all hover:scale-105 shadow-gold-sm group"
+              >
+                <Layers className="w-4 h-4 text-gold group-hover:rotate-12 transition-transform" />
+                <span>Explore Remaining {filteredServices.length - 3} Studio Packages</span>
+                <ChevronDown className="w-4 h-4 animate-bounce text-gold" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAllServices(false);
+                  document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-surface-200 hover:bg-surface-50 text-ivory-200 border border-surface-50 text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-md"
+              >
+                <span>Minimize & Show Top 3 Featured</span>
+                <ChevronUp className="w-4 h-4 text-gold" />
+              </button>
+            )}
+          </div>
+        )}
       </section>
 
       {/* 3. Selected Cinematic Works Showcase (Single-Active Playback) */}
