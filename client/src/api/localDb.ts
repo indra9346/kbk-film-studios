@@ -255,7 +255,7 @@ const DEFAULT_DB: LocalDBData = {
       location: "Hindupur, Andhra Pradesh",
       rating: 5,
       reviewText: "The Haldi video editing is absolutely stunning! Bharath Kumar captured every splash, every smile, and every dance move with incredible cinematic precision. The yellow color grading was breathtaking — we cried watching it!",
-      videoUrl: "/assets/works/amulya-haldi.mp4",
+      videoUrl: "",
       thumbnailUrl: "",
       eventDate: "August 2026",
       isVerified: true,
@@ -270,7 +270,7 @@ const DEFAULT_DB: LocalDBData = {
       location: "Bengaluru / Hindupur",
       rating: 5,
       reviewText: "KBK Film Studios delivered sheer magic! The beat sync on our Sangeeth dance night and the sacred mantra restoration on our Muhurtham film were beyond world class. Highly recommended!",
-      videoUrl: "https://drive.google.com/file/d/1rqVfAXvqzroASucfdilB3-sRVGk9811Y/view",
+      videoUrl: "",
       thumbnailUrl: "",
       eventDate: "August 2026",
       isVerified: true,
@@ -285,7 +285,7 @@ const DEFAULT_DB: LocalDBData = {
       location: "Hindupur, Andhra Pradesh",
       rating: 5,
       reviewText: "Kurudi Bharath Kumar transformed our wedding footage into a pure movie! The color grading on our silk sarees and the emotional flow during the reception made all our family members amazed.",
-      videoUrl: "/assets/works/hanumantha-reception.mp4",
+      videoUrl: "",
       thumbnailUrl: "",
       eventDate: "July 2026",
       isVerified: true,
@@ -300,7 +300,7 @@ const DEFAULT_DB: LocalDBData = {
       location: "Hindupur, Andhra Pradesh",
       rating: 5,
       reviewText: "The video pacing and color grading on DaVinci Resolve exceeded all our expectations. The same-day reception teaser was screened on the LED wall and received loud applause from all guests!",
-      videoUrl: "/assets/works/pavan-anjali-reception.mp4",
+      videoUrl: "",
       thumbnailUrl: "",
       eventDate: "June 2026",
       isVerified: true,
@@ -347,11 +347,12 @@ const DEFAULT_DB: LocalDBData = {
   auditLogs: []
 };
 
-const STORAGE_KEY = 'kbk_local_database_v9';
+const STORAGE_KEY = 'kbk_local_database_v10';
 
 function purgeLegacyStorage() {
   try {
     const legacyKeys = [
+      'kbk_local_database_v9',
       'kbk_local_database_v8',
       'kbk_local_database_v7',
       'kbk_local_database_v6',

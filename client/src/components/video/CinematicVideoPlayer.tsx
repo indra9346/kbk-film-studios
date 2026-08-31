@@ -367,8 +367,56 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             </span>
           </div>
         </div>
+      ) : isGoogleDrive ? (
+        /* CASE 3: GOOGLE DRIVE PREVIEW EMBED (Crystal Clear, 100% Brightness, Full Native Controls) */
+        <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
+          {isInViewport || isModal ? (
+            <iframe
+              src={
+                trimmedUrl.includes('folders')
+                  ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
+                  : `https://drive.google.com/file/d/${driveId}/preview`
+              }
+              title={title}
+              loading="lazy"
+              className="w-full h-full border-0"
+              allow="autoplay; fullscreen; encrypted-media"
+              allowFullScreen
+            />
+          ) : (
+            <div className="w-full h-full bg-surface-200/90 flex items-center justify-center text-ivory-300 text-xs font-mono">
+              <span>Drive Video Stream</span>
+            </div>
+          )}
+
+          {/* Google Drive HD Badge */}
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 pointer-events-none">
+            <span className="px-2 py-0.5 rounded-full bg-black/85 text-emerald-400 text-[10px] font-mono font-bold tracking-wider border border-emerald-500/40 backdrop-blur-md flex items-center gap-1 shadow-md">
+              <Film className="w-2.5 h-2.5" />
+              <span>DRIVE HD</span>
+            </span>
+          </div>
+
+          {/* Direct Cinema View Expand Button for Drive Video */}
+          {onExpand && (
+            <div className="absolute bottom-2 right-2 z-20">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExpand();
+                }}
+                className="px-2.5 py-1 rounded-lg bg-black/85 hover:bg-gold text-gold hover:text-black border border-gold/40 text-[10px] font-bold shadow-md transition-all flex items-center gap-1"
+                title="Open Cinema View"
+              >
+                <Maximize2 className="w-3 h-3" />
+                <span className="hidden xs:inline">Cinema View</span>
+              </button>
+            </div>
+          )}
+        </div>
       ) : directSrc ? (
-        /* CASE 3: ULTRA FAST DIRECT 2X AUTOPLAY HTML5 VIDEO (100% Strictly Muted Loop Autoplay) */
+        /* CASE 4: ULTRA FAST DIRECT 2X AUTOPLAY HTML5 VIDEO (100% Strictly Muted Loop Autoplay) */
         <div className="relative w-full h-full bg-black flex items-center justify-center">
           <video
             ref={videoRef}
@@ -405,8 +453,8 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             </button>
           </div>
 
-          {/* Fallback Play button if browser rejected initial autoplay */}
-          {playRejected && !isPlaying && (
+          {/* Fallback Play button if browser rejected initial autoplay on direct video */}
+          {playRejected && !isPlaying && isDirectVideo && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
               <button
                 type="button"
@@ -419,39 +467,17 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
             </div>
           )}
         </div>
-      ) : isGoogleDrive ? (
-        /* CASE 4: GOOGLE DRIVE PREVIEW EMBED (Strictly Muted preview) */
-        <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center pointer-events-auto">
-          {isInViewport || isModal ? (
-            <iframe
-              src={
-                trimmedUrl.includes('folders')
-                  ? `https://drive.google.com/embeddedfolderview?id=${driveId}#grid`
-                  : `https://drive.google.com/file/d/${driveId}/preview`
-              }
-              title={title}
-              loading="lazy"
-              className="w-full h-full object-cover border-0"
-              allow="autoplay; fullscreen; encrypted-media"
-              allowFullScreen
-            />
-          ) : (
-            <div className="w-full h-full bg-surface-200/80 animate-pulse flex items-center justify-center text-ivory-400 text-xs font-mono">
-              Loading Film...
-            </div>
-          )}
-        </div>
       ) : (
         <div className="w-full h-full bg-surface-200 flex items-center justify-center text-ivory-400 text-xs font-mono">
           <span>Ready to Preview</span>
         </div>
       )}
 
-      {/* CONTROLS OVERLAY (Sound Toggle, 2x Toggle, Scrubber, Cinema Modal) */}
-      {showControls && (
+      {/* CONTROLS OVERLAY for Direct and YouTube Videos (Sound Toggle, 2x Toggle, Scrubber, Cinema Modal) */}
+      {showControls && !isGoogleDrive && !isPic && (
         <div
-          className={`absolute inset-x-0 bottom-0 p-2 sm:p-3 sm:bg-gradient-to-t sm:from-black/85 sm:via-black/30 sm:to-transparent transition-opacity duration-300 z-20 ${
-            isHovered || !isPlaying || hasInteracted || isGoogleDrive ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
+          className={`absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 via-black/30 to-transparent transition-opacity duration-300 z-20 ${
+            isHovered || !isPlaying || hasInteracted ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
           }`}
         >
           {/* Mini Gold Scrubber Progress Line for Direct Videos */}

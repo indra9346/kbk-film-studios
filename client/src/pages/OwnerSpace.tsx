@@ -486,13 +486,55 @@ export const OwnerSpace: React.FC = () => {
     e.preventDefault();
     if (!editingWork || !editingWork.title) return;
     try {
+      setIsUploadingMedia(true);
+      let mediaUrl = editingWork.videoUrl || '';
+      let coverUrl = editingWork.thumbnailUrl || '';
+
+      if (selectedWorkMediaFile && (mediaUrl.startsWith('blob:') || !mediaUrl)) {
+        try {
+          const res = await api.uploadMedia(selectedWorkMediaFile);
+          if (res?.success && res.url && !res.url.startsWith('blob:')) {
+            mediaUrl = res.url;
+          }
+        } catch (e) {
+          console.warn('Work media upload fallback:', e);
+        }
+      }
+
+      if (selectedWorkCoverFile && (coverUrl.startsWith('blob:') || !coverUrl)) {
+        try {
+          const res = await api.uploadMedia(selectedWorkCoverFile);
+          if (res?.success && res.url && !res.url.startsWith('blob:')) {
+            coverUrl = res.url;
+          }
+        } catch (e) {
+          console.warn('Work cover upload fallback:', e);
+        }
+      }
+
       const finalCategory = (isCustomCategory && customCategoryName.trim())
         ? customCategoryName.trim()
         : editingWork.category || 'Wedding Highlights';
 
-      const payload = {
-        ...editingWork,
+      const isDrive = mediaUrl.includes('drive.google.com');
+      const isYt = mediaUrl.includes('youtube') || mediaUrl.includes('youtu.be');
+      const isImg = isImageMedia(mediaUrl);
+
+      const payload: PublicWork = {
+        id: editingWork.id || generateUUID(),
+        title: editingWork.title,
         category: finalCategory,
+        eventLocation: editingWork.eventLocation || 'Hindupur, AP',
+        eventYear: editingWork.eventYear || '2026',
+        thumbnailUrl: coverUrl || (isImg ? mediaUrl : '/assets/kbk-logo.jpg'),
+        videoUrl: mediaUrl,
+        videoSourceType: isImg ? ('image' as any) : isDrive ? 'google_drive' : isYt ? 'youtube' : 'direct_mp4',
+        description: editingWork.description || '',
+        softwareUsed: editingWork.softwareUsed || ['Premiere Pro', 'DaVinci Resolve'],
+        isFeatured: editingWork.isFeatured !== false,
+        isPublished: editingWork.isPublished !== false,
+        sortOrder: editingWork.sortOrder || works.length + 1,
+        createdAt: editingWork.createdAt || new Date().toISOString()
       };
 
       const res = await api.saveWork(payload);
@@ -508,12 +550,16 @@ export const OwnerSpace: React.FC = () => {
         });
       }
       setEditingWork(null);
+      setSelectedWorkMediaFile(null);
+      setSelectedWorkCoverFile(null);
       setIsCustomCategory(false);
       setCustomCategoryName('');
       loadOwnerData();
       refreshData();
     } catch (err: any) {
       alert(err.message || 'Failed to save work');
+    } finally {
+      setIsUploadingMedia(false);
     }
   };
 
@@ -536,8 +582,23 @@ export const OwnerSpace: React.FC = () => {
     e.preventDefault();
     if (!editingTestimonial || !editingTestimonial.clientName || !editingTestimonial.reviewText) return;
     try {
+      setIsUploadingMedia(true);
+      let vidUrl = editingTestimonial.videoUrl || '';
+
+      if (selectedTestimonialFile && (vidUrl.startsWith('blob:') || !vidUrl)) {
+        try {
+          const res = await api.uploadMedia(selectedTestimonialFile);
+          if (res?.success && res.url && !res.url.startsWith('blob:')) {
+            vidUrl = res.url;
+          }
+        } catch (e) {
+          console.warn('Testimonial media upload fallback:', e);
+        }
+      }
+
       const payload = {
         ...editingTestimonial,
+        videoUrl: vidUrl,
         serviceTitle: editingTestimonial.serviceTitle || 'Wedding Video Highlights',
         location: editingTestimonial.location || 'Hindupur, AP',
         eventDate: editingTestimonial.eventDate || '2026',
@@ -547,12 +608,21 @@ export const OwnerSpace: React.FC = () => {
       };
       await api.saveTestimonial(payload);
       setEditingTestimonial(null);
+      setSelectedTestimonialFile(null);
       loadOwnerData();
       refreshData();
     } catch (err: any) {
       alert(err.message || 'Failed to save testimonial');
+    } finally {
+      setIsUploadingMedia(false);
     }
   };
+
+  // Local file references to ensure 100% upload on publish
+  const [selectedQuickFile, setSelectedQuickFile] = useState<File | null>(null);
+  const [selectedWorkMediaFile, setSelectedWorkMediaFile] = useState<File | null>(null);
+  const [selectedWorkCoverFile, setSelectedWorkCoverFile] = useState<File | null>(null);
+  const [selectedTestimonialFile, setSelectedTestimonialFile] = useState<File | null>(null);
 
   const handleLocalMediaSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -567,11 +637,13 @@ export const OwnerSpace: React.FC = () => {
     const autoTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
 
     if (type === 'quick_ingest') {
+      setSelectedQuickFile(file);
       setQuickIngestUrl(instantUrl);
       if (!quickIngestTitle) {
         setQuickIngestTitle(autoTitle);
       }
     } else if (type === 'work_media') {
+      setSelectedWorkMediaFile(file);
       setEditingWork((prev) => ({
         ...prev,
         videoUrl: instantUrl,
@@ -579,11 +651,13 @@ export const OwnerSpace: React.FC = () => {
         title: prev?.title || autoTitle
       }));
     } else if (type === 'work_cover') {
+      setSelectedWorkCoverFile(file);
       setEditingWork((prev) => ({
         ...prev,
         thumbnailUrl: instantUrl
       }));
     } else if (type === 'testimonial') {
+      setSelectedTestimonialFile(file);
       setEditingTestimonial((prev) => ({
         ...prev,
         videoUrl: instantUrl
@@ -624,25 +698,32 @@ export const OwnerSpace: React.FC = () => {
 
   const handlePublishQuickWork = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const url = quickIngestUrl.trim();
+    let url = quickIngestUrl.trim();
     const title = quickIngestTitle.trim() || 'Client Showcase Work';
-    if (!url) {
-      alert('Please enter a video/photo URL (YouTube, Google Drive, or cloud MP4)!');
-      return;
-    }
-
-    if (url.startsWith('blob:')) {
-      if (isUploadingMedia) {
-        alert('⏳ Your video file is still uploading to Cloud Storage. Please wait a few moments until the cloud upload finishes, then click Publish Live!');
-        return;
-      }
-      alert('⚠️ Notice: Local temporary browser files cannot be streamed to mobile users or visitors over the web. To ensure your film streams in 100% HD with instant autoplay on all mobile devices and PCs, please paste your YouTube link (e.g. YouTube Shorts or HD video) or Google Drive link!');
+    if (!url && !selectedQuickFile) {
+      alert('Please enter a video/photo URL (YouTube, Google Drive, or cloud MP4) or browse a local file!');
       return;
     }
 
     try {
       setIsPublishingQuickWork(true);
-      const isImg = isImageMedia(url);
+
+      // If a local file was selected and url is still blob: or upload was in flight, complete the cloud upload now
+      if (selectedQuickFile && (url.startsWith('blob:') || !url || isUploadingMedia)) {
+        try {
+          const res = await api.uploadMedia(selectedQuickFile);
+          if (res?.success && res.url && !res.url.startsWith('blob:')) {
+            url = res.url;
+          }
+        } catch (upErr) {
+          console.warn('Direct upload before publish fallback:', upErr);
+        }
+      }
+
+      const isImg = selectedQuickFile?.type.startsWith('image/') || isImageMedia(url);
+      const isDrive = url.includes('drive.google.com');
+      const isYt = url.includes('youtube') || url.includes('youtu.be');
+
       const payload: PublicWork = {
         id: generateUUID(),
         title,
@@ -651,7 +732,7 @@ export const OwnerSpace: React.FC = () => {
         eventYear: '2026',
         thumbnailUrl: isImg ? url : '/assets/kbk-logo.jpg',
         videoUrl: url,
-        videoSourceType: isImg ? ('image' as any) : (url.includes('drive.google.com') ? 'google_drive' : url.includes('youtube') ? 'youtube' : 'direct_mp4'),
+        videoSourceType: isImg ? ('image' as any) : isDrive ? 'google_drive' : isYt ? 'youtube' : 'direct_mp4',
         description: isImg
           ? 'Master high-resolution color corrected and toned luxury stills collection.'
           : 'Master color graded and cinematic pace edited luxury wedding film.',
@@ -668,6 +749,7 @@ export const OwnerSpace: React.FC = () => {
       await api.saveWork(payload);
       setQuickIngestUrl('');
       setQuickIngestTitle('');
+      setSelectedQuickFile(null);
       await loadOwnerData();
       await refreshData();
       alert(`🎉 Successfully published "${title}" directly to Supabase & Portfolio! Broadcasted to all devices live.`);
