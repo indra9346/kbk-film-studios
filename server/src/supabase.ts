@@ -11,7 +11,8 @@ import type {
 } from './types.js';
 
 const supabaseUrl = process.env.SUPABASE_URL || 'https://hhqadycmsxsedlvdfcnn.supabase.co';
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const defaultAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWFkeWNtc3hzZWRsdmRmY25uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczMjE0MDksImV4cCI6MjA3Mjg5NzQwOX0.rOuX2YBS4S8jHhB0ayLTl4R25pstE5twiiQLNp8uc4o';
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || defaultAnonKey;
 
 export const supabase: SupabaseClient | null =
   supabaseUrl && supabaseServiceRoleKey

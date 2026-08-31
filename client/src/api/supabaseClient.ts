@@ -2,6 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { PublicWork, Testimonial, ServiceItem, StudioCMSData } from '../types';
 
 export const SUPABASE_DEFAULT_URL = 'https://hhqadycmsxsedlvdfcnn.supabase.co';
+export const SUPABASE_DEFAULT_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWFkeWNtc3hzZWRsdmRmY25uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczMjE0MDksImV4cCI6MjA3Mjg5NzQwOX0.rOuX2YBS4S8jHhB0ayLTl4R25pstE5twiiQLNp8uc4o';
 
 export const isValidUUID = (str: string): boolean => {
   if (!str || typeof str !== 'string') return false;
@@ -36,7 +37,7 @@ export const getSupabaseAnonKey = (): string => {
     const saved = localStorage.getItem('kbk_supabase_anon_key');
     if (saved) return saved;
   }
-  return (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+  return (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || SUPABASE_DEFAULT_ANON_KEY;
 };
 
 export const setSupabaseCredentials = (url?: string, anonKey?: string) => {
