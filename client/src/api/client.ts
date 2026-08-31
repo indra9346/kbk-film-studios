@@ -1075,6 +1075,8 @@ export const api = {
               const errObj = JSON.parse(xhr.responseText);
               if (errObj?.code === 'NoSuchBucket' || errObj?.message === 'Bucket not found') {
                 errorMsg = 'Bucket "showcase_media" not found in Supabase. Please create a public bucket named "showcase_media" in Supabase Dashboard > Storage.';
+              } else if (errObj?.code === 'AccessDenied' || errObj?.message?.includes('row-level security policy')) {
+                errorMsg = 'Supabase Storage permission needed: Please run the Storage RLS policy in Supabase SQL Editor to enable public uploads.';
               }
             } catch {}
 
