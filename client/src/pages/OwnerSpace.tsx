@@ -618,11 +618,23 @@ export const OwnerSpace: React.FC = () => {
     }
   };
 
-  // Local file references to ensure 100% upload on publish
+  // Local file references & real upload progress states
   const [selectedQuickFile, setSelectedQuickFile] = useState<File | null>(null);
+  const [quickFileDetails, setQuickFileDetails] = useState<{ name: string; sizeFormatted: string; type: string } | null>(null);
+  const [quickUploadProgress, setQuickUploadProgress] = useState<number | null>(null);
+  const [quickUploadStatus, setQuickUploadStatus] = useState<'idle' | 'uploading' | 'complete' | 'error'>('idle');
+  const [quickUploadError, setQuickUploadError] = useState<string | null>(null);
+  const [quickSuccessNotice, setQuickSuccessNotice] = useState<string | null>(null);
+
   const [selectedWorkMediaFile, setSelectedWorkMediaFile] = useState<File | null>(null);
   const [selectedWorkCoverFile, setSelectedWorkCoverFile] = useState<File | null>(null);
   const [selectedTestimonialFile, setSelectedTestimonialFile] = useState<File | null>(null);
+
+  const formatFileSize = (bytes: number): string => {
+    if (!bytes || bytes <= 0) return '0 B';
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   const handleLocalMediaSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -631,13 +643,29 @@ export const OwnerSpace: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Instant zero-delay local object preview
+    // File validation: Maximum 500MB
+    const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      alert(`⚠️ File too large: Selected file is ${formatFileSize(file.size)}. Maximum video size allowed is 500 MB.`);
+      event.target.value = '';
+      return;
+    }
+
     const instantUrl = URL.createObjectURL(file);
     const isImg = file.type.startsWith('image/');
     const autoTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
 
     if (type === 'quick_ingest') {
       setSelectedQuickFile(file);
+      setQuickFileDetails({
+        name: file.name,
+        sizeFormatted: formatFileSize(file.size),
+        type: file.type || (isImg ? 'image/jpeg' : 'video/mp4')
+      });
+      setQuickUploadStatus('uploading');
+      setQuickUploadProgress(0);
+      setQuickUploadError(null);
+      setQuickSuccessNotice(null);
       setQuickIngestUrl(instantUrl);
       if (!quickIngestTitle) {
         setQuickIngestTitle(autoTitle);
@@ -666,10 +694,17 @@ export const OwnerSpace: React.FC = () => {
 
     try {
       setIsUploadingMedia(true);
-      const res = await api.uploadMedia(file);
+      const res = await api.uploadMedia(file, (progress) => {
+        if (type === 'quick_ingest') {
+          setQuickUploadProgress(progress);
+        }
+      });
+
       if (res?.success && res.url) {
         if (type === 'quick_ingest') {
           setQuickIngestUrl(res.url);
+          setQuickUploadProgress(100);
+          setQuickUploadStatus('complete');
         } else if (type === 'work_media') {
           setEditingWork((prev) => ({
             ...prev,
@@ -689,7 +724,11 @@ export const OwnerSpace: React.FC = () => {
         }
       }
     } catch (err: any) {
-      console.warn('Media upload note:', err);
+      console.warn('Media upload exception:', err);
+      if (type === 'quick_ingest') {
+        setQuickUploadStatus('error');
+        setQuickUploadError(err.message || 'Upload failed');
+      }
     } finally {
       setIsUploadingMedia(false);
       event.target.value = '';
@@ -701,22 +740,29 @@ export const OwnerSpace: React.FC = () => {
     let url = quickIngestUrl.trim();
     const title = quickIngestTitle.trim() || 'Client Showcase Work';
     if (!url && !selectedQuickFile) {
-      alert('Please enter a video/photo URL (YouTube, Google Drive, or cloud MP4) or browse a local file!');
+      alert('Please enter a video/photo URL (Google Drive, YouTube, or direct link) or browse a local file!');
       return;
     }
 
     try {
       setIsPublishingQuickWork(true);
 
-      // If a local file was selected and url is still blob: or upload was in flight, complete the cloud upload now
+      // If a local file was selected and url is still local blob or upload was in progress, complete the cloud storage upload
       if (selectedQuickFile && (url.startsWith('blob:') || !url || isUploadingMedia)) {
         try {
-          const res = await api.uploadMedia(selectedQuickFile);
+          setQuickUploadStatus('uploading');
+          const res = await api.uploadMedia(selectedQuickFile, (p) => setQuickUploadProgress(p));
           if (res?.success && res.url && !res.url.startsWith('blob:')) {
             url = res.url;
+            setQuickIngestUrl(res.url);
+            setQuickUploadStatus('complete');
+            setQuickUploadProgress(100);
           }
-        } catch (upErr) {
-          console.warn('Direct upload before publish fallback:', upErr);
+        } catch (upErr: any) {
+          console.warn('Direct upload before publish note:', upErr);
+          setQuickUploadStatus('error');
+          setQuickUploadError(upErr.message || 'Upload failed');
+          throw new Error(`Cloud upload failed: ${upErr.message || 'Network error'}. Please retry.`);
         }
       }
 
@@ -747,9 +793,13 @@ export const OwnerSpace: React.FC = () => {
       setWorks((prev) => [payload, ...prev]);
 
       await api.saveWork(payload);
+      setQuickSuccessNotice(`✓ "${title}" uploaded and published successfully.`);
       setQuickIngestUrl('');
       setQuickIngestTitle('');
       setSelectedQuickFile(null);
+      setQuickFileDetails(null);
+      setQuickUploadProgress(null);
+      setQuickUploadStatus('idle');
       await loadOwnerData();
       await refreshData();
       alert(`🎉 Successfully published "${title}" directly to Supabase & Portfolio! Broadcasted to all devices live.`);
@@ -2278,9 +2328,9 @@ export const OwnerSpace: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => quickFileInputRef.current?.click()}
-                        disabled={isUploadingMedia}
-                        className="px-3.5 py-2.5 rounded-xl bg-surface-200 hover:bg-gold/20 text-gold border border-gold/40 text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0"
-                        title="Browse video or photo from local machine"
+                        disabled={isUploadingMedia || isPublishingQuickWork}
+                        className="px-3.5 py-2.5 rounded-xl bg-surface-200 hover:bg-gold/20 text-gold border border-gold/40 text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                        title="Browse video or photo from local machine (MP4, WEBM, MOV, JPG, PNG, WEBP)"
                       >
                         <FolderUp className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">Browse File</span>
@@ -2288,7 +2338,7 @@ export const OwnerSpace: React.FC = () => {
                       <input
                         ref={quickFileInputRef}
                         type="file"
-                        accept="video/*,image/*"
+                        accept="video/mp4,video/webm,video/quicktime,video/x-matroska,image/jpeg,image/png,image/webp"
                         className="hidden"
                         onChange={(e) => handleLocalMediaSelect(e, 'quick_ingest')}
                       />
@@ -2324,9 +2374,9 @@ export const OwnerSpace: React.FC = () => {
                       <button
                         type="button"
                         onClick={handlePublishQuickWork}
-                        disabled={isPublishingQuickWork || !quickIngestUrl.trim()}
+                        disabled={isPublishingQuickWork || (!quickIngestUrl.trim() && !selectedQuickFile)}
                         className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shrink-0 ${
-                          quickIngestUrl.trim()
+                          quickIngestUrl.trim() || selectedQuickFile
                             ? 'bg-gold hover:bg-gold-light text-black shadow-gold hover:scale-[1.02] cursor-pointer'
                             : 'bg-surface-200 text-ivory-400/50 cursor-not-allowed border border-white/10'
                         }`}
@@ -2341,14 +2391,72 @@ export const OwnerSpace: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Uploading Media Indicator */}
-                  {isUploadingMedia && (
-                    <div className="p-3 rounded-xl bg-gold/10 border border-gold/40 flex items-center gap-3 animate-pulse">
-                      <RefreshCw className="w-4 h-4 text-gold animate-spin shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-gold">Uploading media file to Cloud Storage...</p>
-                        <p className="text-[10px] text-ivory-300">Synchronizing stream URL and preparing instant Supabase sync. Ready to publish.</p>
+                  {/* Selected File Details & Real Progress Bar */}
+                  {quickFileDetails && (
+                    <div className="p-3.5 rounded-xl bg-surface-200/90 border border-gold/30 space-y-2 animate-fadeIn">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1.5">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <span className="text-gold font-bold shrink-0">Selected file:</span>
+                          <span className="font-mono text-ivory-100 truncate">{quickFileDetails.name}</span>
+                        </div>
+                        <div className="text-[11px] text-ivory-400 shrink-0 font-mono">
+                          Size: <span className="text-white font-semibold">{quickFileDetails.sizeFormatted}</span> • Type: <span className="text-white font-semibold">{quickFileDetails.type}</span>
+                        </div>
                       </div>
+
+                      {quickUploadStatus === 'uploading' && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs text-gold">
+                            <span className="flex items-center gap-1.5">
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              Uploading to Cloud Storage...
+                            </span>
+                            <span className="font-mono font-bold">{quickUploadProgress ?? 0}%</span>
+                          </div>
+                          <div className="w-full h-1.5 rounded-full bg-surface-100 overflow-hidden">
+                            <div
+                              className="h-full bg-gold transition-all duration-300 ease-out rounded-full shadow-gold-sm"
+                              style={{ width: `${Math.max(quickUploadProgress ?? 5, 5)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {quickUploadStatus === 'complete' && (
+                        <div className="flex items-center gap-1.5 text-xs text-accent-emerald font-semibold">
+                          <CheckCircle2 className="w-4 h-4 text-accent-emerald" />
+                          <span>Upload complete ✓ Ready to publish live to Supabase.</span>
+                        </div>
+                      )}
+
+                      {quickUploadStatus === 'error' && (
+                        <div className="flex items-center justify-between text-xs text-accent-crimson">
+                          <div className="flex items-center gap-1.5">
+                            <AlertCircle className="w-4 h-4" />
+                            <span>Upload failed: {quickUploadError}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => selectedQuickFile && handleLocalMediaSelect({ target: { files: [selectedQuickFile] } } as any, 'quick_ingest')}
+                            className="text-xs text-gold underline hover:text-gold-light"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Quick Success Notice Banner */}
+                  {quickSuccessNotice && (
+                    <div className="p-3 rounded-xl bg-accent-emerald/15 border border-accent-emerald/30 text-xs text-accent-emerald flex items-center justify-between animate-fadeIn">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span className="font-medium">{quickSuccessNotice}</span>
+                      </div>
+                      <button onClick={() => setQuickSuccessNotice(null)} className="text-ivory-400 hover:text-white text-xs ml-2">
+                        ✕
+                      </button>
                     </div>
                   )}
 
@@ -2402,6 +2510,10 @@ export const OwnerSpace: React.FC = () => {
                         onClick={() => {
                           setQuickIngestUrl('');
                           setQuickIngestTitle('');
+                          setSelectedQuickFile(null);
+                          setQuickFileDetails(null);
+                          setQuickUploadProgress(null);
+                          setQuickUploadStatus('idle');
                         }}
                         className="text-xs text-ivory-400 hover:text-accent-crimson px-2.5 py-1.5 rounded-lg border border-transparent hover:border-accent-crimson/30 transition-all font-semibold shrink-0"
                       >

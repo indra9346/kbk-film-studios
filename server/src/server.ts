@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken';
 import { db } from './db.js';
 import { workflowEngine } from './workflowEngine.js';
 import { automationEngine } from './automation/engine.js';
-import { isValidUUID } from './supabase.js';
+import { supabase, isSupabaseEnabled, isValidUUID } from './supabase.js';
 import {
   BookingRequest,
   ServiceProject,
@@ -161,13 +161,65 @@ const uploadMedia = multer({
   limits: { fileSize: 300 * 1024 * 1024 } // 300MB
 });
 
-app.post('/api/owner/media/upload', uploadMedia.single('file'), (req: Request, res: Response) => {
+app.post('/api/owner/media/upload', uploadMedia.single('file'), async (req: Request, res: Response) => {
   if (!req.file) {
     res.status(400).json({ error: 'No media file uploaded' });
     return;
   }
   const isImage = req.file.mimetype.startsWith('image/');
   const isVideo = req.file.mimetype.startsWith('video/');
+  const cleanFileName = `${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+  const filePath = `showcase/${cleanFileName}`;
+
+  // 1. Upload directly to Supabase Storage for persistent cloud hosting
+  if (isSupabaseEnabled() && supabase) {
+    try {
+      const fileBuffer = fs.readFileSync(req.file.path);
+      let { data, error } = await supabase.storage
+        .from('showcase_media')
+        .upload(filePath, fileBuffer, {
+          contentType: req.file.mimetype,
+          upsert: true
+        });
+
+      let targetBucket = 'showcase_media';
+      if (error) {
+        // Fallback to 'deliveries' bucket if 'showcase_media' bucket isn't present
+        const fallback = await supabase.storage
+          .from('deliveries')
+          .upload(filePath, fileBuffer, {
+            contentType: req.file.mimetype,
+            upsert: true
+          });
+        if (!fallback.error) {
+          targetBucket = 'deliveries';
+          error = null;
+        }
+      }
+
+      if (!error) {
+        const { data: pubData } = supabase.storage.from(targetBucket).getPublicUrl(filePath);
+        if (pubData?.publicUrl) {
+          try { fs.unlinkSync(req.file.path); } catch {}
+          res.json({
+            success: true,
+            url: pubData.publicUrl,
+            fileName: req.file.originalname,
+            originalName: req.file.originalname,
+            fileSizeBytes: req.file.size,
+            mimeType: req.file.mimetype,
+            isImage,
+            isVideo
+          });
+          return;
+        }
+      }
+    } catch (sbErr) {
+      console.warn('[Server] Supabase storage upload exception:', sbErr);
+    }
+  }
+
+  // 2. Fallback local URL if Supabase not configured
   const fileUrl = `/storage/showcase_media/${req.file.filename}`;
   res.json({
     success: true,

@@ -973,15 +973,29 @@ export const api = {
   // ----------------------------------------------------
   // SHOWCASE MEDIA UPLOADER (Local Videos & Pics)
   // ----------------------------------------------------
-  async uploadMedia(file: File): Promise<{ success: boolean; url: string; fileName: string; isImage: boolean; isVideo: boolean }> {
+  async uploadMedia(
+    file: File,
+    onProgress?: (progress: number) => void
+  ): Promise<{ success: boolean; url: string; fileName: string; isImage: boolean; isVideo: boolean }> {
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
 
-    // 1. Direct Supabase Storage Bucket Upload
+    // Validate allowed file types
+    const allowedTypes = [
+      'video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska',
+      'image/jpeg', 'image/png', 'image/webp', 'image/gif'
+    ];
+    if (!allowedTypes.includes(file.type) && !isImage && !isVideo) {
+      throw new Error(`Unsupported file type: ${file.type || 'unknown'}. Please select MP4, WEBM, MOV, JPG, PNG, or WEBP.`);
+    }
+
+    // 1. Direct Supabase Storage Bucket Upload (if client has Supabase anon credentials)
     if (isSupabaseConfigured()) {
       try {
         const cleanFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         const filePath = `showcase/${cleanFileName}`;
+
+        if (onProgress) onProgress(10);
 
         let uploadRes = await supabase.storage
           .from('showcase_media')
@@ -990,6 +1004,8 @@ export const api = {
             upsert: true,
             contentType: file.type || (isImage ? 'image/jpeg' : 'video/mp4')
           });
+
+        if (onProgress) onProgress(60);
 
         let targetBucket = 'showcase_media';
         let targetPath = filePath;
@@ -1017,6 +1033,7 @@ export const api = {
             .getPublicUrl(targetPath);
 
           if (pubData?.publicUrl) {
+            if (onProgress) onProgress(100);
             return {
               success: true,
               url: pubData.publicUrl,
@@ -1031,42 +1048,53 @@ export const api = {
       }
     }
 
-    // 2. Server backend endpoint
-    try {
+    // 2. Server backend endpoint with real XMLHttpRequest progress tracking
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${API_BASE}/owner/media/upload`, true);
+
+      const token = localStorage.getItem('kbk_owner_token');
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          onProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data?.url) {
+              if (onProgress) onProgress(100);
+              resolve({
+                success: true,
+                url: data.url,
+                fileName: data.fileName || file.name,
+                isImage,
+                isVideo
+              });
+              return;
+            }
+          } catch (e) {
+            console.error('Failed parsing upload response:', e);
+          }
+        }
+        reject(new Error(xhr.responseText ? JSON.parse(xhr.responseText)?.error || 'Upload failed' : 'Upload failed'));
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('Network error while uploading media to cloud server.'));
+      };
+
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch(`${API_BASE}/owner/media/upload`, {
-        method: 'POST',
-        headers: {
-          ...(localStorage.getItem('kbk_owner_token') ? { 'Authorization': `Bearer ${localStorage.getItem('kbk_owner_token')}` } : {})
-        },
-        body: formData
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) {
-          return {
-            success: true,
-            url: data.url,
-            fileName: data.fileName || file.name,
-            isImage,
-            isVideo
-          };
-        }
-      }
-    } catch (e) {
-      console.warn('[API Server] uploadMedia server note:', e);
-    }
-
-    // 3. Ultra-fast local object URL (instant 0ms response, no tab freezing, no quota limits)
-    const blobUrl = URL.createObjectURL(file);
-    return {
-      success: true,
-      url: blobUrl,
-      fileName: file.name,
-      isImage,
-      isVideo
-    };
+      xhr.send(formData);
+    });
   },
 
   // ----------------------------------------------------
