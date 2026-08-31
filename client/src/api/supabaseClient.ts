@@ -50,6 +50,29 @@ export const setSupabaseCredentials = (url?: string, anonKey?: string) => {
   }
 };
 
+export const initSupabaseFromRemote = async (): Promise<boolean> => {
+  try {
+    if (!getSupabaseAnonKey()) {
+      const res = await fetch('/api/public/supabase-config');
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.supabaseAnonKey && data.supabaseAnonKey.length > 20) {
+          setSupabaseCredentials(data.supabaseUrl || SUPABASE_DEFAULT_URL, data.supabaseAnonKey);
+          return true;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[SupabaseClient] Remote config load note:', e);
+  }
+  return isSupabaseConfigured();
+};
+
+// Auto-run on module load in browser
+if (typeof window !== 'undefined') {
+  initSupabaseFromRemote();
+}
+
 export let supabase: SupabaseClient = createClient(
   getSupabaseUrl(),
   getSupabaseAnonKey() || 'anon-placeholder',

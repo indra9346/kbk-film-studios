@@ -15,6 +15,9 @@ import {
   isSupabaseConfigured,
   isValidUUID,
   generateUUID,
+  getSupabaseUrl,
+  getSupabaseAnonKey,
+  initSupabaseFromRemote,
   mapWorkFromRow,
   mapWorkToRow,
   mapTestimonialFromRow,
@@ -989,66 +992,107 @@ export const api = {
       throw new Error(`Unsupported file type: ${file.type || 'unknown'}. Please select MP4, WEBM, MOV, JPG, PNG, or WEBP.`);
     }
 
-    // 1. Direct Supabase Storage Bucket Upload (if client has Supabase anon credentials)
-    if (isSupabaseConfigured()) {
+    // Try loading remote Supabase credentials if not present in memory
+    if (!isSupabaseConfigured()) {
       try {
-        const cleanFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const filePath = `showcase/${cleanFileName}`;
-
-        if (onProgress) onProgress(10);
-
-        let uploadRes = await supabase.storage
-          .from('showcase_media')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true,
-            contentType: file.type || (isImage ? 'image/jpeg' : 'video/mp4')
-          });
-
-        if (onProgress) onProgress(60);
-
-        let targetBucket = 'showcase_media';
-        let targetPath = filePath;
-
-        // Fallback to 'deliveries' bucket if 'showcase_media' bucket isn't created yet
-        if (uploadRes.error) {
-          console.warn('[Supabase Storage] showcase_media upload note:', uploadRes.error.message);
-          const fallbackRes = await supabase.storage
-            .from('deliveries')
-            .upload(`showcase/${cleanFileName}`, file, {
-              cacheControl: '3600',
-              upsert: true,
-              contentType: file.type || (isImage ? 'image/jpeg' : 'video/mp4')
-            });
-          if (!fallbackRes.error) {
-            targetBucket = 'deliveries';
-            targetPath = fallbackRes.data?.path || `showcase/${cleanFileName}`;
-            uploadRes = fallbackRes;
-          }
-        }
-
-        if (!uploadRes.error) {
-          const { data: pubData } = supabase.storage
-            .from(targetBucket)
-            .getPublicUrl(targetPath);
-
-          if (pubData?.publicUrl) {
-            if (onProgress) onProgress(100);
-            return {
-              success: true,
-              url: pubData.publicUrl,
-              fileName: file.name,
-              isImage,
-              isVideo
-            };
-          }
-        }
-      } catch (storageErr) {
-        console.warn('[Supabase Storage] Direct upload exception:', storageErr);
+        await initSupabaseFromRemote();
+      } catch (e) {
+        // ignore
       }
     }
 
-    // 2. Server backend endpoint with real XMLHttpRequest progress tracking
+    const cleanFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+
+    // 1. Direct Supabase Cloud Storage Upload (Bypasses Vercel 4.5MB body limit)
+    if (isSupabaseConfigured()) {
+      const supabaseUrl = getSupabaseUrl();
+      const anonKey = getSupabaseAnonKey();
+
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const uploadUrl = `${supabaseUrl}/storage/v1/object/showcase_media/showcase/${cleanFileName}`;
+        const publicUrl = `${supabaseUrl}/storage/v1/object/public/showcase_media/showcase/${cleanFileName}`;
+
+        xhr.open('POST', uploadUrl, true);
+        xhr.setRequestHeader('apikey', anonKey);
+        xhr.setRequestHeader('Authorization', `Bearer ${anonKey}`);
+        xhr.setRequestHeader('Content-Type', file.type || (isImage ? 'image/jpeg' : 'video/mp4'));
+        xhr.setRequestHeader('x-upsert', 'true');
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable && onProgress) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            onProgress(percent);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            if (onProgress) onProgress(100);
+            resolve({
+              success: true,
+              url: publicUrl,
+              fileName: file.name,
+              isImage,
+              isVideo
+            });
+            return;
+          }
+
+          // Fallback to 'deliveries' bucket if showcase_media returned error
+          const xhr2 = new XMLHttpRequest();
+          const fallbackUploadUrl = `${supabaseUrl}/storage/v1/object/deliveries/showcase/${cleanFileName}`;
+          const fallbackPublicUrl = `${supabaseUrl}/storage/v1/object/public/deliveries/showcase/${cleanFileName}`;
+
+          xhr2.open('POST', fallbackUploadUrl, true);
+          xhr2.setRequestHeader('apikey', anonKey);
+          xhr2.setRequestHeader('Authorization', `Bearer ${anonKey}`);
+          xhr2.setRequestHeader('Content-Type', file.type || (isImage ? 'image/jpeg' : 'video/mp4'));
+          xhr2.setRequestHeader('x-upsert', 'true');
+
+          xhr2.upload.onprogress = (event) => {
+            if (event.lengthComputable && onProgress) {
+              const percent = Math.round((event.loaded / event.total) * 100);
+              onProgress(percent);
+            }
+          };
+
+          xhr2.onload = () => {
+            if (xhr2.status >= 200 && xhr2.status < 300) {
+              if (onProgress) onProgress(100);
+              resolve({
+                success: true,
+                url: fallbackPublicUrl,
+                fileName: file.name,
+                isImage,
+                isVideo
+              });
+              return;
+            }
+
+            reject(new Error(`Supabase Storage returned HTTP ${xhr.status}: ${xhr.responseText || 'Check Supabase bucket storage policies'}`));
+          };
+
+          xhr2.onerror = () => {
+            reject(new Error('Network error uploading to Supabase Storage.'));
+          };
+
+          xhr2.send(file);
+        };
+
+        xhr.onerror = () => {
+          reject(new Error('Network error uploading directly to Supabase Storage.'));
+        };
+
+        xhr.send(file);
+      });
+    }
+
+    // 2. Server backend endpoint with real XMLHttpRequest progress tracking (for small files < 4.5MB)
+    if (file.size > 4.5 * 1024 * 1024) {
+      throw new Error(`File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds serverless limit. Please configure your Supabase Anon Key or paste a Google Drive / YouTube link for instant HD streaming.`);
+    }
+
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `${API_BASE}/owner/media/upload`, true);
@@ -1084,7 +1128,7 @@ export const api = {
             console.error('Failed parsing upload response:', e);
           }
         }
-        reject(new Error(xhr.responseText ? JSON.parse(xhr.responseText)?.error || 'Upload failed' : 'Upload failed'));
+        reject(new Error(xhr.responseText ? JSON.parse(xhr.responseText)?.error || `Upload failed with status ${xhr.status}` : `Upload failed with status ${xhr.status}`));
       };
 
       xhr.onerror = () => {

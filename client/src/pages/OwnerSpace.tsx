@@ -44,7 +44,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useStudio } from '../context/StudioContext';
 import { api } from '../api/client';
-import { generateUUID } from '../api/supabaseClient';
+import { generateUUID, getSupabaseAnonKey, setSupabaseCredentials, isSupabaseConfigured, getSupabaseUrl } from '../api/supabaseClient';
 import { getVideoType, getCleanVideoUrl, extractDriveFileId, isImageMedia } from '../components/video/VideoCard';
 import { VideoModal } from '../components/video/VideoModal';
 import { CinematicVideoPlayer } from '../components/video/CinematicVideoPlayer';
@@ -629,6 +629,22 @@ export const OwnerSpace: React.FC = () => {
   const [selectedWorkMediaFile, setSelectedWorkMediaFile] = useState<File | null>(null);
   const [selectedWorkCoverFile, setSelectedWorkCoverFile] = useState<File | null>(null);
   const [selectedTestimonialFile, setSelectedTestimonialFile] = useState<File | null>(null);
+
+  // Supabase direct connection modal state
+  const [showSupabaseKeyModal, setShowSupabaseKeyModal] = useState(false);
+  const [supabaseUrlInput, setSupabaseUrlInput] = useState(getSupabaseUrl() || 'https://hhqadycmsxsedlvdfcnn.supabase.co');
+  const [supabaseAnonKeyInput, setSupabaseAnonKeyInput] = useState(getSupabaseAnonKey() || '');
+
+  const handleSaveSupabaseConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabaseAnonKeyInput.trim()) {
+      alert('Please enter your Supabase Anon Public Key (starts with eyJ...) from Supabase Dashboard > Project Settings > API.');
+      return;
+    }
+    setSupabaseCredentials(supabaseUrlInput.trim() || 'https://hhqadycmsxsedlvdfcnn.supabase.co', supabaseAnonKeyInput.trim());
+    setShowSupabaseKeyModal(false);
+    alert('✅ Supabase Storage & Database credentials saved! Direct 500MB cloud upload active on all devices.');
+  };
 
   const formatFileSize = (bytes: number): string => {
     if (!bytes || bytes <= 0) return '0 B';
@@ -2275,6 +2291,18 @@ export const OwnerSpace: React.FC = () => {
                       <span>Sync to Supabase</span>
                     </button>
                     <button
+                      onClick={() => setShowSupabaseKeyModal(true)}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                        isSupabaseConfigured()
+                          ? 'bg-accent-emerald/15 text-accent-emerald border border-accent-emerald/30'
+                          : 'bg-gold/15 text-gold border border-gold/40 hover:bg-gold hover:text-black'
+                      }`}
+                      title="Direct Supabase Cloud Storage Connection"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      <span>{isSupabaseConfigured() ? 'Supabase Connected' : 'Supabase Key'}</span>
+                    </button>
+                    <button
                       onClick={() => {
                         setIsUploadingMedia(false);
                         setEditingWork({
@@ -3813,6 +3841,82 @@ export const OwnerSpace: React.FC = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Supabase Direct Cloud Storage Key Modal */}
+      {showSupabaseKeyModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl glass-panel gold-border-glow shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-gold/20 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gold/15 text-gold flex items-center justify-center">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-base font-bold text-ivory-100">
+                    Supabase Cloud Sync
+                  </h3>
+                  <p className="text-[10px] text-ivory-400">Direct 500MB Video & Photo Storage</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSupabaseKeyModal(false)}
+                className="text-ivory-400 hover:text-white p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSupabaseConfig} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-ivory-300">
+                  Supabase Project URL
+                </label>
+                <input
+                  type="text"
+                  value={supabaseUrlInput}
+                  onChange={(e) => setSupabaseUrlInput(e.target.value)}
+                  placeholder="https://hhqadycmsxsedlvdfcnn.supabase.co"
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 font-mono text-xs focus:outline-none focus:border-gold"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-ivory-300 flex items-center justify-between">
+                  <span>Supabase Anon Public Key (apikey)</span>
+                  <span className="text-[10px] text-gold">Project Settings &gt; API</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={supabaseAnonKeyInput}
+                  onChange={(e) => setSupabaseAnonKeyInput(e.target.value)}
+                  placeholder="Paste your anon public key (starts with eyJ...)"
+                  required
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/30 text-gold font-mono text-[11px] focus:outline-none focus:border-gold leading-relaxed"
+                />
+                <p className="text-[10px] text-ivory-400">
+                  Found in your Supabase Dashboard under <strong>Project Settings → API → Project API Keys → `anon public`</strong>.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSupabaseKeyModal(false)}
+                  className="px-4 py-2.5 rounded-xl bg-surface-100 text-ivory-300 text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm transition-all"
+                >
+                  Save & Connect
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

@@ -233,6 +233,14 @@ app.post('/api/owner/media/upload', uploadMedia.single('file'), async (req: Requ
   });
 });
 
+// Public Supabase Configuration Endpoint (allows frontend to auto-sync with Supabase Storage)
+app.get('/api/public/supabase-config', (req: Request, res: Response) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_URL || 'https://hhqadycmsxsedlvdfcnn.supabase.co',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  });
+});
+
 app.post('/api/owner/projects/:id/upload', requireOwnerAuth, uploadDelivery.single('file'), (req: AuthRequest, res: Response) => {
   if (!req.file) {
     res.status(400).json({ error: 'No file uploaded' });
