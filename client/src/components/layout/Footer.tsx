@@ -251,10 +251,10 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ivory-400">
+        <div className="pt-6 mt-4 border-t border-surface-100 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-ivory-400">
           <p>© {new Date().getFullYear()} KBK Films. All rights reserved. Kurudi Bharath Kumar, Hindupur.</p>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <button
               onClick={() => setIsTermsModalOpen(true)}
               className="hover:text-gold transition-colors"
@@ -264,6 +264,20 @@ export const Footer: React.FC = () => {
             <Link to="/about" className="hover:text-gold transition-colors">
               Privacy & Data Isolation
             </Link>
+
+            {/* Developer Watermark Badge */}
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-200/90 border border-gold/30 shadow-inner text-[11px] text-ivory-200">
+              <span className="text-ivory-400 font-mono text-[10px] uppercase tracking-wider">Developed by</span>
+              <img
+                src="https://hhqadycmsxsedlvdfcnn.supabase.co/storage/v1/object/sign/mywebsite_logo/favicon.ico?token=eyJraWQiOiI3OGVhN2E1MC03ODVjLTQ0ZWItYjQzYS1iZWI1OTJmMmYyN2IiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJteXdlYnNpdGVfbG9nby9mYXZpY29uLmljbyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODgyMDExODgsImV4cCI6ODY1Nzg4MjAxMTg4fQ.mNJo9x4Chxd3y1RrAufjDrruJyqyaMls2Y_mWcmLrOg"
+                alt="Development Works Logo"
+                className="w-4 h-4 rounded-sm object-contain inline-block shadow-sm"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+              <span className="text-gold font-bold tracking-wide">Development Works</span>
+            </div>
           </div>
         </div>
       </div>
