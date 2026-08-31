@@ -1017,7 +1017,6 @@ export const api = {
         xhr.setRequestHeader('apikey', anonKey);
         xhr.setRequestHeader('Authorization', `Bearer ${anonKey}`);
         xhr.setRequestHeader('Content-Type', file.type || (isImage ? 'image/jpeg' : 'video/mp4'));
-        xhr.setRequestHeader('x-upsert', 'true');
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable && onProgress) {
@@ -1048,7 +1047,6 @@ export const api = {
           xhr2.setRequestHeader('apikey', anonKey);
           xhr2.setRequestHeader('Authorization', `Bearer ${anonKey}`);
           xhr2.setRequestHeader('Content-Type', file.type || (isImage ? 'image/jpeg' : 'video/mp4'));
-          xhr2.setRequestHeader('x-upsert', 'true');
 
           xhr2.upload.onprogress = (event) => {
             if (event.lengthComputable && onProgress) {
