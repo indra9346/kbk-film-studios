@@ -1070,7 +1070,15 @@ export const api = {
               return;
             }
 
-            reject(new Error(`Supabase Storage returned HTTP ${xhr.status}: ${xhr.responseText || 'Check Supabase bucket storage policies'}`));
+            let errorMsg = xhr.responseText || 'Check Supabase bucket storage policies';
+            try {
+              const errObj = JSON.parse(xhr.responseText);
+              if (errObj?.code === 'NoSuchBucket' || errObj?.message === 'Bucket not found') {
+                errorMsg = 'Bucket "showcase_media" not found in Supabase. Please create a public bucket named "showcase_media" in Supabase Dashboard > Storage.';
+              }
+            } catch {}
+
+            reject(new Error(errorMsg));
           };
 
           xhr2.onerror = () => {
