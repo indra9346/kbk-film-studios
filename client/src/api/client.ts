@@ -154,48 +154,89 @@ export const api = {
 
   async submitBooking(data: any): Promise<{ success: boolean; bookingRef: string; message: string }> {
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
-    const bookingRef = `KBK-2026-${randomDigits}`;
+    const bookingRef = data.bookingRef || `KBK-2026-${randomDigits}`;
+
+    // Look up service details if not provided
+    const allServices = localDb.getServices();
+    const service = allServices.find(s => s.id === data.serviceId) || allServices[0];
+    const serviceTitle = data.serviceTitle || service?.title || 'Haldi & Sangeeth Ceremonies';
+    const quotedAmount = Number(data.quotedAmount || service?.basePrice || 12999);
+    const budgetRange = data.budgetRange || data.priceLabel || service?.priceLabel || `Starting from ₹${quotedAmount.toLocaleString('en-IN')}`;
+
+    const priceSnapshot = data.priceSnapshot && Object.keys(data.priceSnapshot).length > 0
+      ? data.priceSnapshot
+      : {
+          serviceId: service?.id || data.serviceId || 'srv-3',
+          serviceTitle,
+          priceType: service?.priceType || 'starting_from',
+          basePrice: quotedAmount,
+          currency: service?.currency || 'INR',
+          priceLabel: budgetRange,
+          inclusions: service?.inclusions || [],
+          exclusions: service?.exclusions || [],
+          turnaroundDays: service?.turnaroundDays || 4,
+          snapshotDate: new Date().toISOString()
+        };
+
+    const row = {
+      id: generateUUID(),
+      booking_ref: bookingRef,
+      client_id: generateUUID(),
+      client_name: data.fullName,
+      client_phone: data.phone,
+      client_email: data.email || '',
+      client_city: data.city || 'Hindupur',
+      service_id: data.serviceId || service?.id || 'srv-3',
+      service_title: serviceTitle,
+      event_date: data.eventDate || new Date().toISOString().split('T')[0],
+      preferred_delivery_date: data.preferredDeliveryDate || '',
+      budget_range: budgetRange,
+      footage_details: data.footageDetails || '',
+      reference_links: data.referenceLinks || '',
+      custom_notes: data.customNotes || '',
+      agreed_terms: true,
+      price_snapshot: priceSnapshot,
+      quoted_amount: quotedAmount,
+      final_amount: quotedAmount,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
 
     if (isSupabaseConfigured()) {
       try {
-        const row = {
-          id: generateUUID(),
-          booking_ref: bookingRef,
-          client_id: generateUUID(),
-          client_name: data.fullName,
-          client_phone: data.phone,
-          client_email: data.email || '',
-          client_city: data.city || 'Hindupur',
-          service_id: data.serviceId || 'srv-1',
-          service_title: data.serviceTitle || 'Specialized Video Editing',
-          event_date: data.eventDate || new Date().toISOString().split('T')[0],
-          preferred_delivery_date: data.preferredDeliveryDate || '',
-          budget_range: data.budgetRange || '',
-          footage_details: data.footageDetails || '',
-          reference_links: data.referenceLinks || '',
-          custom_notes: data.customNotes || '',
-          agreed_terms: true,
-          price_snapshot: {},
-          quoted_amount: 14999,
-          final_amount: 14999,
-          status: 'pending',
-          created_at: new Date().toISOString()
-        };
-        await supabase.from('booking_requests').insert(row);
+        const { error } = await supabase.from('booking_requests').insert(row);
+        if (error) {
+          console.warn('[Supabase] direct booking insert error:', error);
+        }
       } catch (e) {
         console.warn('[Supabase] direct booking insert note:', e);
       }
     }
 
-    return safeRequest(
-      `${API_BASE}/bookings`,
-      {
+    // Save to localDb using the exact same bookingRef and details
+    localDb.submitBooking({
+      ...data,
+      bookingRef,
+      serviceTitle,
+      quotedAmount,
+      priceSnapshot,
+      budgetRange
+    });
+
+    // Notify backend API asynchronously if available (with exact bookingRef)
+    try {
+      fetch(`${API_BASE}/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      },
-      () => localDb.submitBooking(data)
-    );
+        body: JSON.stringify({ ...data, bookingRef, serviceTitle, quotedAmount, priceSnapshot, budgetRange }),
+      }).catch(() => {});
+    } catch (_) {}
+
+    return {
+      success: true,
+      bookingRef,
+      message: 'Booking request submitted successfully! Kurudi Bharath Kumar has been notified.'
+    };
   },
 
   // ----------------------------------------------------
@@ -518,10 +559,18 @@ export const api = {
         }
 
         // 3. Fetch client deliveries
+        const orConditions = [
+          `booking_ref.ilike.${savedRef}`,
+          bookingData?.id ? `booking_ref.eq.${bookingData.id}` : null,
+          projectData?.id ? `project_id.eq.${projectData.id}` : null,
+          projectData?.id ? `booking_ref.eq.${projectData.id}` : null,
+          projectData?.bookingRef ? `booking_ref.ilike.${projectData.bookingRef}` : null,
+        ].filter(Boolean).join(',');
+
         const { data: dData } = await supabase
           .from('client_video_deliveries')
           .select('*')
-          .ilike('booking_ref', savedRef)
+          .or(orConditions)
           .eq('is_active', true);
 
         if (dData && dData.length > 0) {
@@ -865,7 +914,20 @@ export const api = {
     return { success: true };
   },
 
-  async uploadProjectFile(projectId: string, file: File): Promise<{ success: boolean; fileName: string; fileSizeBytes: number; fileUrl: string }> {
+  async uploadProjectFile(projectId: string, file: File, onProgress?: (progress: number) => void): Promise<{ success: boolean; fileName: string; fileSizeBytes: number; fileUrl: string }> {
+    try {
+      const mediaResult = await this.uploadMedia(file, onProgress);
+      if (mediaResult.success && mediaResult.url) {
+        return {
+          success: true,
+          fileName: file.name,
+          fileSizeBytes: file.size,
+          fileUrl: mediaResult.url
+        };
+      }
+    } catch (e) {
+      console.warn('uploadProjectFile direct storage upload error:', e);
+    }
     return {
       success: true,
       fileName: file.name,
@@ -875,44 +937,62 @@ export const api = {
   },
 
   async uploadClientDelivery(projectId: string, data: any): Promise<any> {
-    const bookingRef = projectId.startsWith('proj-') ? projectId.replace('proj-', '') : (data.bookingRef || projectId);
+    let p: any = null;
+    let resolvedBookingRef = data.bookingRef;
 
     if (isSupabaseConfigured()) {
       try {
-        let p: any = null;
         let query = supabase.from('service_projects').select('*');
         if (isValidUUID(projectId)) {
           query = query.eq('id', projectId);
         } else {
-          query = query.ilike('booking_ref', bookingRef);
+          query = query.ilike('booking_ref', projectId.replace('proj-', ''));
         }
         const { data: pData } = await query.limit(1);
         if (pData && pData.length > 0) {
           p = pData[0];
+          if (!resolvedBookingRef && p.booking_ref) {
+            resolvedBookingRef = p.booking_ref;
+          }
         }
+      } catch (e) {
+        console.warn('[Supabase] uploadClientDelivery project lookup note:', e);
+      }
+    }
 
-        const token = `dl_${bookingRef.replace('KBK-', '')}_${Math.random().toString(36).substring(2, 8)}`;
+    if (!resolvedBookingRef) {
+      resolvedBookingRef = projectId.startsWith('proj-') ? projectId.replace('proj-', '') : projectId;
+    }
+
+    const token = `dl_${resolvedBookingRef.replace(/[^a-zA-Z0-9]/g, '_')}_${Math.random().toString(36).substring(2, 8)}`;
+    const videoUrl = data.videoUrl || '';
+    const isDrive = videoUrl.includes('drive.google.com');
+    const isYoutube = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
+    const videoSourceType = isDrive ? 'google_drive' : (isYoutube ? 'youtube' : (videoUrl ? 'direct_mp4' : 'file_download'));
+
+    if (isSupabaseConfigured()) {
+      try {
         const row = {
           id: generateUUID(),
-          booking_ref: bookingRef,
-          client_id: p?.client_id || generateUUID(),
+          booking_ref: resolvedBookingRef,
+          client_id: p?.client_id || data.clientId || generateUUID(),
           client_name: p?.client_name || data.clientName || 'Client',
-          project_id: p?.id && isValidUUID(p.id) ? p.id : null,
+          project_id: p?.id && isValidUUID(p.id) ? p.id : (isValidUUID(projectId) ? projectId : null),
           title: data.title || 'Client Master Video Delivery',
           description: data.description || '',
-          video_url: data.videoUrl || 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view',
-          video_source_type: 'google_drive',
-          thumbnail_url: '/assets/kbk-logo.jpg',
-          file_name: data.fileName || `${bookingRef}_Master_4K.mp4`,
+          video_url: videoUrl,
+          video_source_type: videoSourceType,
+          thumbnail_url: data.thumbnailUrl || '/assets/kbk-logo.jpg',
+          file_name: data.fileName || `${resolvedBookingRef}_Master_4K.mp4`,
           file_size_bytes: data.fileSizeBytes || 4886163,
-          file_size_formatted: '4.8 GB',
-          mime_type: 'video/mp4',
+          file_size_formatted: data.fileSizeFormatted || '4.8 GB',
+          mime_type: data.mimeType || 'video/mp4',
           file_category: data.fileCategory || 'master_video',
           download_token: token,
-          expiry_date: new Date(Date.now() + 90 * 86400000).toISOString(),
+          expiry_date: new Date(Date.now() + (Number(data.expiryDays) || 90) * 86400000).toISOString(),
           download_count: 0,
-          max_downloads: 50,
-          is_streamable: true,
+          max_downloads: Number(data.maxDownloads) || 50,
+          is_streamable: Boolean(videoUrl),
           is_active: true,
           owner_notes: data.ownerNotes || '',
           created_at: new Date().toISOString(),

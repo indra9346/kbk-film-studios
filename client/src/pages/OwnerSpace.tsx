@@ -162,6 +162,9 @@ export const OwnerSpace: React.FC = () => {
   const [selectedDeliveryFile, setSelectedDeliveryFile] = useState<File | null>(null);
   const [deliveryVideoUrl, setDeliveryVideoUrl] = useState('');
   const [isUploadingDeliveryFile, setIsUploadingDeliveryFile] = useState(false);
+  const [deliveryUploadProgress, setDeliveryUploadProgress] = useState(0);
+  const [isUploadingModalFile, setIsUploadingModalFile] = useState(false);
+  const [modalFileUploadProgress, setModalFileUploadProgress] = useState(0);
 
   // Co-Owner Invite Modal
   const [newOwnerName, setNewOwnerName] = useState('');
@@ -428,16 +431,26 @@ export const OwnerSpace: React.FC = () => {
     e.preventDefault();
     if (!deliveryProject || !deliveryTitle.trim()) return;
 
+    if (!selectedDeliveryFile && !deliveryVideoUrl.trim()) {
+      alert('Please either select a video or deliverable file from PC or enter a valid Google Drive / YouTube link.');
+      return;
+    }
+
     try {
       setIsUploadingDeliveryFile(true);
+      setDeliveryUploadProgress(0);
 
       let sizeBytes = 4886163;
       let finalFileName = deliveryFileName.trim() || `${deliveryProject.bookingRef}_Master_4K.mp4`;
+      let finalVideoUrl = deliveryVideoUrl.trim();
 
       if (selectedDeliveryFile) {
-        // Upload the file first to the backend
-        const uploadResult = await api.uploadProjectFile(deliveryProject.id, selectedDeliveryFile);
-        if (uploadResult.success) {
+        // Upload the file to persistent cloud storage
+        const uploadResult = await api.uploadProjectFile(deliveryProject.id, selectedDeliveryFile, (prog) => {
+          setDeliveryUploadProgress(prog);
+        });
+        if (uploadResult.success && uploadResult.fileUrl) {
+          finalVideoUrl = uploadResult.fileUrl;
           sizeBytes = uploadResult.fileSizeBytes;
           finalFileName = uploadResult.fileName;
         }
@@ -448,7 +461,10 @@ export const OwnerSpace: React.FC = () => {
         fileName: finalFileName,
         fileCategory: deliveryCategory,
         fileSizeBytes: sizeBytes,
-        videoUrl: deliveryVideoUrl.trim() || 'https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view',
+        videoUrl: finalVideoUrl,
+        bookingRef: deliveryProject.bookingRef,
+        clientName: deliveryProject.clientName,
+        clientId: deliveryProject.clientId,
         expiryDays: 90,
         maxDownloads: 50
       });
@@ -458,6 +474,7 @@ export const OwnerSpace: React.FC = () => {
       setDeliveryFileName('');
       setDeliveryVideoUrl('');
       setSelectedDeliveryFile(null);
+      setDeliveryUploadProgress(0);
       loadOwnerData();
       alert('Deliverable uploaded and client tracking locker updated successfully!');
     } catch (err: any) {
@@ -1956,7 +1973,7 @@ export const OwnerSpace: React.FC = () => {
                                 className="w-full h-full border-0"
                                 allow="autoplay"
                               />
-                            ) : (
+                            ) : cvd.videoUrl ? (
                               <video
                                 src={cvd.videoUrl}
                                 controls
@@ -1964,12 +1981,20 @@ export const OwnerSpace: React.FC = () => {
                                 className="w-full h-full object-cover"
                                 poster={cvd.thumbnailUrl || '/assets/kbk-logo.jpg'}
                               />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-surface-100 text-ivory-300 p-4 text-center space-y-2">
+                                <div className="w-10 h-10 rounded-full bg-gold/15 text-gold border border-gold/30 flex items-center justify-center">
+                                  <Film className="w-5 h-5" />
+                                </div>
+                                <span className="text-xs font-semibold text-ivory-100">{cvd.fileName || 'Master Deliverable'}</span>
+                                <span className="text-[10px] text-ivory-400 font-mono">Download Package Ready</span>
+                              </div>
                             )}
                             <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-gold text-[9px] font-bold uppercase tracking-wider border border-gold/30 z-10">
                               {cvd.fileCategory?.replace(/_/g, ' ')}
                             </div>
                             <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 text-[9px] font-mono border border-emerald-500/30 z-10">
-                              {isGoogleDrive ? '📁 Drive' : isYoutube ? '▶ YT' : '🎬 Direct'}
+                              {isGoogleDrive ? '📁 Drive' : isYoutube ? '▶ YT' : cvd.videoUrl ? '🎬 Direct' : '📦 File'}
                             </div>
                           </div>
 
@@ -1978,24 +2003,32 @@ export const OwnerSpace: React.FC = () => {
                             <h4 className="font-serif text-base font-bold text-white line-clamp-1">{cvd.title}</h4>
                             <p className="text-xs text-ivory-400 line-clamp-2">{cvd.description}</p>
 
-                            <div className="grid grid-cols-2 gap-2 text-[11px] text-ivory-400">
-                              <div>
-                                <span className="text-ivory-300 font-semibold block">Booking Ref:</span>
-                                <span className="font-mono text-gold">{cvd.bookingRef}</span>
-                              </div>
-                              <div>
-                                <span className="text-ivory-300 font-semibold block">Client:</span>
-                                <span>{cvd.clientName}</span>
-                              </div>
-                              <div>
-                                <span className="text-ivory-300 font-semibold block">Downloads:</span>
-                                <span>{cvd.downloadCount} / {cvd.maxDownloads}</span>
-                              </div>
-                              <div>
-                                <span className="text-ivory-300 font-semibold block">Expires:</span>
-                                <span>{cvd.expiryDate ? new Date(cvd.expiryDate).toLocaleDateString('en-IN') : 'Never'}</span>
-                              </div>
-                            </div>
+                            {(() => {
+                              const resolvedBookingRef = cvd.bookingRef && cvd.bookingRef.length > 20
+                                ? (projects.find(p => p.id === cvd.bookingRef || p.bookingId === cvd.bookingRef)?.bookingRef ||
+                                   bookings.find(b => b.id === cvd.bookingRef)?.bookingRef || cvd.bookingRef)
+                                : (cvd.bookingRef || 'KBK-2026');
+                              return (
+                                <div className="grid grid-cols-2 gap-2 text-[11px] text-ivory-400">
+                                  <div>
+                                    <span className="text-ivory-300 font-semibold block">Booking Ref:</span>
+                                    <span className="font-mono text-gold">{resolvedBookingRef}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-ivory-300 font-semibold block">Client:</span>
+                                    <span>{cvd.clientName}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-ivory-300 font-semibold block">Downloads:</span>
+                                    <span>{cvd.downloadCount} / {cvd.maxDownloads}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-ivory-300 font-semibold block">Expires:</span>
+                                    <span>{cvd.expiryDate ? new Date(cvd.expiryDate).toLocaleDateString('en-IN') : 'Never'}</span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
                             {/* Access Token */}
                             <div className="p-2.5 rounded-lg bg-surface-100 border border-surface-50 text-[10px] font-mono text-ivory-400 break-all">
@@ -2064,6 +2097,43 @@ export const OwnerSpace: React.FC = () => {
                       </div>
 
                       <div className="space-y-4 text-xs">
+                        {/* Quick Project / Booking Selector */}
+                        <div className="space-y-1 p-3 rounded-xl bg-surface-100 border border-gold/30">
+                          <label className="font-semibold text-gold block">⚡ Quick Select Client Project</label>
+                          <select
+                            onChange={(e) => {
+                              const selectedVal = e.target.value;
+                              if (!selectedVal) return;
+                              const foundProj = projects.find(p => p.bookingRef === selectedVal || p.id === selectedVal);
+                              const foundBooking = bookings.find(b => b.bookingRef === selectedVal || b.id === selectedVal);
+                              const ref = foundProj?.bookingRef || foundBooking?.bookingRef || selectedVal;
+                              const cName = foundProj?.clientName || foundBooking?.clientName || '';
+                              const sTitle = foundProj?.serviceTitle || foundBooking?.serviceTitle || 'Master Video';
+
+                              setEditingClientVideo((prev: any) => ({
+                                ...prev,
+                                bookingRef: ref,
+                                clientName: cName,
+                                title: prev.title || `${sTitle} — 4K Master Deliverable`,
+                                fileName: prev.fileName || `${ref}_Master_4K.mp4`
+                              }));
+                            }}
+                            className="w-full px-3 py-2 rounded-lg bg-surface-200 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-xs"
+                          >
+                            <option value="">-- Choose registered client project or type below --</option>
+                            {projects.map((p) => (
+                              <option key={p.id} value={p.bookingRef}>
+                                {p.bookingRef} — {p.clientName} ({p.serviceTitle})
+                              </option>
+                            ))}
+                            {bookings.filter(b => !projects.some(p => p.bookingRef === b.bookingRef)).map((b) => (
+                              <option key={b.id} value={b.bookingRef}>
+                                {b.bookingRef} — {b.clientName} ({b.serviceTitle})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
                         {/* Booking Ref */}
                         <div className="space-y-1">
                           <label className="font-semibold text-ivory-300">Booking Reference *</label>
@@ -2072,7 +2142,7 @@ export const OwnerSpace: React.FC = () => {
                             value={editingClientVideo.bookingRef || ''}
                             onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, bookingRef: e.target.value }))}
                             placeholder="e.g. KBK-2026-8941"
-                            className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm"
+                            className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm font-mono"
                           />
                         </div>
 
@@ -2095,22 +2165,81 @@ export const OwnerSpace: React.FC = () => {
                             type="text"
                             value={editingClientVideo.title || ''}
                             onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, title: e.target.value }))}
-                            placeholder="e.g. Amulya Haldi Ceremony — 4K Master"
+                            placeholder="e.g. Haldi & Sangeeth Ceremonies — 4K Master"
                             className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm"
                           />
                         </div>
 
+                        {/* File Upload from PC */}
+                        <div className="space-y-1.5 border-2 border-dashed border-gold/25 hover:border-gold/50 rounded-2xl p-4 text-center bg-surface-100 hover:bg-surface-50 transition-all cursor-pointer relative">
+                          <input
+                            type="file"
+                            onChange={async (e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                try {
+                                  setIsUploadingModalFile(true);
+                                  setModalFileUploadProgress(0);
+                                  const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                                  const uploadRes = await api.uploadMedia(file, (prog) => {
+                                    setModalFileUploadProgress(prog);
+                                  });
+                                  if (uploadRes.success && uploadRes.url) {
+                                    setEditingClientVideo((prev: any) => ({
+                                      ...prev,
+                                      videoUrl: uploadRes.url,
+                                      fileName: file.name,
+                                      title: prev.title || baseName.replace(/[_-]/g, ' ')
+                                    }));
+                                  }
+                                } catch (err: any) {
+                                  alert(err.message || 'Failed to upload video file');
+                                } finally {
+                                  setIsUploadingModalFile(false);
+                                  setModalFileUploadProgress(0);
+                                }
+                              }
+                            }}
+                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                          />
+                          <Upload className="w-6 h-6 text-gold/80 mx-auto mb-1.5" />
+                          <span className="text-xs font-bold text-ivory-100 block">
+                            {isUploadingModalFile ? 'Uploading Video to Cloud Storage...' : 'Upload Video File from PC'}
+                          </span>
+                          <span className="text-[10px] text-ivory-400 block mt-0.5">
+                            Direct cloud upload. Real streaming and download will be attached to client.
+                          </span>
+                        </div>
+
+                        {isUploadingModalFile && modalFileUploadProgress > 0 && (
+                          <div className="space-y-1 p-2.5 rounded-xl bg-surface-100 border border-gold/30">
+                            <div className="flex justify-between text-[11px] text-gold font-semibold">
+                              <span>Uploading to cloud storage...</span>
+                              <span>{modalFileUploadProgress}%</span>
+                            </div>
+                            <div className="w-full h-1.5 rounded-full bg-surface-50 overflow-hidden">
+                              <div
+                                className="h-full bg-gold transition-all duration-200"
+                                style={{ width: `${modalFileUploadProgress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
                         {/* Video URL */}
                         <div className="space-y-1">
-                          <label className="font-semibold text-ivory-300">Video URL * (Google Drive / YouTube / Direct MP4)</label>
+                          <label className="font-semibold text-ivory-300 flex items-center justify-between">
+                            <span>Video Stream / Download Link</span>
+                            <span className="text-[10px] text-gold font-normal">Drive, YouTube, or direct MP4</span>
+                          </label>
                           <input
                             type="url"
                             value={editingClientVideo.videoUrl || ''}
                             onChange={e => setEditingClientVideo((prev: any) => ({ ...prev, videoUrl: e.target.value }))}
-                            placeholder="https://drive.google.com/file/d/... or YouTube URL"
+                            placeholder="https://drive.google.com/file/d/... or YouTube or leave auto-filled from PC upload"
                             className="w-full px-3 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-ivory-100 focus:outline-none focus:border-gold text-sm font-mono"
                           />
-                          <p className="text-[10px] text-ivory-400">Paste the Google Drive share link, YouTube URL, or direct .mp4 URL</p>
+                          <p className="text-[10px] text-ivory-400">Google Drive share link, YouTube URL, or direct master URL (no default common video will be attached)</p>
                         </div>
 
                         {/* Description */}
@@ -2182,9 +2311,10 @@ export const OwnerSpace: React.FC = () => {
 
                       <div className="flex gap-3 pt-2">
                         <button
+                          disabled={isUploadingModalFile}
                           onClick={async () => {
-                            if (!editingClientVideo.bookingRef || !editingClientVideo.title || !editingClientVideo.videoUrl) {
-                              alert('Please fill in Booking Ref, Title, and Video URL');
+                            if (!editingClientVideo.bookingRef || !editingClientVideo.title || (!editingClientVideo.videoUrl && !editingClientVideo.fileName)) {
+                              alert('Please fill in Booking Ref, Title, and Video URL or upload a file');
                               return;
                             }
                             try {
@@ -2204,11 +2334,12 @@ export const OwnerSpace: React.FC = () => {
                               alert(err.message || 'Failed to save delivery');
                             }
                           }}
-                          className="flex-1 py-3 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm transition-all"
+                          className="flex-1 py-3 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider shadow-gold-sm transition-all disabled:opacity-50"
                         >
                           {editingClientVideo.id ? 'Update Delivery' : 'Add Video Delivery'}
                         </button>
                         <button
+                          type="button"
                           onClick={() => setEditingClientVideo(null)}
                           className="px-5 py-3 rounded-xl bg-surface-100 text-ivory-300 text-xs font-semibold border border-surface-50"
                         >
@@ -3230,16 +3361,31 @@ export const OwnerSpace: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-ivory-300 flex items-center justify-between">
                   <span>Google Drive / Stream Video Link</span>
-                  <span className="text-[10px] text-gold font-normal">Auto-links to client player</span>
+                  <span className="text-[10px] text-gold font-normal">Optional if file uploaded from PC</span>
                 </label>
                 <input
                   type="text"
                   value={deliveryVideoUrl}
                   onChange={(e) => setDeliveryVideoUrl(e.target.value)}
-                  placeholder="https://drive.google.com/file/d/1X-bWfeq-8smOgdl9jBgrRwx3RNimChCP/view"
+                  placeholder="https://drive.google.com/file/d/... or YouTube URL"
                   className="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-gold/20 text-xs sm:text-sm font-mono"
                 />
               </div>
+
+              {isUploadingDeliveryFile && deliveryUploadProgress > 0 && (
+                <div className="space-y-1 p-3 rounded-xl bg-surface-100 border border-gold/30">
+                  <div className="flex justify-between text-[11px] text-gold font-semibold">
+                    <span>Uploading master file to cloud storage...</span>
+                    <span>{deliveryUploadProgress}%</span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-surface-50 overflow-hidden">
+                    <div
+                      className="h-full bg-gold transition-all duration-200"
+                      style={{ width: `${deliveryUploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-ivory-300">Deliverable Category</label>
@@ -3276,7 +3422,7 @@ export const OwnerSpace: React.FC = () => {
                 {isUploadingDeliveryFile ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Uploading Video...</span>
+                    <span>{deliveryUploadProgress > 0 ? `Uploading (${deliveryUploadProgress}%)...` : 'Uploading Video...'}</span>
                   </>
                 ) : (
                   <span>Attach & Notify Client</span>

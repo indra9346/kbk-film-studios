@@ -501,15 +501,22 @@ app.post('/api/bookings', async (req: Request, res: Response) => {
     return;
   }
 
-  const service = db.getServices().find(s => s.id === serviceId);
-  if (!service) {
-    res.status(404).json({ error: 'Selected service not found in catalogue' });
-    return;
-  }
+  const service = db.getServices().find(s => s.id === serviceId) || {
+    id: serviceId || 'srv-3',
+    title: req.body.serviceTitle || 'Haldi & Sangeeth Ceremonies',
+    priceType: 'starting_from' as const,
+    basePrice: Number(req.body.quotedAmount) || 12999,
+    currency: 'INR',
+    priceLabel: req.body.budgetRange || `Starting from ₹${(Number(req.body.quotedAmount) || 12999).toLocaleString('en-IN')}`,
+    inclusions: [],
+    exclusions: [],
+    turnaroundDays: 4,
+    sortOrder: 3
+  };
 
-  // Generate unique booking reference (e.g., KBK-2026-XXXX)
+  // Generate unique booking reference or use provided client bookingRef
   const randomDigits = Math.floor(1000 + Math.random() * 9000);
-  const bookingRef = `KBK-2026-${randomDigits}`;
+  const bookingRef = req.body.bookingRef || `KBK-2026-${randomDigits}`;
 
   // Find or create Client record
   let client = db.getClients().find(c => c.phone === phone || c.email.toLowerCase() === email.toLowerCase());
@@ -526,7 +533,7 @@ app.post('/api/bookings', async (req: Request, res: Response) => {
   }
 
   // Create immutable Price Snapshot
-  const priceSnapshot = {
+  const priceSnapshot = req.body.priceSnapshot || {
     serviceId: service.id,
     serviceTitle: service.title,
     priceType: service.priceType,

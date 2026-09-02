@@ -469,7 +469,7 @@ export const localDb = {
   submitBooking(data: any): { success: boolean; bookingRef: string; message: string } {
     const db = getDB();
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
-    const bookingRef = `KBK-2026-${randomDigits}`;
+    const bookingRef = data.bookingRef || `KBK-2026-${randomDigits}`;
     const service = db.services.find(s => s.id === data.serviceId) || db.services[0];
 
     const booking: BookingRequest = {
