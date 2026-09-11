@@ -104,97 +104,97 @@ export const CinematicHeroVideo: React.FC = () => {
           }}
         />
 
-        {/* Ambient Calibrated Luxury Overlays (maintains 100% typography contrast while keeping video vibrant & visible on phones) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/15 to-background/90 sm:from-background/70 sm:via-background/20 sm:to-background/90"></div>
-        <div className="absolute inset-0 bg-radial-vignette opacity-25 sm:opacity-40"></div>
+        {/* Ambient Calibrated Luxury Overlays (completely transparent in center so 3D KBK logo & clapboard pop brilliantly) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-background/95 sm:from-background/70 sm:via-background/20 sm:to-background/90"></div>
+        <div className="absolute inset-0 bg-radial-vignette opacity-20 sm:opacity-40"></div>
 
         {/* Gold Atmospheric Center Glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gold/10 blur-[130px] rounded-full pointer-events-none"></div>
       </div>
 
       {/* Foreground Hero Content */}
-      <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-6 sm:py-12 lg:py-20 flex flex-col items-center justify-center">
+      <div className="relative z-20 max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 text-center py-4 sm:py-12 lg:py-20 flex flex-col items-center justify-center">
         {/* Crest & Badge */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-surface-100/90 border border-gold/40 shadow-gold-sm mb-5 backdrop-blur-md animate-fadeIn">
-          <Sparkles className="w-4 h-4 text-gold animate-spin-slow" />
-          <span className="text-[11px] sm:text-xs uppercase tracking-widest font-semibold gold-gradient-text">
+        <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-black/40 border border-gold/40 shadow-gold-sm mb-3 sm:mb-5 backdrop-blur-md animate-fadeIn">
+          <Sparkles className="w-3.5 h-3.5 text-gold animate-spin-slow" />
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest font-semibold gold-gradient-text">
             Studio Post-Production Excellence • Hindupur, AP
           </span>
         </div>
 
         {/* Master Heading */}
-        <h1 className="font-serif text-3xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-ivory-100 max-w-5xl leading-[1.15] mb-5 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
+        <h1 className="font-serif text-2xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-ivory-100 max-w-5xl leading-tight sm:leading-[1.15] mb-2.5 sm:mb-5 drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)]">
           Immortalizing Moments into <br className="hidden sm:inline" />
           <span className="gold-gradient-text drop-shadow-[0_2px_15px_rgba(212,175,55,0.4)]">Cinematic Masterpieces</span>
         </h1>
 
         {/* Subtitle & Value Proposition */}
-        <p className="text-xs sm:text-base lg:text-lg text-ivory-200 max-w-3xl mb-8 sm:mb-10 leading-relaxed font-light drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+        <p className="text-[11px] sm:text-base lg:text-lg text-ivory-200/95 max-w-2xl sm:max-w-3xl mb-5 sm:mb-10 leading-relaxed font-light drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] px-2">
           Bespoke wedding highlights, pre-wedding visual poetry, spot editing, and high-energy haldi & sangeeth films crafted with precision color science and client data isolation.
         </p>
 
-        {/* Primary Call to Action Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-14 w-full max-w-md sm:max-w-none">
+        {/* Primary Call to Action Buttons (Sleek Glass Cluster on Mobile) */}
+        <div className="flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-4 mb-5 sm:mb-14 w-full max-w-md sm:max-w-none">
           <Link
             to="/book"
-            className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs sm:text-sm tracking-wide shadow-gold-md hover:shadow-gold-lg transition-all duration-300 hover:-translate-y-0.5"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2.5 px-4 sm:px-8 py-2.5 sm:py-4 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-xs sm:text-sm tracking-wide shadow-gold-md hover:shadow-gold-lg transition-all duration-300 hover:-translate-y-0.5"
           >
-            <span>Book Your Service</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>Book Service</span>
+            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Link>
 
           <Link
             to="/works"
-            className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-3.5 sm:py-4 rounded-xl bg-surface-100/90 hover:bg-surface-50 text-ivory-100 border border-gold/30 hover:border-gold font-semibold text-xs sm:text-sm tracking-wide backdrop-blur-md transition-all duration-300"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2.5 px-4 sm:px-7 py-2.5 sm:py-4 rounded-xl bg-black/40 hover:bg-black/60 text-ivory-100 border border-gold/40 hover:border-gold font-semibold text-xs sm:text-sm tracking-wide backdrop-blur-md transition-all duration-300 shadow-sm"
           >
-            <Film className="w-4 h-4 text-gold" />
-            <span>Explore Works Showcase</span>
+            <Film className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold" />
+            <span>Explore Works</span>
           </Link>
 
           <Link
             to="/track"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-4 rounded-xl bg-surface-200/80 hover:bg-surface-100 text-ivory-200 border border-surface-50 font-medium text-[11px] sm:text-xs tracking-wider uppercase transition-all"
+            className="hidden sm:flex items-center justify-center gap-2 px-6 py-3 sm:py-4 rounded-xl bg-surface-200/80 hover:bg-surface-100 text-ivory-200 border border-surface-50 font-medium text-[11px] sm:text-xs tracking-wider uppercase transition-all"
           >
             <ShieldCheck className="w-4 h-4 text-gold" />
             <span>Track Active Service</span>
           </Link>
         </div>
 
-        {/* Floating Interactive Live Stats Counter (1,000+ Clients) */}
-        <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl glass-panel gold-border-glow">
-          <div className="text-center p-3 border-r border-gold/15 last:border-r-0">
-            <div className="font-serif text-2xl sm:text-4xl font-extrabold text-gold tracking-tight">
+        {/* Floating Interactive Live Stats Counter (Optimized Glass Ribbon on Mobile) */}
+        <div className="w-full max-w-4xl grid grid-cols-4 gap-1 sm:gap-4 p-2 sm:p-6 rounded-2xl glass-panel gold-border-glow bg-black/35 backdrop-blur-md border border-gold/25">
+          <div className="text-center p-1.5 sm:p-3 border-r border-gold/15">
+            <div className="font-serif text-base sm:text-4xl font-extrabold text-gold tracking-tight">
               1,000+
             </div>
-            <p className="text-[11px] sm:text-xs text-ivory-300 uppercase tracking-wider mt-1 font-medium">
-              Happy Clients
+            <p className="text-[9px] sm:text-xs text-ivory-300 uppercase tracking-wider mt-0.5 sm:mt-1 font-medium">
+              Clients
             </p>
           </div>
 
-          <div className="text-center p-3 border-r border-gold/15 last:border-r-0">
-            <div className="font-serif text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <div className="text-center p-1.5 sm:p-3 border-r border-gold/15">
+            <div className="font-serif text-base sm:text-4xl font-extrabold text-white tracking-tight">
               1,200+
             </div>
-            <p className="text-[11px] sm:text-xs text-ivory-300 uppercase tracking-wider mt-1 font-medium">
-              Films Delivered
+            <p className="text-[9px] sm:text-xs text-ivory-300 uppercase tracking-wider mt-0.5 sm:mt-1 font-medium">
+              Films
             </p>
           </div>
 
-          <div className="text-center p-3 border-r border-gold/15 last:border-r-0">
-            <div className="font-serif text-2xl sm:text-4xl font-extrabold text-gold tracking-tight">
+          <div className="text-center p-1.5 sm:p-3 border-r border-gold/15">
+            <div className="font-serif text-base sm:text-4xl font-extrabold text-gold tracking-tight">
               6+ Yrs
             </div>
-            <p className="text-[11px] sm:text-xs text-ivory-300 uppercase tracking-wider mt-1 font-medium">
-              Editing Mastery
+            <p className="text-[9px] sm:text-xs text-ivory-300 uppercase tracking-wider mt-0.5 sm:mt-1 font-medium">
+              Mastery
             </p>
           </div>
 
-          <div className="text-center p-3">
-            <div className="font-serif text-2xl sm:text-4xl font-extrabold text-accent-emerald tracking-tight">
+          <div className="text-center p-1.5 sm:p-3">
+            <div className="font-serif text-base sm:text-4xl font-extrabold text-accent-emerald tracking-tight">
               100%
             </div>
-            <p className="text-[11px] sm:text-xs text-ivory-300 uppercase tracking-wider mt-1 font-medium">
-              Isolated Deliveries
+            <p className="text-[9px] sm:text-xs text-ivory-300 uppercase tracking-wider mt-0.5 sm:mt-1 font-medium">
+              Isolated
             </p>
           </div>
         </div>
