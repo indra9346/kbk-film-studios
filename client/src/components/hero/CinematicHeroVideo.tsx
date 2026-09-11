@@ -75,7 +75,7 @@ export const CinematicHeroVideo: React.FC = () => {
   })();
 
   return (
-    <div className="relative w-full min-h-[92vh] sm:min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-14">
+    <div className="relative w-full min-h-[88vh] sm:min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-10 sm:pt-24 sm:pb-14">
       {/* Video & Banner Background Container */}
       <div className="absolute inset-0 w-full h-full bg-black overflow-hidden pointer-events-none">
         {/* Full 100% Precision Background Video */}
@@ -88,17 +88,25 @@ export const CinematicHeroVideo: React.FC = () => {
           loop
           preload="auto"
           onCanPlay={() => {
-            videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+            if (videoRef.current) {
+              videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {
+                // If browser restricts sound or power, ensure muted retry
+                if (videoRef.current) {
+                  videoRef.current.muted = true;
+                  videoRef.current.play().catch(() => setIsPlaying(false));
+                }
+              });
+            }
           }}
-          className="w-full h-full object-cover object-center scale-100 sm:scale-105 opacity-75 sm:opacity-85 filter brightness-95 contrast-105 transition-all duration-700"
+          className="w-full h-full object-cover object-center scale-100 sm:scale-105 opacity-85 sm:opacity-90 filter brightness-100 contrast-105 transition-all duration-700"
           onError={(e) => {
             console.log('Video asset fallback to poster');
           }}
         />
 
-        {/* Ambient Calibrated Luxury Overlays (maintains 100% typography contrast while keeping video vivid) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/75 via-background/25 to-background/90"></div>
-        <div className="absolute inset-0 bg-radial-vignette opacity-40"></div>
+        {/* Ambient Calibrated Luxury Overlays (maintains 100% typography contrast while keeping video vibrant & visible on phones) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/15 to-background/90 sm:from-background/70 sm:via-background/20 sm:to-background/90"></div>
+        <div className="absolute inset-0 bg-radial-vignette opacity-25 sm:opacity-40"></div>
 
         {/* Gold Atmospheric Center Glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gold/10 blur-[130px] rounded-full pointer-events-none"></div>
