@@ -8,6 +8,7 @@ interface AuthContextType {
   ownerToken: string | null;
   requestOwnerOTP: (identifier: string) => Promise<any>;
   verifyOwnerOTP: (identifier: string, code: string) => Promise<any>;
+  loginWithMasterPassword: (identifier: string, password: string) => Promise<any>;
   ownerLogout: () => void;
 
   // Client State
@@ -57,6 +58,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('kbk_owner_data');
   };
 
+  const loginWithMasterPassword = async (identifier: string, password: string) => {
+    const res = await api.loginWithMasterPassword(identifier, password);
+    if (res.success && res.token) {
+      setOwnerToken(res.token);
+      setOwnerData(res.owner);
+      localStorage.setItem('kbk_owner_token', res.token);
+      localStorage.setItem('kbk_owner_data', JSON.stringify(res.owner));
+    }
+    return res;
+  };
+
   const requestClientOTP = async (bookingRef: string, identifier: string) => {
     return await api.requestClientOTP(bookingRef, identifier);
   };
@@ -91,6 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ownerToken,
         requestOwnerOTP,
         verifyOwnerOTP,
+        loginWithMasterPassword,
         ownerLogout,
 
         isClientAuthenticated: Boolean(clientToken && clientTrackingRef),

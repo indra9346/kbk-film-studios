@@ -5,10 +5,12 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { db } from './db.js';
 import { workflowEngine } from './workflowEngine.js';
 import { automationEngine } from './automation/engine.js';
 import { supabase, isSupabaseEnabled, isValidUUID } from './supabase.js';
+import { BOOM_KNOWLEDGE, findBoomAnswer } from './boomKnowledge.js';
 import {
   BookingRequest,
   ServiceProject,
@@ -23,7 +25,9 @@ import {
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || 'kbk_film_studios_super_secret_jwt_key_2026';
+// JWT_SECRET must be set in Vercel. The development fallback avoids blocking local
+// work, but is deliberately never used in a production deployment.
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'kbk_local_development_only_change_me');
 
 app.use(cors());
 app.use(express.json());
@@ -53,6 +57,7 @@ interface AuthRequest extends Request {
     email: string;
     role: string;
     permissions: string[];
+    projectAccess?: string[];
   };
 }
 
@@ -94,6 +99,10 @@ const findDeliveryByToken = (token: string) => {
 };
 
 const requireOwnerAuth = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!JWT_SECRET) {
+    res.status(503).json({ error: 'Owner access is not configured. Set JWT_SECRET in the deployment environment.' });
+    return;
+  }
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Unauthorized: Owner session token required' });
@@ -124,6 +133,31 @@ const requireOwnerAuth = (req: AuthRequest, res: Response, next: NextFunction) =
     res.status(401).json({ error: 'Invalid or expired owner session token' });
     return;
   }
+};
+
+const isPrimaryOwner = (owner?: AuthRequest['owner']) => Boolean(owner && (owner.role === 'primary_owner' || owner.permissions.includes('all') || owner.permissions.includes('manage_owners')));
+
+const requirePrimaryOwner = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!isPrimaryOwner(req.owner)) {
+    res.status(403).json({ error: 'Only the primary owner can manage access and project restrictions.' });
+    return;
+  }
+  next();
+};
+
+const canAccessProject = (owner: AuthRequest['owner'], project: { id: string; bookingRef: string }) => {
+  if (isPrimaryOwner(owner) || owner?.permissions.includes('all')) return true;
+  const grants = owner?.projectAccess || [];
+  return grants.includes('all') || grants.includes(project.id) || grants.includes(project.bookingRef);
+};
+
+const issueOwnerSession = (owner: Owner) => {
+  if (!JWT_SECRET) throw new Error('Owner access is not configured');
+  const tokenPayload = {
+    id: owner.id, name: owner.name, phone: owner.phone, email: owner.email,
+    role: owner.role, permissions: owner.permissions, projectAccess: owner.projectAccess || []
+  };
+  return { token: jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '8h' }), owner: tokenPayload };
 };
 
 // Multer Config for Deliveries
@@ -262,6 +296,30 @@ app.post('/api/owner/projects/:id/upload', requireOwnerAuth, uploadDelivery.sing
 // Get Studio CMS data (Bio, Education, SKU Degree + MBA, 800+ stats, terms)
 app.get('/api/cms', (req: Request, res: Response) => {
   res.json(db.getStudioCMS());
+});
+
+// Public, scoped studio concierge. It works from the curated KBK knowledge base
+// without an external dependency, and can use the Responses API when OPENAI_API_KEY
+// is configured server-side. It never receives private project data.
+app.post('/api/boom/chat', async (req: Request, res: Response) => {
+  const message = String(req.body?.message || '').trim();
+  if (!message || message.length > 800) { res.status(400).json({ error: 'Please send a question of up to 800 characters.' }); return; }
+  const fallback = findBoomAnswer(message);
+  if (!process.env.OPENAI_API_KEY) { res.json({ reply: fallback, mode: 'knowledge-base' }); return; }
+  try {
+    const cms = db.getStudioCMS();
+    const prompt = `You are Boom, a warm and concise client concierge for ${cms.studioName}, a friend of Bharath. Answer only about the studio and the supplied knowledge. Never claim access to client accounts, booking status, private media, prices not supplied, or internal information. For exact quotes or account-specific questions, direct the user to Book Service, Track My Service, or the studio contact. Knowledge: ${JSON.stringify(BOOM_KNOWLEDGE)}. User: ${message}`;
+    const response = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: process.env.OPENAI_MODEL || 'gpt-4.1-mini', input: prompt, max_output_tokens: 220, store: false })
+    });
+    const data: any = await response.json();
+    const reply = response.ok && typeof data.output_text === 'string' && data.output_text.trim() ? data.output_text.trim() : fallback;
+    res.json({ reply, mode: response.ok ? 'ai' : 'knowledge-base' });
+  } catch {
+    res.json({ reply: fallback, mode: 'knowledge-base' });
+  }
 });
 
 // Get Public Services Catalogue with Prices and Inclusions
@@ -600,6 +658,37 @@ app.post('/api/bookings', async (req: Request, res: Response) => {
 // ----------------------------------------------------
 // 2. PASSWORDLESS AUTHENTICATION & OTP
 // ----------------------------------------------------
+
+// Primary-owner sign-in for the restricted access console. The password is only
+// accepted server-side and must be configured as OWNER_MASTER_PASSWORD in Vercel.
+// Do not put it in client code, JSON data, or source control.
+app.post('/api/auth/owner-master-login', (req: Request, res: Response) => {
+  const { identifier, password } = req.body || {};
+  const configuredPassword = process.env.OWNER_MASTER_PASSWORD;
+  if (!configuredPassword) {
+    res.status(503).json({ error: 'Master access is not configured. Set OWNER_MASTER_PASSWORD in the deployment environment.' });
+    return;
+  }
+  if (!identifier || !password) {
+    res.status(400).json({ error: 'Email or phone and master password are required.' });
+    return;
+  }
+  const raw = String(identifier).trim().toLowerCase();
+  const digits = raw.replace(/\D/g, '');
+  const owner = db.getOwners().find(o => o.isActive && o.role === 'primary_owner' && (
+    o.email.toLowerCase() === raw || matchesPhoneIdentifier(o.phone, digits)
+  ));
+  const expected = Buffer.from(configuredPassword);
+  const supplied = Buffer.from(String(password));
+  const validPassword = expected.length === supplied.length && crypto.timingSafeEqual(expected, supplied);
+  if (!owner || !validPassword) {
+    res.status(401).json({ error: 'Invalid master-owner credentials.' });
+    return;
+  }
+  const session = issueOwnerSession(owner);
+  db.addAuditLog({ actorRole: owner.role, actorName: owner.name, actorIdentifier: owner.phone, action: 'PRIMARY_OWNER_AUTHENTICATED', details: 'Primary owner opened the restricted access console.' });
+  res.json({ success: true, ...session });
+});
 
 // Request Owner Access OTP (Registered owners only)
 app.post('/api/auth/owner-request-otp', (req: Request, res: Response) => {
@@ -1354,7 +1443,7 @@ app.delete('/api/owner/projects/:id', requireOwnerAuth, async (req: AuthRequest,
 
 // Manage Service Projects Lifecycle (9 Stages)
 app.get('/api/owner/projects', requireOwnerAuth, (req: AuthRequest, res: Response) => {
-  res.json(db.getServiceProjects());
+  res.json(db.getServiceProjects().filter(project => canAccessProject(req.owner, project)));
 });
 
 app.patch('/api/owner/projects/:id/stage', requireOwnerAuth, async (req: AuthRequest, res: Response) => {
@@ -1365,6 +1454,10 @@ app.patch('/api/owner/projects/:id/stage', requireOwnerAuth, async (req: AuthReq
     const project = db.getServiceProjects().find(p => p.id === id || p.bookingRef === id);
     if (!project) {
       res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+    if (!canAccessProject(req.owner, project)) {
+      res.status(403).json({ error: 'This owner is not granted access to this client project.' });
       return;
     }
 
@@ -1387,6 +1480,10 @@ app.post('/api/owner/projects/:id/delivery', requireOwnerAuth, async (req: AuthR
   const { title, fileName, fileSizeBytes, fileCategory, expiryDays, maxDownloads } = req.body;
 
   const project = db.getServiceProjects().find(p => p.id === id || p.bookingRef === id);
+  if (project && !canAccessProject(req.owner, project)) {
+    res.status(403).json({ error: 'This owner is not granted access to this client project.' });
+    return;
+  }
   if (!project) {
     res.status(404).json({ error: 'Project not found' });
     return;
@@ -1670,7 +1767,7 @@ app.post('/api/owner/workflows/test-n8n', requireOwnerAuth, async (req: AuthRequ
 });
 
 // Manage Co-Owners Team
-app.get('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.get('/api/owner/owners', requireOwnerAuth, requirePrimaryOwner, (req: AuthRequest, res: Response) => {
   const activeOwners = db.getOwners().filter(o => o.isActive !== false);
   res.json(activeOwners);
 });
@@ -1717,8 +1814,8 @@ app.post('/api/owner/check-access', (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response) => {
-  const { name, phone, email, role, permissions } = req.body;
+app.post('/api/owner/owners', requireOwnerAuth, requirePrimaryOwner, (req: AuthRequest, res: Response) => {
+  const { name, phone, email, role, permissions, projectAccess } = req.body;
   if (!name || !phone || !email) {
     res.status(400).json({ error: 'Name, phone, and email are required to invite an owner' });
     return;
@@ -1738,6 +1835,7 @@ app.post('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response
     existing.email = cleanEmail;
     existing.role = role || existing.role || 'co_owner';
     existing.permissions = Array.isArray(permissions) ? permissions : (existing.permissions || ['manage_bookings', 'manage_lifecycle', 'manage_deliveries', 'manage_works', 'manage_pricing', 'manage_cms']);
+    existing.projectAccess = Array.isArray(projectAccess) ? projectAccess : (existing.projectAccess || []);
     existing.isActive = true;
     db.saveDatabase();
 
@@ -1760,6 +1858,7 @@ app.post('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response
     email: cleanEmail,
     role: role || 'co_owner',
     permissions: Array.isArray(permissions) ? permissions : ['manage_bookings', 'manage_lifecycle', 'manage_deliveries', 'manage_works', 'manage_pricing', 'manage_cms'],
+    projectAccess: Array.isArray(projectAccess) ? projectAccess : [],
     isActive: true,
     createdAt: new Date().toISOString()
   };
@@ -1778,7 +1877,20 @@ app.post('/api/owner/owners', requireOwnerAuth, (req: AuthRequest, res: Response
   res.status(201).json({ success: true, owner: newOwner });
 });
 
-app.delete('/api/owner/owners/:id', requireOwnerAuth, (req: AuthRequest, res: Response) => {
+app.patch('/api/owner/owners/:id/access', requireOwnerAuth, requirePrimaryOwner, async (req: AuthRequest, res: Response) => {
+  const owner = db.getOwners().find(o => o.id === req.params.id);
+  if (!owner) { res.status(404).json({ error: 'Owner not found' }); return; }
+  if (owner.role === 'primary_owner') { res.status(403).json({ error: 'The primary owner access cannot be reduced here.' }); return; }
+  const { permissions, projectAccess, isActive } = req.body || {};
+  if (Array.isArray(permissions)) owner.permissions = permissions;
+  if (Array.isArray(projectAccess)) owner.projectAccess = projectAccess;
+  if (typeof isActive === 'boolean') owner.isActive = isActive;
+  await db.saveOwner(owner);
+  db.addAuditLog({ actorRole: req.owner!.role as any, actorName: req.owner!.name, actorIdentifier: req.owner!.phone, action: 'OWNER_ACCESS_UPDATED', details: `Updated project restrictions for ${owner.name}.` });
+  res.json({ success: true, owner });
+});
+
+app.delete('/api/owner/owners/:id', requireOwnerAuth, requirePrimaryOwner, (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const owner = db.getOwners().find(o => o.id === id || o.phone === id || o.email.toLowerCase() === id.toLowerCase());
   if (!owner) {

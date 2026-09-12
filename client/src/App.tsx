@@ -8,6 +8,7 @@ import { PricingClarificationModal } from './components/pricing/PricingClarifica
 import { TermsModal } from './components/pricing/TermsModal';
 import { SEOHead } from './components/seo/SEOHead';
 import { ScrollToTop } from './components/layout/ScrollToTop';
+import { BoomChat } from './components/BoomChat';
 
 // Pages
 import { Home } from './pages/Home';
@@ -18,6 +19,7 @@ import { Testimonials } from './pages/Testimonials';
 import { BookService } from './pages/BookService';
 import { TrackService } from './pages/TrackService';
 import { OwnerSpace } from './pages/OwnerSpace';
+import { RestrictedOwnerSpace } from './pages/RestrictedOwnerSpace';
 
 export function App() {
   return (
@@ -40,10 +42,12 @@ export function App() {
                 <Route path="/track" element={<TrackService />} />
                 <Route path="/owner" element={<OwnerSpace />} />
                 <Route path="/owner-space" element={<OwnerSpace />} />
+                <Route path="/owner-access" element={<RestrictedOwnerSpace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
             <Footer />
+            <BoomChat />
 
             {/* Global Interactive Modals */}
             <PricingClarificationModal />

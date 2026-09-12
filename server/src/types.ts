@@ -18,6 +18,8 @@ export interface Owner {
   email: string;
   role: 'primary_owner' | 'co_owner' | 'editor';
   permissions: string[];
+  /** Project ids / booking references this account may view or operate on. `all` grants every project. */
+  projectAccess?: string[];
   isActive: boolean;
   createdAt: string;
 }

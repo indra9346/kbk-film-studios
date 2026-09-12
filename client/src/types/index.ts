@@ -18,6 +18,7 @@ export interface Owner {
   email: string;
   role: 'primary_owner' | 'co_owner' | 'editor';
   permissions: string[];
+  projectAccess?: string[];
   isActive: boolean;
   createdAt: string;
 }

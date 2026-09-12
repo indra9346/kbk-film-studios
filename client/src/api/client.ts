@@ -78,6 +78,9 @@ async function safeRequest<T>(url: string, options?: RequestInit, fallback?: () 
 }
 
 export const api = {
+  async askBoom(message: string): Promise<{ reply: string; mode: 'ai' | 'knowledge-base' }> {
+    return safeRequest(`${API_BASE}/boom/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) });
+  },
   // ----------------------------------------------------
   // PUBLIC GETTERS (Direct Supabase + API fallback)
   // ----------------------------------------------------
@@ -323,6 +326,28 @@ export const api = {
       token,
       owner: check.owner,
     };
+  },
+
+  async loginWithMasterPassword(identifier: string, password: string): Promise<{ success: boolean; token: string; owner: any }> {
+    return safeRequest(`${API_BASE}/auth/owner-master-login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier, password })
+    });
+  },
+
+  async getRestrictedOwners(): Promise<Owner[]> {
+    return safeRequest(`${API_BASE}/owner/owners`, { headers: getAuthHeaders() });
+  },
+
+  async getRestrictedProjects(): Promise<ServiceProject[]> {
+    return safeRequest(`${API_BASE}/owner/projects`, { headers: getAuthHeaders() });
+  },
+
+  async saveRestrictedOwner(data: { name: string; phone: string; email: string; role?: string; permissions: string[]; projectAccess: string[] }): Promise<any> {
+    return safeRequest(`${API_BASE}/owner/owners`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(data) });
+  },
+
+  async saveRestrictedOwnerAccess(id: string, data: { permissions: string[]; projectAccess: string[]; isActive?: boolean }): Promise<any> {
+    return safeRequest(`${API_BASE}/owner/owners/${encodeURIComponent(id)}/access`, { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify(data) });
   },
 
   // ----------------------------------------------------
