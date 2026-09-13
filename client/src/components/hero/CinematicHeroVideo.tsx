@@ -78,7 +78,21 @@ export const CinematicHeroVideo: React.FC = () => {
     <div className="relative w-full min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden pt-16 pb-12 sm:pt-24 sm:pb-14">
       {/* Video & Banner Background Container */}
       <div className="absolute inset-0 w-full h-full bg-black overflow-hidden pointer-events-none">
-        {/* Full 100% Precision Background Video */}
+        {/* Blurred fill layer: edge-to-edge color with no visible black bars on
+            portrait screens. Purely decorative, so it's hidden from the ref/controls. */}
+        <video
+          aria-hidden="true"
+          src={heroVideoSrc}
+          playsInline
+          muted
+          autoPlay
+          loop
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover scale-125 blur-3xl opacity-50"
+        />
+
+        {/* Sharp foreground layer: object-contain guarantees the entire frame —
+            including the full "KBK" lettering — is always visible, never cropped. */}
         <video
           ref={videoRef}
           src={heroVideoSrc}
@@ -98,7 +112,7 @@ export const CinematicHeroVideo: React.FC = () => {
               });
             }
           }}
-          className="w-full h-full object-cover object-center scale-100 sm:scale-105 opacity-90 filter brightness-100 contrast-105 transition-all duration-700"
+          className="relative w-full h-full object-contain object-center opacity-95 filter brightness-100 contrast-105 transition-all duration-700"
           onError={(e) => {
             console.log('Video asset fallback to poster');
           }}
@@ -211,7 +225,7 @@ export const CinematicHeroVideo: React.FC = () => {
       </div>
 
       {/* Floating Video Controller Bar (Bottom Right on Desktop, subtle icon group on Mobile) */}
-      <div className="absolute bottom-2 right-2 sm:bottom-6 sm:right-6 z-30 flex items-center gap-1.5 sm:gap-2 bg-black/60 sm:bg-surface-200/90 backdrop-blur-md border border-gold/30 rounded-full px-2.5 sm:px-3.5 py-1 sm:py-2 shadow-2xl">
+      <div className="absolute bottom-2 left-2 sm:bottom-6 sm:left-6 z-30 flex items-center gap-1.5 sm:gap-2 bg-black/60 sm:bg-surface-200/90 backdrop-blur-md border border-gold/30 rounded-full px-2.5 sm:px-3.5 py-1 sm:py-2 shadow-2xl">
         <div className="hidden sm:flex items-center gap-1.5 pr-2 border-r border-gold/20">
           <span className="w-2 h-2 rounded-full bg-accent-emerald animate-ping"></span>
           <span className="text-[10px] font-bold text-gold uppercase tracking-wider">4K Reel</span>
