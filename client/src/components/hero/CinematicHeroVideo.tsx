@@ -78,21 +78,7 @@ export const CinematicHeroVideo: React.FC = () => {
     <div className="relative w-full min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden pt-16 pb-12 sm:pt-24 sm:pb-14">
       {/* Video & Banner Background Container */}
       <div className="absolute inset-0 w-full h-full bg-black overflow-hidden pointer-events-none">
-        {/* Blurred fill layer: edge-to-edge color with no visible black bars on
-            portrait screens. Purely decorative, so it's hidden from the ref/controls. */}
-        <video
-          aria-hidden="true"
-          src={heroVideoSrc}
-          playsInline
-          muted
-          autoPlay
-          loop
-          preload="auto"
-          className="absolute inset-0 w-full h-full object-cover scale-125 blur-3xl opacity-50"
-        />
-
-        {/* Sharp foreground layer: object-contain guarantees the entire frame —
-            including the full "KBK" lettering — is always visible, never cropped. */}
+        {/* Full Edge-to-Edge Cinematic Background Video */}
         <video
           ref={videoRef}
           src={heroVideoSrc}
@@ -112,18 +98,18 @@ export const CinematicHeroVideo: React.FC = () => {
               });
             }
           }}
-          className="relative w-full h-full object-contain object-center opacity-95 filter brightness-100 contrast-105 transition-all duration-700"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-90 filter brightness-100 contrast-105 transition-all duration-700"
           onError={(e) => {
             console.log('Video asset fallback to poster');
           }}
         />
 
-        {/* Ambient Calibrated Luxury Overlays (completely transparent in center so 3D KBK logo & clapboard pop brilliantly) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-background/95 sm:from-background/70 sm:via-background/20 sm:to-background/90"></div>
-        <div className="absolute inset-0 bg-radial-vignette opacity-15 sm:opacity-40"></div>
+        {/* Ambient Calibrated Luxury Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/40 to-background"></div>
+        <div className="absolute inset-0 bg-radial-vignette opacity-35 sm:opacity-50"></div>
 
         {/* Gold Atmospheric Center Glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gold/10 blur-[130px] rounded-full pointer-events-none"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gold/15 blur-[130px] rounded-full pointer-events-none"></div>
       </div>
 
       {/* Foreground Hero Content: Distributed gracefully so the center 3D animation is open */}

@@ -77,9 +77,42 @@ async function safeRequest<T>(url: string, options?: RequestInit, fallback?: () 
   }
 }
 
+const CLIENT_BOOM_KNOWLEDGE = [
+  { topics: ['hello', 'hi', 'hey', 'namaste', 'who are you', 'what is boom'], answer: "Hi! I’m Boom, a friend of Bharath at KBK Film Studios. I can help you with video editing services, pricing, booking, tracking your project, deliveries, and how our client portal works." },
+  { topics: ['service', 'services', 'editing', 'wedding', 'video', 'haldi', 'sangeeth', 'pre-wedding', 'spot edit'], answer: 'KBK Film Studios specializes in Pre-Wedding edits, Master Wedding Highlights, Haldi & Sangeeth ceremonies, Reception edits, Same-Day On-Venue Spot Edits, Teasers & Reels, and Event Montages. Check our Services & Pricing page for complete packages.' },
+  { topics: ['price', 'pricing', 'cost', 'quote', 'budget', 'rate', 'how much'], answer: 'Each project is tailored to your footage volume, camera count, and delivery timeline. Packages start from ₹12,999 to ₹24,999+. Bharath reviews every booking request to provide a customized quotation.' },
+  { topics: ['book', 'booking', 'hire', 'schedule', 'reserve'], answer: 'To book a slot, click "Book Service" in the navigation. Fill in your event date, footage details, preferred delivery date, and budget. Kurudi Bharath Kumar will review and confirm your slot.' },
+  { topics: ['track', 'tracking', 'status', 'token', 'progress', 'portal'], answer: 'You can track your editing progress in real-time by clicking "Track" in the menu. Enter your Booking Reference (e.g. KBK-2026-XXXX) or registered phone number.' },
+  { topics: ['delivery', 'download', 'deliveries', 'file', 'video link', '4k'], answer: 'Deliveries are released directly into your secure private client portal. You can stream in 4K or download master ProRes/MP4 files with dedicated access tokens.' },
+  { topics: ['revision', 'revisions', 'change', 'feedback', 'edit'], answer: 'KBK Films includes complimentary revision rounds in every package. You can send timecode-specific notes directly through your tracking portal.' },
+  { topics: ['contact', 'whatsapp', 'phone', 'email', 'bharath', 'location', 'hindupur'], answer: 'KBK Film Studios is located in Hindupur, Andhra Pradesh. You can call or WhatsApp Bharath directly at +91 9346227894 or email kbkfilms.official@gmail.com.' },
+  { topics: ['owner', 'login', 'admin', 'password', 'restricted'], answer: 'Studio owners and authorized staff can access the management portal via the Owner Login or Restricted Owner Space with authorized credentials.' },
+];
+
+function findClientBoomAnswer(msg: string): string {
+  const norm = (msg || '').toLowerCase();
+  let bestMatch = CLIENT_BOOM_KNOWLEDGE[0];
+  let bestScore = 0;
+  for (const item of CLIENT_BOOM_KNOWLEDGE) {
+    let score = 0;
+    for (const t of item.topics) {
+      if (norm.includes(t)) score += 1;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = item;
+    }
+  }
+  return bestScore > 0 ? bestMatch.answer : "I can help with KBK Films services, pricing, booking, tracking, deliveries, revisions, or contacting Bharath. What would you like to know?";
+}
+
 export const api = {
   async askBoom(message: string): Promise<{ reply: string; mode: 'ai' | 'knowledge-base' }> {
-    return safeRequest(`${API_BASE}/boom/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) });
+    return safeRequest(
+      `${API_BASE}/boom/chat`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) },
+      () => ({ reply: findClientBoomAnswer(message), mode: 'knowledge-base' as const })
+    );
   },
   // ----------------------------------------------------
   // PUBLIC GETTERS (Direct Supabase + API fallback)
@@ -712,7 +745,7 @@ export const api = {
     if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase.from('booking_requests').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data.map((r: any) => ({
             id: r.id,
             bookingRef: r.booking_ref,
@@ -742,14 +775,14 @@ export const api = {
         console.warn('[Supabase] getOwnerBookings note:', e);
       }
     }
-    return localDb.getBookings();
+    return safeRequest(`${API_BASE}/owner/bookings`, { headers: getAuthHeaders('owner') }, () => localDb.getBookings());
   },
 
   async getOwnerProjects(): Promise<ServiceProject[]> {
     if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase.from('service_projects').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data.map((r: any) => ({
             id: r.id,
             bookingId: r.booking_id,
@@ -780,7 +813,7 @@ export const api = {
         console.warn('[Supabase] getOwnerProjects note:', e);
       }
     }
-    return localDb.getProjects();
+    return safeRequest(`${API_BASE}/owner/projects`, { headers: getAuthHeaders('owner') }, () => localDb.getProjects());
   },
 
   async updateBookingStatus(id: string, payload: any): Promise<any> {
@@ -1359,22 +1392,36 @@ export const api = {
   async deleteBooking(id: string): Promise<any> {
     if (isSupabaseConfigured()) {
       try {
-        await supabase.from('booking_requests').delete().eq('id', id);
+        await supabase.from('booking_requests').delete().or(`id.eq.${id},booking_ref.eq.${id}`);
       } catch (e) {
         console.warn('[Supabase] deleteBooking note:', e);
       }
     }
+    localDb.deleteBooking(id);
+    try {
+      await fetch(`${API_BASE}/owner/bookings/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders('owner')
+      });
+    } catch (_) {}
     return { success: true };
   },
 
   async deleteProject(id: string): Promise<any> {
     if (isSupabaseConfigured()) {
       try {
-        await supabase.from('service_projects').delete().eq('id', id);
+        await supabase.from('service_projects').delete().or(`id.eq.${id},booking_ref.eq.${id}`);
       } catch (e) {
         console.warn('[Supabase] deleteProject note:', e);
       }
     }
+    localDb.deleteProject(id);
+    try {
+      await fetch(`${API_BASE}/owner/projects/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders('owner')
+      });
+    } catch (_) {}
     return { success: true };
   },
 

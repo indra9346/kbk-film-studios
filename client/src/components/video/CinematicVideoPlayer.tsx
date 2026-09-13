@@ -86,7 +86,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
           JSON.stringify({ event: 'command', func, args }),
           '*'
         );
-      } catch (_) {}
+      } catch (_) { }
     }
   }, []);
 
@@ -292,9 +292,8 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => setIsHovered(true)}
-      className={`relative w-full overflow-hidden bg-black flex items-center justify-center select-none ${
-        aspectRatio === '16/9' ? 'aspect-video' : aspectRatio === '9/16' ? 'aspect-[9/16]' : ''
-      } ${className}`}
+      className={`relative w-full overflow-hidden bg-black flex items-center justify-center select-none ${aspectRatio === '16/9' ? 'aspect-video' : aspectRatio === '9/16' ? 'aspect-[9/16]' : ''
+        } ${className}`}
     >
       {/* CASE 1: PHOTO STILL / HIGH-RES PICTURE */}
       {isPic ? (
@@ -433,7 +432,7 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
               if (videoRef.current && (isInViewport || isModal)) {
                 videoRef.current.muted = isMuted;
                 videoRef.current.playbackRate = playbackSpeed;
-                videoRef.current.play().catch(() => {});
+                videoRef.current.play().catch(() => { });
               }
             }}
             onTimeUpdate={handleTimeUpdate}
@@ -476,9 +475,8 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
       {/* CONTROLS OVERLAY for Direct and YouTube Videos (Sound Toggle, 2x Toggle, Scrubber, Cinema Modal) */}
       {showControls && !isGoogleDrive && !isPic && (
         <div
-          className={`absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 via-black/30 to-transparent transition-opacity duration-300 z-20 ${
-            isHovered || !isPlaying || hasInteracted ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
-          }`}
+          className={`absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 via-black/30 to-transparent transition-opacity duration-300 z-20 ${isHovered || !isPlaying || hasInteracted ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
+            }`}
         >
           {/* Mini Gold Scrubber Progress Line for Direct Videos */}
           {directSrc && (
@@ -508,9 +506,8 @@ export const CinematicVideoPlayer: React.FC<CinematicVideoPlayerProps> = ({
               <button
                 type="button"
                 onClick={handleToggleMute}
-                className={`p-1 sm:p-1.5 rounded-lg border transition-colors shadow-sm flex items-center gap-1 text-[10px] font-bold ${
-                  !isMuted ? 'bg-gold text-black border-gold' : 'bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border-gold/30'
-                }`}
+                className={`p-1 sm:p-1.5 rounded-lg border transition-colors shadow-sm flex items-center gap-1 text-[10px] font-bold ${!isMuted ? 'bg-gold text-black border-gold' : 'bg-black/80 hover:bg-gold hover:text-black text-ivory-100 border-gold/30'
+                  }`}
                 title={isMuted ? 'Unmute Audio (Plays single sound)' : 'Mute Audio'}
               >
                 {isMuted ? <VolumeX className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}

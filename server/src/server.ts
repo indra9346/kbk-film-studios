@@ -538,6 +538,64 @@ app.get('/api/public/stream-drive/:id', async (req: Request, res: Response) => {
   }
 });
 
+// ----------------------------------------------------
+// BOOM CHATBOT API (AI + KBK Knowledge Base)
+// ----------------------------------------------------
+app.post(['/api/boom/chat', '/boom/chat'], async (req: Request, res: Response) => {
+  try {
+    const { message } = req.body;
+    if (!message || typeof message !== 'string') {
+      res.status(400).json({ error: 'Message is required' });
+      return;
+    }
+
+    const openAiKey = process.env.OPENAI_API_KEY;
+    const openAiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
+    if (openAiKey) {
+      try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${openAiKey}`,
+          },
+          body: JSON.stringify({
+            model: openAiModel,
+            messages: [
+              {
+                role: 'system',
+                content: `You are Boom — a friend of Bharath at KBK Film Studios (Hindupur, Andhra Pradesh). You are a helpful, warm, professional, cinematic studio assistant. You answer questions about KBK Films services (wedding highlights, pre-wedding visual poetry, spot editing, haldi & sangeeth films, reception edits, teaser/reels), starting prices, booking process, delivery tracking via registered phone/reference, revisions, and privacy. You do not disclose internal secrets, passwords, or unauthorized client data. If asked who Bharath is, he is Kurudi Bharath Kumar, the creative director, lead filmmaker, and senior colorist of KBK Films. Keep answers concise, helpful, and friendly.`,
+              },
+              { role: 'user', content: message },
+            ],
+            max_tokens: 350,
+            temperature: 0.7,
+          }),
+        });
+
+        if (response.ok) {
+          const data: any = await response.json();
+          const reply = data.choices?.[0]?.message?.content?.trim();
+          if (reply) {
+            res.json({ reply, mode: 'ai' });
+            return;
+          }
+        }
+      } catch (aiErr) {
+        console.warn('[Boom AI Error, falling back to knowledge base]:', aiErr);
+      }
+    }
+
+    // Fallback to KBK curated knowledge base
+    const answer = findBoomAnswer(message);
+    res.json({ reply: answer, mode: 'knowledge-base' });
+  } catch (err: any) {
+    console.error('[Boom Chat error]:', err);
+    res.status(500).json({ reply: findBoomAnswer(req.body?.message || ''), mode: 'knowledge-base' });
+  }
+});
+
 // Get Public Testimonials
 app.get('/api/testimonials', (req: Request, res: Response) => {
   const testimonials = db.getTestimonials().filter(t => t.isPublished);
