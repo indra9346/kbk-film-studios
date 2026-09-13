@@ -29,6 +29,13 @@ const PORT = process.env.PORT || 5000;
 // work, but is deliberately never used in a production deployment.
 const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'kbk_local_development_only_change_me');
 
+// OTP codes must be genuinely random. ALLOW_DEMO_OTP should stay unset/false in
+// Vercel — it exists only so local development can still use a fixed code.
+const ALLOW_DEMO_OTP = process.env.ALLOW_DEMO_OTP === 'true';
+function generateOtp(): string {
+  return ALLOW_DEMO_OTP ? '123456' : String(Math.floor(100000 + Math.random() * 900000));
+}
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -719,8 +726,8 @@ app.post('/api/auth/owner-request-otp', (req: Request, res: Response) => {
     return;
   }
 
-  // Generate 6-digit OTP code (Standard studio demo OTP: 123456 or generated)
-  const otpCode = '123456';
+  // Generate a genuinely random 6-digit OTP.
+  const otpCode = generateOtp();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 mins
 
   const otpRecord = {
@@ -736,10 +743,13 @@ app.post('/api/auth/owner-request-otp', (req: Request, res: Response) => {
   db.getOTPVerifications().push(otpRecord);
   db.saveDatabase();
 
+  // Stand-in for real SMS/email delivery: retrieve this from Vercel function
+  // logs until a delivery provider is wired up. Never expose it in the response.
+  console.log(`[OTP] owner_login for ${cleanIdentifier}: ${otpCode}`);
+
   res.json({
     success: true,
-    message: `Verification code sent to registered owner ${owner.name} (${cleanIdentifier}).`,
-    demoHint: 'For quick studio demonstration, use code: 123456'
+    message: `Verification code sent to registered owner ${owner.name} (${cleanIdentifier}).`
   });
 });
 
@@ -770,18 +780,16 @@ app.post('/api/auth/owner-verify-otp', (req: Request, res: Response) => {
     return;
   }
 
-  // Verify OTP
-  if (otpCode !== '123456') {
-    const validOTP = db.getOTPVerifications().find(
-      o => o.identifier === cleanIdentifier && o.otpCode === otpCode && o.expiresAt > Date.now() && !o.verified
-    );
-    if (!validOTP) {
-      res.status(400).json({ error: 'Invalid or expired verification code' });
-      return;
-    }
-    validOTP.verified = true;
-    db.saveDatabase();
+  // Verify OTP against the real record — no hardcoded bypass.
+  const validOTP = db.getOTPVerifications().find(
+    o => o.identifier === cleanIdentifier && o.otpCode === otpCode && o.expiresAt > Date.now() && !o.verified
+  );
+  if (!validOTP) {
+    res.status(400).json({ error: 'Invalid or expired verification code' });
+    return;
   }
+  validOTP.verified = true;
+  db.saveDatabase();
 
   const tokenPayload = {
     id: owner.id,
@@ -840,7 +848,7 @@ app.post('/api/auth/client-request-otp', (req: Request, res: Response) => {
     return;
   }
 
-  const otpCode = '123456';
+  const otpCode = generateOtp();
   const expiresAt = Date.now() + 15 * 60 * 1000;
 
   db.getOTPVerifications().push({
@@ -855,10 +863,11 @@ app.post('/api/auth/client-request-otp', (req: Request, res: Response) => {
   });
   db.saveDatabase();
 
+  console.log(`[OTP] client_tracking for ${cleanRef}/${cleanId}: ${otpCode}`);
+
   res.json({
     success: true,
-    message: `Verification code sent to client for booking ${cleanRef}.`,
-    demoHint: 'For quick demonstration, use code: 123456'
+    message: `Verification code sent to client for booking ${cleanRef}.`
   });
 });
 
@@ -886,17 +895,15 @@ app.post('/api/auth/client-verify-otp', (req: Request, res: Response) => {
     return;
   }
 
-  if (otpCode !== '123456') {
-    const validOTP = db.getOTPVerifications().find(
-      o => o.bookingRef === cleanRef && o.identifier === cleanId && o.otpCode === otpCode && o.expiresAt > Date.now()
-    );
-    if (!validOTP) {
-      res.status(400).json({ error: 'Invalid or expired OTP code' });
-      return;
-    }
-    validOTP.verified = true;
-    db.saveDatabase();
+  const validOTP = db.getOTPVerifications().find(
+    o => o.bookingRef === cleanRef && o.identifier === cleanId && o.otpCode === otpCode && o.expiresAt > Date.now()
+  );
+  if (!validOTP) {
+    res.status(400).json({ error: 'Invalid or expired OTP code' });
+    return;
   }
+  validOTP.verified = true;
+  db.saveDatabase();
 
   // Issue Client Token valid for this specific booking reference ONLY
   const clientToken = jwt.sign(
@@ -936,7 +943,7 @@ app.post('/api/auth/client-forgot-reference', (req: Request, res: Response) => {
     return;
   }
 
-  const otpCode = '123456';
+  const otpCode = generateOtp();
   const expiresAt = Date.now() + 15 * 60 * 1000;
 
   db.getOTPVerifications().push({
@@ -951,10 +958,11 @@ app.post('/api/auth/client-forgot-reference', (req: Request, res: Response) => {
   });
   db.saveDatabase();
 
+  console.log(`[OTP] forgot_reference for ${cleanId}: ${otpCode}`);
+
   res.json({
     success: true,
-    message: `Verification code sent to retrieve booking references.`,
-    demoHint: 'For quick demonstration, use code: 123456'
+    message: `Verification code sent to retrieve booking references.`
   });
 });
 
@@ -968,17 +976,15 @@ app.post('/api/auth/client-verify-forgot-reference', (req: Request, res: Respons
 
   const cleanId = identifier.trim().toLowerCase();
 
-  if (otpCode !== '123456') {
-    const validOTP = db.getOTPVerifications().find(
-      o => o.identifier === cleanId && o.otpCode === otpCode && o.expiresAt > Date.now() && o.purpose === 'forgot_reference'
-    );
-    if (!validOTP) {
-      res.status(400).json({ error: 'Invalid or expired OTP verification code' });
-      return;
-    }
-    validOTP.verified = true;
-    db.saveDatabase();
+  const validOTP = db.getOTPVerifications().find(
+    o => o.identifier === cleanId && o.otpCode === otpCode && o.expiresAt > Date.now() && o.purpose === 'forgot_reference'
+  );
+  if (!validOTP) {
+    res.status(400).json({ error: 'Invalid or expired OTP verification code' });
+    return;
   }
+  validOTP.verified = true;
+  db.saveDatabase();
 
   const bookings = db.getBookingRequests().filter(
     b => b.clientPhone === cleanId || b.clientEmail.toLowerCase() === cleanId
